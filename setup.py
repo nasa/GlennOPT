@@ -9,27 +9,15 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-<<<<<<< HEAD
     name = "glennopt",
-    version = "0.0.1",
-    author = "Paht Juangphanich",
+    version = "1.0.0",
+    author = "See webpage https://github.com/nasa/GlennOPT",
     author_email = "paht.juangphanich@nasa.gov",
     description = ("Multi-objective optimization tool"),
     license = "Proprietary",
     keywords = "optimization, multi-objective, nsga3",
     url = "http://packages.python.org/an_example_pypi_project",
     packages=['base_classes','doe','helpers','nsga3'],
-=======
-    name = "GlennOPT",
-    version = "0.0.1",
-    author = "Paht Juangphanich",
-    author_email = "paht.juangphanich@nasa.gov",
-    description = ("Multi-Objective optimization tool"),
-    license = "Proprietary",
-    keywords = "example documentation tutorial",
-    url = "http://packages.python.org/an_example_pypi_project",
-    packages=['base_classes','doe','helpers','nsga3','test','test_functions'],
->>>>>>> Enhance-Execution
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
