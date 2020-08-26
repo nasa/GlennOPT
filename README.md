@@ -41,7 +41,9 @@ Integrate into OpenMDAO for a complete optimization package (needs to be debated
 [Advance Reference](/%2E%2E/wikis/Tutorial:-Advance)
 
 # Contributors 
-Person | Position | Dates | Responsibilities 
-Nadeem Kever | NASA LERCIP Intern | Summer-Fall 2020 | Single Objective DE, Gradient Multi-Gradient 
-Paht Juangphanich | NASA Researcher | Creator | NSGA-III
+|                   | Position      | Dates            | Responsibility                      |   |
+|-------------------|---------------|------------------|-------------------------------------|---|
+| Nadeem Kever      | LERCIP Intern | Summer-Fall 2020 | Single Objective DE, Multi-Gradient |   |
+| Paht Juangphanich | Researcher    | Spring 2020-     | NSGA-III, Optimizer Base Class      |   |
+|                   |               |                  |                                     |   |
 
