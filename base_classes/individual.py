@@ -72,7 +72,7 @@ class Individual:
             
         constraint = max([0,perf_constraint,obj_constraint])
         for i in range(len(self.__objectives)):
-            y[i] = self.__objectives[i].value + 1.0/(2.0*np.power(C*self.__population,a)) * np.power(constraint,2) # Dynamic Penalty with Equation(2)
+            y[i] = self.__objectives[i].value + 1.0/(2.0*np.power(C*self.population,a)) * np.power(constraint,2) # Dynamic Penalty with Equation(2)
         return y
     
     @objectives.setter

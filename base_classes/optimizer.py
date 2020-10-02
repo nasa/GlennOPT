@@ -534,15 +534,15 @@ class Optimizer:
         
         compromise_target = (max_objective_values+min_objective_values)/2
         # 
-        import operator # for sorting list of classes 
-        
-        sorted_x = sorted(individuals, key=operator.attrgetter('population'))
+        import operator # for sorting list of classes         
+        individuals = sorted(individuals, key=operator.attrgetter('population'))
 
         best_individuals = list()        
         best_compromise = list()
         for ind in individuals:            
             pop = ind.population
-            for i in len(best_objectives[pop]): # loop for all objectives
+
+            for i in range(len(best_objectives[pop])): # loop for all objectives
                 if (best_objectives[pop][i] > ind.objectives[i]):
                     
 

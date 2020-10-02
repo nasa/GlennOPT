@@ -21,6 +21,4 @@ class Parameter:
         self.constraint_less_than = constr_less_than
         self.constraint_greater_than = constr_greater_than
         self.value = value_if_failed # * Setting to default Value
-        
-        
-# print("parameter.py reached and working")
+    
