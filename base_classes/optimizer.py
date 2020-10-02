@@ -17,16 +17,11 @@ import numpy as np
 from glennopt.base_classes import Individual
 from glennopt.helpers import Parameter, copy_helper, parallel_settings
 
-P = TypeVar('T', bound='Parameter')
-I = TypeVar('T', bound='Individual')
-parameter_list = List[P]
-individual_list = List[I]
-
 class Optimizer: 
     """
         Base class for starting an optimization
     """
-    def __init__(self,name:str,eval_script:str, eval_folder:str = None,opt_folder:str=None, eval_parameters:parameter_list=[], objectives:parameter_list = [], performance_parameters:parameter_list = [], single_folder_eval=False):
+    def __init__(self,name:str,eval_script:str, eval_folder:str = None,opt_folder:str=None, eval_parameters:List[Parameter]=[], objectives:List[Parameter] = [], performance_parameters:List[Parameter] = [], single_folder_eval=False):
         """
             initializes the optimizer base class
             Inputs:
@@ -225,7 +220,7 @@ class Optimizer:
         if (len(available_indicies)>0):
             return available_indicies[0]             
 
-    def evaluate_population(self,individuals:individual_list,population_number:int=0):
+    def evaluate_population(self,individuals:List[Individual],population_number:int=0):
         """
             Evaluates a population of individuals, checks to see if the population exists in the directory. If it already exists, do nothing, read the results, evaluate if there is no output file
         """
@@ -334,7 +329,7 @@ class Optimizer:
         return -1
     
     
-    def append_restart_file(self, individuals:individual_list):
+    def append_restart_file(self, individuals:List[Individual]):
         """
             Appends self.population_track to a restart file, these are the individuals matter and can be restarted from. Instead of restarting from a population, lets restart from the best individuals 
 
@@ -379,7 +374,7 @@ class Optimizer:
         
         return []
 
-    def to_pandas(self,individuals:parameter_list,pop_number:int=0,bReturnPandas:bool = False):
+    def to_pandas(self,individuals:List[Parameter],pop_number:int=0,bReturnPandas:bool = False):
         """
             Creates a new dataframe with the results of a population. Call this in a loop for each population
         """
@@ -485,6 +480,99 @@ class Optimizer:
         legend_labels = []
         # Scan the pandas file, grab objectives for each population
         for key, df in self.pandas_cache.items():
+            obj1_data = []
+            obj2_data = []
+            c=colors[indx]
+            for index, row in df.iterrows():
+                obj1_data.append(row[obj1_name])
+                obj2_data.append(row[obj2_name])
+            # Plot the gathered data
+            ax.scatter(obj1_data, obj2_data, color=c, s=5,alpha=0.5)
+            legend_labels.append(key)
+            indx+=1
+
+        ax.set_xlabel(obj1_name)
+        ax.set_ylabel(obj2_name)
+        ax.legend(legend_labels)
+        fig.canvas.draw()
+        fig.canvas.flush_events()
+        plt.show()
+    
+    def get_best(self):
+        '''
+            Get the best individuals from each population
+            Returns an array of
+            [ 
+                POP001: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
+                
+                POP002: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
+                
+                POP003: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
+            ]
+        '''
+        # Read calculation folder
+        individuals = self.read_calculation_folder()
+        populations = {x.pop: x for x in individuals}.values() # Get unique populations 
+        
+        # (Compromise Target) Get max and min value of each objective 
+        nobjectives = len(self.objectives)
+        
+        max_objective_values = np.array( (nobjectives, ) )  
+        min_objective_values = np.array( (nobjectives, ) )
+        
+        for indx,ind in enumerate(individuals):
+            objectives_temp = ind.objectives()
+            for o in range(nobjectives):
+                if indx==0:
+                    max_objective_values[o] = objectives_temp[o]
+                    min_objective_values[o] = objectives_temp[o]
+                else:
+                    if (objectives_temp[o] > max_objective_values[o] ):
+                        max_objective_values[o] = objectives_temp[o]
+                    if (objectives_temp[o] < min_objective_values[o] ):
+                        min_objective_values[o] = objectives_temp[o]
+        
+        compromise_target = (max_objective_values+min_objective_values)/2
+        # 
+        import operator # for sorting list of classes 
+        
+        sorted_x = sorted(individuals, key=operator.attrgetter('population'))
+
+        best_individuals = list()        
+        best_compromise = list()
+        for ind in individuals:            
+            pop = ind.population
+            for i in len(best_objectives[pop]): # loop for all objectives
+                if (best_objectives[pop][i] > ind.objectives[i]):
+                    
+
+            best.index("bar")
+            objectives = ind.objectives(include_constraints=True)    
+            best_indiv[pop] = {'individual' = ind_name, 'objectives' = objectives,}
+        best_individuals = list() # for multi-objective problem this will be a list that contains list 
+        best_objectives = list() # for multi-objective problem this will be a list that contains list
+        best_eval_
+        # Sort through all dataframes 
+        
+    def plot_best(self,objective_name):
+        """
+            Creates a plot of the population vs the objective value
+            INPUTS:
+                objective_name - objective to compare 
+        """
+        import matplotlib.pyplot as plt
+        import matplotlib.cm as cm
+        fig,ax = plt.subplots()
+
+        colors = cm.rainbow(np.linspace(0, 1, len(self.pandas_cache.keys())))        
+        indx = 0
+        legend_labels = []
+
+        POP = list()
+        obj_val = list()
+        # Scan the pandas file, grab objectives for each population
+        for key, df in self.pandas_cache.items():
+            df[objective_name]
             obj1_data = []
             obj2_data = []
             c=colors[indx]

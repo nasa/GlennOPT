@@ -3,19 +3,21 @@
 """
 import os, shutil
 import subprocess, copy, math
-from random import seed, gauss, random
+from random import seed, gauss, random,uniform
 from typing import List
 from dataclasses import dataclass, field
 import numpy as np 
 import glob
 
-from glennopt.base_classes import Optimizer, Parameter
-from glennopt.nsga3 import NSGA_Individual
-from glennopt.doe import generate_reference_points
-from glennopt.nsga3.non_dominated_sorting import non_dominated_sorting
-from glennopt.nsga3.associate_to_reference_point import associate_to_reference_point
-from glennopt.nsga3.mutate import *
-from glennopt.helpers.data_objects import de_mutation_type, mutation_parameters
+from ..base_classes import Optimizer
+from ..helpers import Parameter
+from ..doe import generate_reference_points
+from ..helpers import get_pairs, de_mutation_type, mutation_parameters
+from .nsga_individual import NSGA_Individual
+from .non_dominated_sorting import non_dominated_sorting
+from .associate_to_reference_point import associate_to_reference_point
+from .mutate import *
+
 individual_list = List[NSGA_Individual]
 param_list = List[Parameter]
 
@@ -76,14 +78,13 @@ class NSGA3(Optimizer):
 
     def start_doe(self,doe_size:int=128):
         """
-            Starts a design of experiments. If the DOE has already started and there is an output file for an individual then the individual won't be evaluated 
-            # TODO Need to launch the evaluation in a separate thread (MPI or something) have a timeout period
+            Starts a design of experiments. If the DOE has already started and there is an output file for an individual then the individual won't be evaluated             
         """
         doe_individuals = []
         for i in range(doe_size):
             parameters = copy.deepcopy(self.eval_parameters)
             for eval_param in parameters:
-                eval_param.value = gauss(0,1)   
+                eval_param.value = np.random.uniform(eval_param.min_value,eval_param.max_value,1)[0]
             
             doe_individuals.append(NSGA_Individual(eval_parameters=parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
         
@@ -98,11 +99,11 @@ class NSGA3(Optimizer):
         params['zmin'] = []
         params['zmax'] = []
         params['smin'] = []
-        [individuals,F,params] = self.sort_and_select_population(individuals=individuals,params=params)
+        [individuals,_,params] = self.sort_and_select_population(individuals=individuals,params=params)
         self.append_restart_file(individuals) # Create the restart file
         if self.single_folder_eval:
             # Delete the population folder
-            population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(-1)
+            population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(-1))
             if os.path.isdir(population_folder):
                 shutil.rmtree(population_folder)
 
@@ -187,7 +188,7 @@ class NSGA3(Optimizer):
             self.append_restart_file(newIndividuals)
             if self.single_folder_eval:
                 # Delete the population folder
-                population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(pop_start)
+                population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(pop_start))
                 if os.path.isdir(population_folder):
                     shutil.rmtree(population_folder)
             pop_start+=1 # increment the population
@@ -200,12 +201,7 @@ class NSGA3(Optimizer):
         individuals,params = self.__normalize_population__(individuals,params)
         
         [individuals, F] = non_dominated_sorting(individuals)
-        
-        nPop = len(individuals)
-        # if numel(pop) == nPop
-        #     return;
-        # end
-        
+                
         [pop, d, rho] = associate_to_reference_point(individuals, params['Zr'])
         LastFront = []
         newpop = []
@@ -243,7 +239,6 @@ class NSGA3(Optimizer):
             MemberToAdd = AssocitedFromLastFront[new_member_ind]
             
             del LastFront[LastFront == MemberToAdd]
-            #LastFront[LastFront == MemberToAdd] = []
             
             newpop.append(individuals[MemberToAdd])
             
@@ -345,7 +340,7 @@ class NSGA3(Optimizer):
             # * --- sort and select ---
         return a
     
-    def __get_parents__(self,nIndividuals:int,nParents:int,parent_indx_seed=[]):
+    def __get_pairs__(self,nIndividuals:int,nParents:int,parent_indx_seed=[]):
         """
             Get a list of all the parents for a particular individual
             Inputs:
@@ -375,7 +370,7 @@ class NSGA3(Optimizer):
         for i in range(len(individuals)): # Loop for every individual
             ind1 = individuals[i] # Select an individual 
             x1 = ind1.eval_parameters
-            parent_indicies = self.__get_parents__(len(individuals),nParents,[i])
+            parent_indicies = get_pairs(len(individuals),nParents,[i])
             parent_indicies.remove(i)
             xp = []
             for indx in parent_indicies:
@@ -392,7 +387,7 @@ class NSGA3(Optimizer):
         newIndividuals=[]
         x_best = individuals[best_indx].eval_parameters
         for i in range(len(individuals)): # Loop for every individual            
-            parent_indicies = self.__get_parents__(len(individuals),4,[best_indx]) # pre-populate with the best index
+            parent_indicies = self.__get_pairs__(len(individuals),4,[best_indx]) # pre-populate with the best index
             parent_indicies.remove(best_indx)            
             x1 = individuals[parent_indicies[0]].eval_parameters
             x2 = individuals[parent_indicies[1]].eval_parameters

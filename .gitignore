@@ -142,3 +142,4 @@ results/
 Results/
 Calculation/
 v1.0/glennopt/test_functions/KUR/serial/restart_file.csv
+test_functions/KUR/parallel/restart_file.csv

@@ -21,19 +21,6 @@ class Parameter:
         self.constraint_less_than = constr_less_than
         self.constraint_greater_than = constr_greater_than
         self.value = value_if_failed # * Setting to default Value
-
-    
-    def apply_constraints(self):
-        '''
-            Step 1: Normalize the value between the max and min
-            Step 2: Normalize the constraint between the max and min
-            Step 3: Scale the value by the constraint
-        '''
-        norm_val = (max-value)/(max-min)
-
-        # if (self.val > self.constraint_greater_than):
-        #     norm_constaint = 
-        # if (self.val < self.constraint_less_than):
-
         
         
+# print("parameter.py reached and working")

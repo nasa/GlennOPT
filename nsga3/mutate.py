@@ -89,4 +89,11 @@ def mutate_crossover_de_best_2_bin(x_best:ndarray,x_r1:ndarray,x_r2:ndarray,x_r3
         else:
             z[i] =  x_best[i]
     return z
+
+# x1 = np.array([1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9])
+# x2 = np.array([2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9])
+# print("x1 = ",x1,"\nx2 = ",x2)
+# print("Crossover: ",crossover(x1,x2))
+# print("mutate: ",mutate(x1))
+# print("mutate crossover de: ",mutate_crossover_de(x1,[1]) )
         

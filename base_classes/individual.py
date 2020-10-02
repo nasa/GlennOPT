@@ -1,16 +1,16 @@
+import sys
+sys.path.insert(0,'../')
 from collections import OrderedDict
-import glennopt.helpers.parameter as Parameter
+from glennopt.helpers.parameter import Parameter
 import numpy as np
 from typing import TypeVar,List
-T = TypeVar('T', bound='Parameter')
-parameter_list = List[T]
 
 
 class Individual:
     '''
         This class represents each individual or "evaluation". In each evaluation there are a set of parameters for objectives as well as additional parameters that are kept track. 
     '''
-    def __init__(self,eval_parameters:parameter_list,objectives:parameter_list,performance_parameters:parameter_list=[]):
+    def __init__(self,eval_parameters:List[Parameter],objectives:List[Parameter],performance_parameters:List[Parameter]):
         '''
         Initializes an individual with objectives and a list of parameters
         '''
@@ -19,6 +19,8 @@ class Individual:
         self.__objectives = objectives
         self.__eval_parameters = eval_parameters
         self.__performance_parameters = performance_parameters
+        #self.__perf_constraint_penalty = np.zeros(len(performance_parameters))
+        #self.__obj_constraint_penalty = np.zeros(len(objectives))
     
     @property 
     def name(self):
@@ -37,12 +39,42 @@ class Individual:
         self.__population = v
 
     @property
-    def objectives(self):
+    def objectives(self, include_constraint=True, C=0.5,a=2):
         y = np.zeros(len(self.__objectives))
-        for i in range(len(self.__objectives)):
-            y[i] = self.__objectives[i].value
+        
+        if (include_constraint): # apply constraint if constraint_value is negative
+            y = self.__apply_dynamic_penalty(C=C,a=a)
+        else:
+            for i in range(len(self.__objectives)):
+                y[i] = self.__objectives[i].value
+            
         return y
 
+    def __apply_dynamic_penalty(self,C,a):
+        '''
+            C = penalty coefficient, this reduces the impact of bad designs at higher populations
+            a = penalty exponential coefficient, 
+        '''
+        perf_constraint = 0
+        y = np.zeros(len(self.__objectives))
+        for j in range(len(self.performance_parameters)):
+            if (self.__performance_parameters[j].constraint_less_than is not None):
+                perf_constraint += (self.__performance_parameters[j].value - self.__performance_parameters[j].constraint_less_than)
+            if (self.__performance_parameters[j].constraint_greater_than is not None):
+                perf_constraint += (self.__performance_parameters[j].constraint_greater_than - self.__performance_parameters[j].value)
+        
+        obj_constraint = 0
+        for i in range(len(self.__objectives)):
+            if (self.__objectives[i].constraint_less_than is not None):
+                obj_constraint += (self.__objectives[i].constraint_less_than - self.__objectives[i].value)
+            if (self.__objectives[i].constraint_greater_than is not None):
+                obj_constraint += (self.__objectives[i].value - self.__objectives[i].constraint_greater_than)
+            
+        constraint = max([0,perf_constraint,obj_constraint])
+        for i in range(len(self.__objectives)):
+            y[i] = self.__objectives[i].value + 1.0/(2.0*np.power(C*self.__population,a)) * np.power(constraint,2) # Dynamic Penalty with Equation(2)
+        return y
+    
     @objectives.setter
     def objectives(self,v):
         self.__objectives = v
@@ -137,6 +169,8 @@ class Individual:
             Returns a dictionary containing the parameters for an individual
         '''        
         return self.__performance_parameters
+
+# print("\n\nindividual.py accessed and working\n\n")
 
     # def apply_constraints(self):
     #     for indx in range(len(self.objectives)): # I could do a 

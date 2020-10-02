@@ -39,11 +39,3 @@ Integrate into OpenMDAO for a complete optimization package (needs to be debated
 [Simple Tutorial](/%2E%2E/wikis/Tutorial:-Prerequisites-and-simplified-example)
 
 [Advance Reference](/%2E%2E/wikis/Tutorial:-Advance)
-
-# Contributors 
-|                   | Position      | Dates            | Responsibility                      |   |
-|-------------------|---------------|------------------|-------------------------------------|---|
-| Nadeem Kever      | LERCIP Intern | Summer-Fall 2020 | Single Objective DE, Constraint Handling|   |
-| Paht Juangphanich | Researcher    | Spring 2020-     | NSGA-III, Optimizer Base Class      |   |
-|                   |               |                  |                                     |   |
-
