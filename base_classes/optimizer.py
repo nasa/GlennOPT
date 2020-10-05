@@ -10,6 +10,7 @@ import os, glob, copy, signal, platform, ctypes
 from typing import TypeVar,List
 import subprocess
 import time
+import math
 """
     External Modules
 """
@@ -501,65 +502,82 @@ class Optimizer:
     def get_best(self):
         '''
             Get the best individuals from each population
-            Returns an array of
-            [ 
-                POP001: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
-                
-                POP002: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
-                
-                POP003: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
-            ]
+
+            Returns:
+                best_individuals - this is an array of individuals that are best at each objective
+                    [ 
+                        POP001: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
+                        POP002: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
+                        POP003: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
+                    ]
+                comp_individuals - this is an array of individuals that is the best compromise between all the objectives
         '''
         # Read calculation folder
         individuals = self.read_calculation_folder()
         populations = {x.pop: x for x in individuals}.values() # Get unique populations 
         
         # (Compromise Target) Get max and min value of each objective 
-        nobjectives = len(self.objectives)
-        
-        max_objective_values = np.array( (nobjectives, ) )  
+        nobjectives = len(self.objectives)        
         min_objective_values = np.array( (nobjectives, ) )
         
         for indx,ind in enumerate(individuals):
             objectives_temp = ind.objectives()
             for o in range(nobjectives):
                 if indx==0:
-                    max_objective_values[o] = objectives_temp[o]
                     min_objective_values[o] = objectives_temp[o]
                 else:
-                    if (objectives_temp[o] > max_objective_values[o] ):
-                        max_objective_values[o] = objectives_temp[o]
-                    if (objectives_temp[o] < min_objective_values[o] ):
+                    if (objectives_temp[o] < min_objective_values[o]):
                         min_objective_values[o] = objectives_temp[o]
-        
+                        
         compromise_target = (max_objective_values+min_objective_values)/2
         # 
         import operator # for sorting list of classes         
         individuals = sorted(individuals, key=operator.attrgetter('population'))
 
-        best_individuals = list()        
-        best_compromise = list()
-        for ind in individuals:            
+        best_individuals = dict()
+        dist = list(); comp_individual = list()
+        dist_temp = list(); comp_individual_temp = list()
+        prev_pop = individuals[0].population
+        for ind in individuals:
             pop = ind.population
-
-            for i in range(len(best_objectives[pop])): # loop for all objectives
-                if (best_objectives[pop][i] > ind.objectives[i]):
-                    
-
-            best.index("bar")
-            objectives = ind.objectives(include_constraints=True)    
-            best_indiv[pop] = {'individual' = ind_name, 'objectives' = objectives,}
-        best_individuals = list() # for multi-objective problem this will be a list that contains list 
-        best_objectives = list() # for multi-objective problem this will be a list that contains list
-        best_eval_
-        # Sort through all dataframes 
+            if pop not in best_individuals.keys():        # Prepopulate
+                best_individuals[pop] = list()
+                for o in range(nobjectives):
+                    best_individuals[pop].append(ind) 
+            else:                                       # Compare   
+                for o in range(nobjectives): # Checks for the best objective
+                    current_best = best_individuals[pop][o].objectives[o]
+                    if ind.objectives[o]<current_best:
+                        best_individuals[pop][o] = ind 
         
-    def plot_best(self,objective_name):
+            # Checks for best compromise that has the smallest distance to minimum of all objective values 
+            if pop == prev_pop:
+                current_objectives = ind.objectives
+                d = 0 
+                for o in range(objectives_temp):
+                    current_best = best_individuals[pop][o].objectives[o]
+                    d = ((current_objectives[o] - current_objectives[o])/min_objective_values[o])**2
+                d = math.sqrt(d)
+                dist_temp.append(d)
+                comp_individual_temp.append(ind)
+            else:
+                # Lets find the miniumum distance and best compromise
+                min_indx = dist_temp.index(min(dist_temp))
+                dist.append(dist_temp[min_indx])
+                comp_individual.append(comp_individual_temp[min_indx])
+                dist_temp.clear()
+                comp_individual_temp.clear()            
+            prev_pop = pop
+        return best_individuals, comp_individual
+        
+    def plot_best_objective(self,objective_index):
         """
             Creates a plot of the population vs the objective value
             INPUTS:
                 objective_name - objective to compare 
         """
+        best_individuals, comp_individual = self.get_best()
+        
         import matplotlib.pyplot as plt
         import matplotlib.cm as cm
         fig,ax = plt.subplots()
@@ -567,22 +585,8 @@ class Optimizer:
         colors = cm.rainbow(np.linspace(0, 1, len(self.pandas_cache.keys())))        
         indx = 0
         legend_labels = []
-
-        POP = list()
-        obj_val = list()
-        # Scan the pandas file, grab objectives for each population
-        for key, df in self.pandas_cache.items():
-            df[objective_name]
-            obj1_data = []
-            obj2_data = []
-            c=colors[indx]
-            for index, row in df.iterrows():
-                obj1_data.append(row[obj1_name])
-                obj2_data.append(row[obj2_name])
-            # Plot the gathered data
-            ax.scatter(obj1_data, obj2_data, color=c, s=5,alpha=0.5)
-            legend_labels.append(key)
-            indx+=1
+        
+        ax.scatter(best_individuals.keys(), obj2_data, color=c, s=5,alpha=0.5)
 
         ax.set_xlabel(obj1_name)
         ax.set_ylabel(obj2_name)
@@ -590,7 +594,8 @@ class Optimizer:
         fig.canvas.draw()
         fig.canvas.flush_events()
         plt.show()
-        
+
+    # def plot_best_compromise(self)
 
     def read_calculation_folder(self):
         """

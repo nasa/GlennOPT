@@ -9,7 +9,7 @@ from glennopt.doe import generate_reference_points
 
 # Generate the DOE
 current_dir = os.getcwd()
-sode = SingleObjectiveDE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",num_populations=10,pop_size=40,optimization_folder=current_dir)
+sode = SingleObjectiveDE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",num_populations=10,pop_size=32,optimization_folder=current_dir)
 
 eval_parameters = []
 eval_parameters.append(Parameter(name="x1",min_value=-5,max_value=5))
@@ -30,7 +30,7 @@ sode.add_performance_parameters(performance_params = performance_parameters)
 # params = mutation_parameters
 # sode.mutation_params.mutation_type = de_mutation_type.de_1_rand_bin
 
-sode.start_doe(doe_size=32)
+sode.start_doe(doe_size=128)
 sode.optimize_from_population(pop_start=-1,n_generations=20)
 
 
