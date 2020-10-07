@@ -2,11 +2,9 @@ from glennopt.nsga3 import NSGA_Individual
 import numpy as np
 from numpy import linalg as LA
 from typing import TypeVar,List
-T = TypeVar('T', bound='NSGA_Individual')
-individual_list = List[T]
 
 # This is basically the crowding distance
-def associate_to_reference_point(individuals:individual_list,zr:np.ndarray):
+def associate_to_reference_point(individuals:List[NSGA_Individual],zr:np.ndarray):
     '''
         Inputs:
             individuals - list of NSGA Individuals 

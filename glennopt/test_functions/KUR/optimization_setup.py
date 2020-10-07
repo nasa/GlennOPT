@@ -6,7 +6,7 @@ from glennopt.doe import generate_reference_points
 
 # Generate the DOE
 current_dir = os.getcwd()
-ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",num_populations=10,pop_size=40,optimization_folder=current_dir)
+ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=40,optimization_folder=current_dir)
 
 eval_parameters = []
 eval_parameters.append(Parameter(name="x1",min_value=-5,max_value=5))

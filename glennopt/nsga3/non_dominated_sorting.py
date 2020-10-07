@@ -3,10 +3,8 @@ import copy
 import numpy as np
 from numpy import linalg as LA
 from typing import TypeVar,List
-T = TypeVar('T', bound='NSGA_Individual')
-individual_list = List[T]
 
-def non_dominated_sorting(individuals:individual_list):
+def non_dominated_sorting(individuals:List[NSGA_Individual]):
     '''
         Loops through the list of individuals and checks which one
     '''
@@ -65,7 +63,7 @@ def non_dominated_sorting(individuals:individual_list):
     # P = CrowdingDistance(P,Fnew,nObj)
 
 # This is basically the crowding distance
-def associate_to_reference_point(individuals:individual_list,zr):
+def associate_to_reference_point(individuals:List[NSGA_Individual],zr):
     '''
         returns
             individuals - List of individuals with parameters associatedref and distanceToAssociatedRef populated

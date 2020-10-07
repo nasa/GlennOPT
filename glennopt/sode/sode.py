@@ -5,51 +5,49 @@ from random import shuffle
 import operator
 import subprocess, copy, math
 import sys
-sys.path.insert(0,'../')
 # import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
-from glennopt.base_classes import Optimizer, Parameter, Individual
-from glennopt.doe import generate_reference_points
-from glennopt.helpers import get_pairs
-from glennopt.nsga3.mutate import mutate_crossover_de
+from ..helpers import Parameter
+from ..base_classes import Optimizer, Individual
+from ..nsga3.mutate import mutation_de_1_rand_bin, mutation_de_best_2_bin, mutation_simple, mutation_parameters, de_mutation_type
 from random import seed, gauss, random
 from typing import List
 
-individual_list = List[Individual]
-param_list = List[Parameter]
-
-class SingleObjectiveDE(Optimizer):
-    def __init__(self,eval_script:str = "evaluation.py", eval_folder:str = "Evaluation",num_populations:int=10,pop_size:int=32, optimization_folder:str=None, beta:List[float]=[0.2,0.8],cr:float=0.2):
-        super().__init__(name="SingleObjectiveDE",eval_script=eval_script,eval_folder=eval_folder, opt_folder=optimization_folder)
+class SODE(Optimizer):
+    def __init__(self,eval_script:str = "evaluation.py", eval_folder:str = "Evaluation",pop_size:int=32, optimization_folder:str=None):
+        super().__init__(name="SODE",eval_script=eval_script,eval_folder=eval_folder, opt_folder=optimization_folder)
         '''        
             Inputs:
                 eval_script - Evaluation python script that will be called. Either Output.txt is read or an actual output is read. 
-
                 eval_folder - folder to be copied into each individual evaluation directory. If this is null, the population directory isn't created and neither are the individual directories
-
                 num_populations - number of populations to evaluate from the starting population
-
                 pop_size - number of individuals in a given population
-
                 optimization_folder - where optimization should start
         '''
-        self.num_populations = num_populations
         self.pop_size = pop_size
-        self.individuals = None        
-        self.beta = beta
-        self.cr = cr
-    
+        self.individuals = None
+        self.__mutation_params = mutation_parameters()
+
     # * Part of initialization    
-    def add_eval_parameters(self,eval_params:param_list):
+    def add_eval_parameters(self,eval_params:List[Parameter]):
         self.eval_parameters = eval_params # Sets base class variable
 
-    def add_objectives(self,objectives:param_list):
+    def add_objectives(self,objectives:List[Parameter]):
         self.objectives = objectives # Sets base class variable
 
-    def add_performance_parameters(self,performance_params:param_list = None):
+    def add_performance_parameters(self,performance_params:List[Parameter] = None):
         self.performance_parameters = performance_params # Sets base class variable
     # *       
+
+    # * Mutation Properties
+    @property
+    def mutation_params(self):
+        return self.__mutation_params
+    @mutation_params.setter
+    def mutation_params(self,v):
+        self.__mutation_params = v
+    # * 
 
     def __set_eval_parameters__(self,y:np.ndarray):
         """
@@ -69,14 +67,12 @@ class SingleObjectiveDE(Optimizer):
             parameters = copy.deepcopy(self.eval_parameters)
             for eval_param in parameters:
                 eval_param.value = np.random.uniform(eval_param.min_value,eval_param.max_value,1)[0]
-            
             doe_individuals.append(Individual(eval_parameters=parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
         
         # * Begin the evaluation
         self.evaluate_population(individuals=doe_individuals,population_number=-1)
         # * Read the DOE
         individuals = self.read_population(population_number=-1)
-
         self.append_restart_file(individuals) # Create the restart file
 
     def optimize_from_population(self,pop_start:int,n_generations:int):
@@ -113,35 +109,26 @@ class SingleObjectiveDE(Optimizer):
             individuals = sorted_inds[:n_individuals]
             shuffle(individuals)
 
-
-    # */ Differential Evolution Functions /*
-    def __optimize__(self,individuals:individual_list,n_generations:int,pop_start:int,params:dict,F:list):
-        ''' 
-            Differential Evolution Main loop
-
-            Inputs:
-                individuals - list of individuals to evaluate
-                n_generations - number of generations to loop through
-                pop_start - starting population number
+    def __crossover_mutate__(self,individuals:List[Individual]):
         '''
-        nIndividuals = len(individuals)
-
-
-
-    def __crossover_mutate__(self,individuals:individual_list):
-        '''
-            
+            Applies Crossover and Mutate
         '''
         
         nIndividuals = len(individuals)
         num_params = len(individuals[0].eval_parameters)
-        
-        newIndividuals = list()
-        for i in range(nIndividuals): # For each individual
-            x = np.copy(individuals[i].eval_parameters)
-            indicies = get_pairs(nIndividuals,nParents=3)
-            xparents = [individuals[j].eval_parameters for j in indicies]
-            z = mutate_crossover_de(x,xparents)
-            newIndividuals.append(Individual(eval_parameters=self.__set_eval_parameters__(z),objectives=self.objectives,performance_parameters=self.performance_parameters))
+        import random
+        nParents = random.randint(self.mutation_params.min_parents,self.mutation_params.max_parents)
+        if self.mutation_params.mutation_type == de_mutation_type.de_1_rand_bin:
+            newIndividuals = mutation_de_1_rand_bin(individuals=individuals,objectives=self.objectives,nParents=nParents,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,F=self.mutation_params.F,C=self.mutation_params.C)
+        elif self.mutation_params.mutation_type == de_mutation_type.simple:
+            newIndividuals = mutation_simple(individuals=individuals,nCrossover=nParents,nMutation=nParents,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
+        elif self.mutation_params.mutation_type == de_mutation_type.mutation_de_best_2_bin:
+            # find best value
+            best_indx = 0
+            for indx in range(1,nIndividuals):
+                if individuals[indx].objectives[0]<individuals[best_indx].objectives[0]:
+                    best_indx = indx
+            
+            newIndividuals = mutation_de_best_2_bin(best_indx=best_indx,individuals=individuals,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,F=self.mutation_params.F,C=self.mutation_params.C)                
 
         return newIndividuals

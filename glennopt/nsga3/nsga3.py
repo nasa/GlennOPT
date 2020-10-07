@@ -11,18 +11,16 @@ import glob
 
 from ..base_classes import Optimizer
 from ..helpers import Parameter
-from ..doe import generate_reference_points
-from ..helpers import get_pairs, de_mutation_type, mutation_parameters
-from .nsga_individual import NSGA_Individual
-from .non_dominated_sorting import non_dominated_sorting
-from .associate_to_reference_point import associate_to_reference_point
-from .mutate import *
+from . import NSGA_Individual
+from . import non_dominated_sorting
+from . import associate_to_reference_point
+from . import generate_reference_points
+from . import mutation_simple, mutation_de_1_rand_bin, mutation_de_best_2_bin, de_mutation_type, mutation_parameters
 
 individual_list = List[NSGA_Individual]
-param_list = List[Parameter]
 
 class NSGA3(Optimizer):
-    def __init__(self,eval_script:str = "evaluation.py", eval_folder:str = "Evaluation",num_populations:int=10,pop_size:int=128, optimization_folder:str=None,single_folder_eval=False):
+    def __init__(self,eval_script:str = "evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval=False):
         super().__init__(name="nsga3",eval_script=eval_script,eval_folder=eval_folder, opt_folder=optimization_folder,single_folder_eval=single_folder_eval)
         """
             NSGA-3 multi-dimensional optimizer. This version has been tweaked to include restart capabilities. It can also keep track of additional parameters that can be considered part of the constraints.
@@ -41,20 +39,18 @@ class NSGA3(Optimizer):
 
                 optimization_folder - where optimization should start
         """
-
-        self.num_populations = num_populations
         self.pop_size = pop_size
         self.individuals = None        
         self.__mutation_params = mutation_parameters()
     
     # * Part of initialization    
-    def add_eval_parameters(self,eval_params:param_list):
+    def add_eval_parameters(self,eval_params:List[Parameter]):
         self.eval_parameters = eval_params # Sets base class variable
 
-    def add_objectives(self,objectives:param_list):
+    def add_objectives(self,objectives:List[Parameter]):
         self.objectives = objectives # Sets base class variable
 
-    def add_performance_parameters(self,performance_params:param_list = None):
+    def add_performance_parameters(self,performance_params:List[Parameter] = None):
         self.performance_parameters = performance_params # Sets base class variable
     # *       
     
@@ -67,15 +63,6 @@ class NSGA3(Optimizer):
         self.__mutation_params = v
     # * 
     
-    def __set_eval_parameters__(self,y:np.ndarray):
-        """
-            only call this function within the class, do not expose to outside. once we have the parameters set, we might need to set the values based on an array.
-        """
-        parameters = copy.deepcopy(self.eval_parameters)
-        for indx in range(len(parameters)):
-            parameters[indx].value = y[indx]
-        return parameters
-
     def start_doe(self,doe_size:int=128):
         """
             Starts a design of experiments. If the DOE has already started and there is an output file for an individual then the individual won't be evaluated             
@@ -163,19 +150,19 @@ class NSGA3(Optimizer):
                 min_parents = 4 if min_parents<4 else min_parents
                 nParents = math.floor(np.random.rand(1)*max_parents+min_parents) 
                 nParents = 3
-                newIndividuals = self.__mutation_de_1_rand_bin__(individuals,nParents)
+                newIndividuals = mutation_de_1_rand_bin(individuals,nParents)
             elif self.mutation_params.mutation_type == de_mutation_type.de_best_2_bin:
                 if len(F[len(F)-1]) == 0: # Take the last front. Sometimes the last array of F is []
                     temp = F[len(F)-2]
                 else:
                     temp = F[len(F)-1]                    
                 best_indx = temp[np.random.randint(0,len(temp))] # best index is a random individual taken from best front
-                newIndividuals = self.__mutation_de_best_2_bin__(best_indx,individuals)
+                newIndividuals = mutation_de_best_2_bin(best_indx,individuals)
             else:
                 # use simple mutation
                 nCrossover = int(nIndividuals*0.5)
                 nMutation = nIndividuals-nCrossover
-                newIndividuals = self.__simple_mutation__(individuals,nCrossover,nMutation)
+                newIndividuals = mutation_simple(individuals,nCrossover,nMutation)
             # concatenante lists
             new_pop.extend(newIndividuals)
 
@@ -251,7 +238,7 @@ class NSGA3(Optimizer):
         return individuals,F,params
 
     # * The follow codes are a part of sort and select
-    def __normalize_population__(self, individuals:param_list,params:dict):
+    def __normalize_population__(self, individuals:List[Parameter],params:dict):
         zmin = self.__update_ideal_point__(individuals,params)
         objectives_mat = np.zeros((len(self.objectives), len(individuals)))
 
@@ -311,7 +298,7 @@ class NSGA3(Optimizer):
 
         return params
 
-    def __update_ideal_point__(self, individuals:param_list,params:dict):
+    def __update_ideal_point__(self, individuals:List[Parameter],params:dict):
         """
             Finds the minimum value of each objective
         """
@@ -340,94 +327,7 @@ class NSGA3(Optimizer):
             # * --- sort and select ---
         return a
     
-    def __get_pairs__(self,nIndividuals:int,nParents:int,parent_indx_seed=[]):
-        """
-            Get a list of all the parents for a particular individual
-            Inputs:
-                nIndividuals - number of individuals
-                nParents - number of parents 
-                parent_indx_seed - pre-populate the parent index array
-        """
-        if len(parent_indx_seed)>0:
-            parent_indx = parent_indx_seed
-            nParents += len(parent_indx_seed)
-        else:
-            parent_indx = []
-        rand_indx = -1        
-        while(rand_indx in parent_indx or rand_indx==-1):
-            rand_indx = np.random.randint(0,nIndividuals-1)
-            parent_indx.append(rand_indx)
-            if (len(parent_indx)>=nParents):
-                break
-        return parent_indx
-
-
-    def __mutation_de_1_rand_bin__(self,individuals:individual_list,nParents:int):
-        """
-            mutation and crossover using de_1_rand_bin
-        """
-        newIndividuals=[] 
-        for i in range(len(individuals)): # Loop for every individual
-            ind1 = individuals[i] # Select an individual 
-            x1 = ind1.eval_parameters
-            parent_indicies = get_pairs(len(individuals),nParents,[i])
-            parent_indicies.remove(i)
-            xp = []
-            for indx in parent_indicies:
-                xp.append(individuals[indx].eval_parameters)                                
-            x1 = mutate_crossover_de(x1,xp,self.mutation_params.F,self.mutation_params.C)
     
-            newIndividuals.append(NSGA_Individual(eval_parameters=self.__set_eval_parameters__(x1),objectives=self.objectives,performance_parameters=self.performance_parameters))
-        return newIndividuals 
-
-    def __mutation_de_best_2_bin__(self,best_indx:int,individuals:individual_list):
-        """
-            mutation and crossover using de_best_2_bin
-        """
-        newIndividuals=[]
-        x_best = individuals[best_indx].eval_parameters
-        for i in range(len(individuals)): # Loop for every individual            
-            parent_indicies = self.__get_pairs__(len(individuals),4,[best_indx]) # pre-populate with the best index
-            parent_indicies.remove(best_indx)            
-            x1 = individuals[parent_indicies[0]].eval_parameters
-            x2 = individuals[parent_indicies[1]].eval_parameters
-            x3 = individuals[parent_indicies[2]].eval_parameters
-            x4 = individuals[parent_indicies[3]].eval_parameters
-            x = mutate_crossover_de_best_2_bin(x_best,x1,x2,x3,x4,self.mutation_params.F,self.mutation_params.C)
-
-            newIndividuals.append(NSGA_Individual(eval_parameters=self.__set_eval_parameters__(x),objectives=self.objectives,performance_parameters=self.performance_parameters))
-                    
-        return newIndividuals 
-
-    def __simple_mutation__(self,individuals:individual_list,nCrossover:int,nMutation:int):
-        """
-            Performs a simple mutation and crossover on the individuals
-        """
-        nIndividuals = len(individuals)
-        # Perform Crossover
-        crossover_individuals = []
-        for k in range(int(nCrossover/2)):
-            rand_indx = np.random.randint(0,nIndividuals-1)
-            y1 = individuals[rand_indx].eval_parameters
-
-            rand_indx2 = np.random.randint(0,nIndividuals-1)
-            y2 = individuals[rand_indx2].eval_parameters
-
-            [y1_new, y2_new] = crossover(y1, y2)
-            
-            crossover_individuals.append(NSGA_Individual(eval_parameters=self.__set_eval_parameters__(y1_new),objectives=self.objectives,performance_parameters=self.performance_parameters))
-            
-            crossover_individuals.append(NSGA_Individual(eval_parameters=self.__set_eval_parameters__(y2_new),objectives=self.objectives,performance_parameters=self.performance_parameters))
-
-        # Perform Mutation
-        mutation_individuals = []
-        for k in range(nMutation):
-            rand_indx = np.random.randint(0,nIndividuals-1)
-            y1 = individuals[rand_indx].eval_parameters
-            y1_new = mutate(y1,self.mutation_params.mu,self.mutation_params.sigma)
-            mutation_individuals.append(NSGA_Individual(eval_parameters=self.__set_eval_parameters__(y1_new),objectives=self.objectives,performance_parameters=self.performance_parameters))
-        crossover_individuals.extend(mutation_individuals)
-        return crossover_individuals
     
     
 

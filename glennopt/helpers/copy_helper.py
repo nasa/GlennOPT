@@ -11,12 +11,4 @@ def copy(src, dest,symlinks=False, ignore=None):
             else:
                 shutil.copy2(s, d)
         except OSError as e:
-             print('Directory not copied. Error: %s' % e)        
-    # try:
-    #     shutil.copytree(src, dest)
-    # except OSError as e:
-    #     # If the error was caused because the source wasn't a directory
-    #     if e.errno == errno.ENOTDIR:
-    #         shutil.copy(src, dest)
-    #     else:
-    #         print('Directory not copied. Error: %s' % e)
+             print('Directory not copied. Error: %s' % e)

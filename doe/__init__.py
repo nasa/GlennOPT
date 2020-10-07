@@ -1,3 +1,0 @@
-from __future__ import absolute_import
-
-from .generate_reference_points import generate_reference_points

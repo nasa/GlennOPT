@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 import copy
 import numpy as np
-from glennopt.helpers.convert_to_ndarray import convert_to_ndarray
+from ..helpers.convert_to_ndarray import convert_to_ndarray
 
 # http://doi.org/10.1109/TEVC.2013.2281535
 
