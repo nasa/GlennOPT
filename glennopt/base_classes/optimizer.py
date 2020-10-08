@@ -513,60 +513,60 @@ class Optimizer:
                 comp_individuals - this is an array of individuals that is the best compromise between all the objectives
         '''
         # Read calculation folder
-        individuals = self.read_calculation_folder()
-        populations = {x.pop: x for x in individuals}.values() # Get unique populations 
+        individuals = self.read_calculation_folder()            # Reads as an array of arrays 
         
-        # (Compromise Target) Get max and min value of each objective 
+        # (Compromise Target) At the minimum index of each objective what are the values of the other objectives
         nobjectives = len(self.objectives)        
-        min_objective_values = np.array( (nobjectives, ) )
+        min_objective_values = np.ndarray( (nobjectives,),dtype=float)
         
-        for indx,ind in enumerate(individuals):
-            objectives_temp = ind.objectives()
-            for o in range(nobjectives):
-                if indx==0:
-                    min_objective_values[o] = objectives_temp[o]
-                else:
-                    if (objectives_temp[o] < min_objective_values[o]):
+        for indx,pop_individuals in enumerate(individuals):
+            for ind in pop_individuals:
+                objectives_temp = ind.objectives
+                for o in range(nobjectives):
+                    if indx==0:
                         min_objective_values[o] = objectives_temp[o]
-                        
-        compromise_target = (max_objective_values+min_objective_values)/2
-        # 
+                    else:
+                        if (objectives_temp[o] < min_objective_values[o]):
+                            print(objectives_temp[o])
+                            min_objective_values[o] = objectives_temp[o]
+        #
         import operator # for sorting list of classes         
-        individuals = sorted(individuals, key=operator.attrgetter('population'))
 
         best_individuals = dict()
         dist = list(); comp_individual = list()
         dist_temp = list(); comp_individual_temp = list()
-        prev_pop = individuals[0].population
-        for ind in individuals:
-            pop = ind.population
-            if pop not in best_individuals.keys():        # Prepopulate
-                best_individuals[pop] = list()
-                for o in range(nobjectives):
-                    best_individuals[pop].append(ind) 
-            else:                                       # Compare   
-                for o in range(nobjectives): # Checks for the best objective
-                    current_best = best_individuals[pop][o].objectives[o]
-                    if ind.objectives[o]<current_best:
-                        best_individuals[pop][o] = ind 
-        
-            # Checks for best compromise that has the smallest distance to minimum of all objective values 
-            if pop == prev_pop:
+        prev_pop = individuals[0][0].population
+
+        for pop_individuals in individuals:
+            pop = pop_individuals[0].population
+            for ind in pop_individuals:
+                if pop not in best_individuals.keys():        # Prepopulate
+                    best_individuals[pop] = list()
+                    for o in range(nobjectives):
+                        best_individuals[pop].append(ind) 
+                else:                                       # Compare   
+                    for o in range(nobjectives): # Checks for the best objective
+                        current_best = best_individuals[pop][o].objectives[o]
+                        if ind.objectives[o]<current_best:
+                            best_individuals[pop][o] = ind 
+            
+                # Checks for best compromise that has the smallest distance to minimum of all objective values 
+                
                 current_objectives = ind.objectives
                 d = 0 
-                for o in range(objectives_temp):
+                for o in range(len(objectives_temp)):
                     current_best = best_individuals[pop][o].objectives[o]
                     d = ((current_objectives[o] - current_objectives[o])/min_objective_values[o])**2
                 d = math.sqrt(d)
                 dist_temp.append(d)
                 comp_individual_temp.append(ind)
-            else:
-                # Lets find the miniumum distance and best compromise
-                min_indx = dist_temp.index(min(dist_temp))
-                dist.append(dist_temp[min_indx])
-                comp_individual.append(comp_individual_temp[min_indx])
-                dist_temp.clear()
-                comp_individual_temp.clear()            
+                
+            # Lets find the miniumum distance and best compromise for a given population
+            min_indx = dist_temp.index(min(dist_temp))
+            dist.append(dist_temp[min_indx])
+            comp_individual.append(comp_individual_temp[min_indx])
+            dist_temp.clear()
+            comp_individual_temp.clear()
             prev_pop = pop
         return best_individuals, comp_individual
         

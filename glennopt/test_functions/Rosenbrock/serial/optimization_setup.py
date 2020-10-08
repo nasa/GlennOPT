@@ -15,7 +15,6 @@ sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",p
 eval_parameters = []
 eval_parameters.append(Parameter(name="x1",min_value=-5,max_value=5))
 eval_parameters.append(Parameter(name="x2",min_value=-5,max_value=5))
-
 sode.add_eval_parameters(eval_params = eval_parameters)
 
 objectives = []

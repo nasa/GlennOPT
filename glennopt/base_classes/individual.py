@@ -169,9 +169,3 @@ class Individual:
             Returns a dictionary containing the parameters for an individual
         '''        
         return self.__performance_parameters
-
-# print("\n\nindividual.py accessed and working\n\n")
-
-    # def apply_constraints(self):
-    #     for indx in range(len(self.objectives)): # I could do a 
-    #         if self.objectives[indx].value >
