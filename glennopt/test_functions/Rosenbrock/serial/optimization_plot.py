@@ -25,8 +25,7 @@ performance_parameters = []
 performance_parameters.append(Parameter(name='p1'))
 performance_parameters.append(Parameter(name='p2'))
 sode.add_performance_parameters(performance_params = performance_parameters)
-# ns.start_doe(doe_size=40)
-# ns.optimize_from_population(pop_start=-1,n_generations=10)
+
+# Get the best individual in each population for objective 1
+best_individuals, comp_individual = sode.get_best()
 sode.plot_best_objective(objective_index=0)
-
-

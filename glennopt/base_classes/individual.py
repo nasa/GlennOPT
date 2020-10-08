@@ -71,8 +71,9 @@ class Individual:
                 obj_constraint += (self.__objectives[i].value - self.__objectives[i].constraint_greater_than)
             
         constraint = max([0,perf_constraint,obj_constraint])
+        population = max([1,self.population]) # this way we avoid nan values
         for i in range(len(self.__objectives)):
-            y[i] = self.__objectives[i].value + 1.0/(2.0*np.power(C*self.population,a)) * np.power(constraint,2) # Dynamic Penalty with Equation(2)
+            y[i] = self.__objectives[i].value + 1.0/(2.0*np.power(C*population,a)) * np.power(constraint,2) # Dynamic Penalty with Equation(2)
         return y
     
     @objectives.setter

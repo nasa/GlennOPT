@@ -11,6 +11,8 @@ from typing import TypeVar,List
 import subprocess
 import time
 import math
+import pprint
+
 """
     External Modules
 """
@@ -527,7 +529,6 @@ class Optimizer:
                         min_objective_values[o] = objectives_temp[o]
                     else:
                         if (objectives_temp[o] < min_objective_values[o]):
-                            print(objectives_temp[o])
                             min_objective_values[o] = objectives_temp[o]
         #
         import operator # for sorting list of classes         
@@ -580,20 +581,31 @@ class Optimizer:
         
         import matplotlib.pyplot as plt
         import matplotlib.cm as cm
-        fig,ax = plt.subplots()
-
-        colors = cm.rainbow(np.linspace(0, 1, len(self.pandas_cache.keys())))        
+        
         indx = 0
         legend_labels = []
         
-        ax.scatter(best_individuals.keys(), obj2_data, color=c, s=5,alpha=0.5)
-
-        ax.set_xlabel(obj1_name)
-        ax.set_ylabel(obj2_name)
+        objective_data = list()
+        best_indivduals = list()
+        for _,ind in best_individuals.items():
+            objective_data.append(ind[objective_index].objectives[objective_index])
+            best_indivduals.append(ind[objective_index].name)
+        
+        fig,ax = plt.subplots()
+        colors = cm.rainbow(np.linspace(0, 1, len(self.pandas_cache.keys())))
+        ax.scatter(best_individuals.keys(), objective_data,color='blue',s=5)
+        ax.set_yscale('log')
+        ax.set_xticks(list(best_individuals.keys()))
+        ax.set_xlabel('Population')
+        ax.set_ylabel('Objective Value')
         ax.legend(legend_labels)
+        ax.set_title('Objective Index: ' + str(objective_index))
         fig.canvas.draw()
         fig.canvas.flush_events()
         plt.show()
+
+        print('Best Individuals for Objective Index ' + str(objective_index))
+        pprint(best_individuals)
 
     # def plot_best_compromise(self)
 
