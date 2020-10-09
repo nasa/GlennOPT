@@ -31,7 +31,7 @@ sode.add_performance_parameters(performance_params = performance_parameters)
 sode.mutation_params.mutation_type = de_mutation_type.de_1_rand_bin
 sode.mutation_params.min_parents = int(0.2*pop_size)
 sode.mutation_params.max_parents = pop_size
-sode.start_doe(doe_size=32)
+# sode.start_doe(doe_size=32)
 sode.optimize_from_population(pop_start=-1,n_generations=20)
 
 

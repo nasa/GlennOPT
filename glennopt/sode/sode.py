@@ -96,7 +96,7 @@ class SODE(Optimizer):
         # Sort the population into [fill in here]
         # self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1,params=params,F=F)
         individuals = sorted(individuals, key=operator.attrgetter('objectives'))
-        individuals = sorted_inds[:self.pop_size]
+        individuals = individuals[:self.pop_size]
         # best_sc = np.zeros(n_generations)
         for pop in range(pop_start+1,n_generations):
             newIndividuals = self.__crossover_mutate__(individuals)

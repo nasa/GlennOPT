@@ -3,10 +3,8 @@
 """
 import sys,os
 sys.path.insert(0,'../../../../')
-from glennopt.helpers import Parameter, mutation_parameters, de_mutation_type, parallel_settings
-from glennopt.nsga3 import NSGA3
-from glennopt.doe import generate_reference_points
-
+from glennopt.helpers import Parameter
+from glennopt.nsga3 import NSGA3,mutation_parameters, de_mutation_type
 
 # Generate the DOE
 current_dir = os.getcwd()
