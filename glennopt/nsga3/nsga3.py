@@ -3,7 +3,7 @@
 """
 import os, shutil
 import subprocess, copy, math
-from random import seed, gauss, random,uniform
+from random import seed, gauss, random,uniform,randint
 from typing import List
 from dataclasses import dataclass, field
 import numpy as np 
@@ -11,11 +11,11 @@ import glob
 
 from ..base_classes import Optimizer
 from ..helpers import Parameter
-from . import NSGA_Individual
-from . import non_dominated_sorting
-from . import associate_to_reference_point
-from . import generate_reference_points
-from . import mutation_simple, mutation_de_1_rand_bin, mutation_de_best_2_bin, de_mutation_type, mutation_parameters
+from .nsga_individual import NSGA_Individual
+from .non_dominated_sorting import non_dominated_sorting
+from .associate_to_reference_point import associate_to_reference_point
+from .generate_reference_points import generate_reference_points
+from .mutate import mutation_simple, mutation_de_1_rand_bin, mutation_de_best_2_bin, de_mutation_type, mutation_parameters
 
 individual_list = List[NSGA_Individual]
 
@@ -144,30 +144,15 @@ class NSGA3(Optimizer):
         # * Loop through all individuals
         for pop in range(pop_start,pop_start+n_generations):
             new_pop = []
-            if self.mutation_params.mutation_type == de_mutation_type.de_1_rand_bin:
-                max_parents = self.pop_size*self.mutation_params.max_parents
-                min_parents = self.pop_size*self.mutation_params.min_parents
-                min_parents = 4 if min_parents<4 else min_parents
-                nParents = math.floor(np.random.rand(1)*max_parents+min_parents) 
-                nParents = 3
-                newIndividuals = mutation_de_1_rand_bin(individuals,nParents)
-            elif self.mutation_params.mutation_type == de_mutation_type.de_best_2_bin:
-                if len(F[len(F)-1]) == 0: # Take the last front. Sometimes the last array of F is []
-                    temp = F[len(F)-2]
-                else:
-                    temp = F[len(F)-1]                    
-                best_indx = temp[np.random.randint(0,len(temp))] # best index is a random individual taken from best front
-                newIndividuals = mutation_de_best_2_bin(best_indx,individuals)
-            else:
-                # use simple mutation
-                nCrossover = int(nIndividuals*0.5)
-                nMutation = nIndividuals-nCrossover
-                newIndividuals = mutation_simple(individuals,nCrossover,nMutation)
+            nParents = randint(self.mutation_params.min_parents,self.mutation_params.max_parents)
+            if self.mutation_params.mutation_type == de_mutation_type.de_1_rand_bin:                                        
+                newIndividuals = mutation_de_1_rand_bin(individuals=individuals,nParents=nParents,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,F=self.mutation_params.F,C=self.mutation_params.C)
+            else:   # simple mutation
+                newIndividuals = mutation_simple(individuals=individuals,nCrossover=nParents,nMutation=nParents,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
             # concatenante lists
             new_pop.extend(newIndividuals)
-
-            self.evaluate_population(new_pop,pop_start)
-            
+            # Evaluate
+            self.evaluate_population(new_pop,pop_start)            
             newIndividuals = self.read_population(pop_start)
             # Sort and select
             newIndividuals.extend(individuals) # add the previous population to the pool                        
@@ -221,7 +206,7 @@ class NSGA3(Optimizer):
                 if (len(AssocitedFromLastFront)==1):
                     new_member_ind = 0
                 else:
-                    new_member_ind = np.random.randint(0,len(AssocitedFromLastFront)-1)
+                    new_member_ind = randint(0,len(AssocitedFromLastFront)-1)
                         
             MemberToAdd = AssocitedFromLastFront[new_member_ind]
             

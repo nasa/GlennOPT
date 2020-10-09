@@ -3,13 +3,13 @@
 """
 import sys,os
 sys.path.insert(0,'../../../../')
-from glennopt.helpers import Parameter, mutation_parameters, de_mutation_type
+from glennopt.helpers import Parameter
 from glennopt.nsga3 import NSGA3,mutation_parameters, de_mutation_type
-from glennopt.doe import generate_reference_points
 
 # Generate the DOE
+pop_size=32
 current_dir = os.getcwd()
-ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",num_populations=10,pop_size=40,optimization_folder=current_dir)
+ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 eval_parameters = []
 eval_parameters.append(Parameter(name="x1",min_value=-5,max_value=5))
@@ -29,8 +29,8 @@ performance_parameters.append(Parameter(name='p2'))
 performance_parameters.append(Parameter(name='p3'))
 ns.add_performance_parameters(performance_params = performance_parameters)
 
-params = mutation_parameters
 ns.mutation_params.mutation_type = de_mutation_type.de_1_rand_bin
-
-ns.start_doe(doe_size=64)
+ns.mutation_params.min_parents = int(0.2*pop_size)
+ns.mutation_params.max_parents = pop_size
+# ns.start_doe(doe_size=64)
 ns.optimize_from_population(pop_start=-1,n_generations=10)
