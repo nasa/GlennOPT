@@ -605,7 +605,6 @@ class Optimizer:
         plt.show()
 
         print('Best Individuals for Objective Index ' + str(objective_index))
-        pprint(best_individuals)
 
     # def plot_best_compromise(self)
 

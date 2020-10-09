@@ -3,12 +3,13 @@
 """
 import sys,os
 sys.path.insert(0,'../../../../')
-from glennopt.helpers import Parameter
+from glennopt.helpers import Parameter, parallel_settings
 from glennopt.nsga3 import NSGA3,mutation_parameters, de_mutation_type
 
 # Generate the DOE
+pop_size=32
 current_dir = os.getcwd()
-ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",num_populations=10,pop_size=40,optimization_folder=current_dir)
+ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=32,optimization_folder=current_dir)
 
 eval_parameters = []
 eval_parameters.append(Parameter(name="x1",min_value=-5,max_value=5))
@@ -31,7 +32,8 @@ ns.add_performance_parameters(performance_params = performance_parameters)
 # Mutation settings
 params = mutation_parameters
 ns.mutation_params.mutation_type = de_mutation_type.de_1_rand_bin
-
+ns.mutation_params.min_parents = int(0.2*pop_size)
+ns.mutation_params.max_parents = pop_size
 # Parallel settings
 parallelSettings = parallel_settings()
 parallelSettings.concurrent_executions = 8
