@@ -88,7 +88,6 @@ class SODE(Optimizer):
         # Check restart file, if not read the population
         
         individuals = self.read_restart_file()
-        n_individuals = len(individuals)
 
         if (len(individuals)==0):
             individuals = self.read_population(population_number=pop_start)            
@@ -96,18 +95,21 @@ class SODE(Optimizer):
         # Crossover and Mutate the doe individuals to generate the next individuals used in the population
         # Sort the population into [fill in here]
         # self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1,params=params,F=F)
-        all_inds = copy.deepcopy(individuals)
+        individuals = sorted(individuals, key=operator.attrgetter('objectives'))
+        individuals = sorted_inds[:self.pop_size]
         # best_sc = np.zeros(n_generations)
         for pop in range(pop_start+1,n_generations):
             newIndividuals = self.__crossover_mutate__(individuals)
             self.evaluate_population(newIndividuals,pop) 
             newIndividuals = self.read_population(pop)
 
-            all_inds.extend(newIndividuals) # add the previous population to the pool 
+            individuals.extend(newIndividuals) # add the previous population to the pool 
             # Sort and select
-            sorted_inds =  sorted(all_inds, key=operator.attrgetter('objectives'))
-            individuals = sorted_inds[:n_individuals]
+            sorted_inds =  sorted(individuals, key=operator.attrgetter('objectives'))
+            self.append_restart_file(sorted_inds)
+            individuals = sorted_inds[:self.pop_size]
             shuffle(individuals)
+            
 
     def __crossover_mutate__(self,individuals:List[Individual]):
         '''

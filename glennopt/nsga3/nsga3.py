@@ -3,7 +3,7 @@
 """
 import os, shutil
 import subprocess, copy, math
-from random import seed, gauss, random,uniform,randint
+from random import seed, gauss,random,uniform,randint
 from typing import List
 from dataclasses import dataclass, field
 import numpy as np 

@@ -40,8 +40,8 @@ class mutation_parameters:
     mu: float = field(repr=True,default=0.02)
     F: float = field(repr=True,default=0.6)
     C: float = field(repr=True,default=0.8)
-    min_parents:float = field(repr=True,default=0.4)
-    max_parents:float = field(repr=True,default=0.9)
+    min_parents:int = field(repr=True,default=0)
+    max_parents:int = field(repr=True,default=10)
 
 def mutation_de_1_rand_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],nParents:int,F:float, C:float):
     """
