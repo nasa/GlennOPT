@@ -12,14 +12,14 @@ Input defined in processing options and plot options sections.
 <333 Trey 09/2020
 """
 
-#%% import packages
+# import packages
 
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 import pyswarms as ps
 
-#%% define signal to reconstruct
+# define signal to reconstruct
 
 fs        = 3600
 fLo       = 0
@@ -32,7 +32,7 @@ fKnown = np.asarray([8,48,72,80,88,96,104])
 XKnown   = np.asarray([0.6229356,0.085519664,0.18917666,0.4036676,
                            0.15955658,2.217998,0.49061242,])
 
-#%% construct frequency content of signal
+# construct frequency content of signal
 
 k  = np.arange(N)
 fk = k*fs/N
@@ -46,7 +46,7 @@ plt.figure()
 plt.plot(fk,X)
 plt.xlim(0,120)
 
-#%% calculate inverse discrete fourier transform
+# calculate inverse discrete fourier transform
 
 dt = 1/fs * 360
 x = N*np.real(np.fft.ifft(X))
@@ -60,7 +60,7 @@ trueSignal  = np.append(x[t<360],x[0]) + 9
 
 
 
-#%% solve for coefficients
+# solve for coefficients
 
 # change variable names to make them spatial instead of temporal
 waveNumber = np.atleast_1d([8,96,104])
@@ -83,7 +83,7 @@ def solveForWaveletCoefficients(probeTheta, waveNumber, theta, trueSignal):
     F = np.linalg.lstsq(A,x,rcond=None)[0]
     return A, F
 
-#%% define objective function
+# define objective function
 
 # goal is to minimize condition number of design matrix
 # low condition numbers give lowest error metrics
@@ -96,7 +96,7 @@ def cost_function(probeTheta, waveNumber, A):
     fcost = np.sum((1*k)**2)
     return fcost
 
-#%% define optimization function
+# define optimization function
 
 def opt_func(probeTheta):
     # waveNumber, theta, trueSignal = getOptParameters()
@@ -108,7 +108,7 @@ def opt_func(probeTheta):
     # cost = [cost_function(probeTheta[i],)]
     return cost
 
-#%% define swarm parameters
+# define swarm parameters
 
 swarm_size = 500
 dim = 9 # Dimension of X
@@ -127,7 +127,7 @@ for i in range(dim):
 constraints = (tLo,tHi)
 (np.ones(dim)*0, np.ones(dim)*360)
 
-#%%  do the optimization
+#  do the optimization
 
 # call optimizer instance of pso
 optimizer = ps.single.GlobalBestPSO(n_particles=swarm_size, dimensions=dim, 
@@ -140,7 +140,7 @@ from pyswarms.utils.plotters import plot_cost_history
 plt.figure()
 plot_cost_history(optimizer.cost_history)
 
-#%% reconstruct signal
+# reconstruct signal
 
 A, F = solveForWaveletCoefficients(joint_vars, waveNumber, theta, trueSignal)
 N          = len(waveNumber)*2 + 1

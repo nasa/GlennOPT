@@ -292,6 +292,8 @@ class Optimizer:
         if (platform.system() == 'Linux'):
             try:
                 os.kill(pid, 0)
+                if pid<0:               # In case code terminates
+                    return False
             except OSError:
                 return False 
             else:
