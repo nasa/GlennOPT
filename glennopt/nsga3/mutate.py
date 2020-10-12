@@ -61,9 +61,10 @@ def mutation_de_1_rand_bin(individuals:List[Individual],objectives:List[Paramete
         parent_indicies.remove(i)
         xp = []                         # gets a list of evaluation parameters
         for indx in parent_indicies:
-            xp.append(individuals[indx].eval_parameters)                                
-        x1 = mutate_crossover_de(x1,xp,F,C)
+            xp.append(individuals[indx].eval_parameters)
 
+        x1 = mutate_crossover_de(x1,xp,ind1.eval_parameter_min, ind1.eval_parameter_max,F,C)
+        
         newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,x1),objectives=objectives,performance_parameters=performance_parameters))
     return newIndividuals 
 
@@ -86,7 +87,8 @@ def mutation_de_best_2_bin(best_indx:int,individuals:List[Individual],objectives
         x2 = individuals[parent_indicies[1]].eval_parameters
         x3 = individuals[parent_indicies[2]].eval_parameters
         x4 = individuals[parent_indicies[3]].eval_parameters
-        x = mutate_crossover_de_best_2_bin(x_best,x1,x2,x3,x4,F,C)
+        
+        x = mutate_crossover_de_best_2_bin(x_best,x1,x2,x3,x4,ind1.eval_parameter_min, ind1.eval_parameter_max,F,C)
 
         newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,x),objectives=objectives,performance_parameters=performance_parameters))
                 
@@ -112,7 +114,6 @@ def mutation_simple(self,individuals:List[Individual],nCrossover:int,nMutation:i
 
         rand_indx2 = np.random.randint(0,nIndividuals-1)
         y2 = individuals[rand_indx2].eval_parameters
-
         [y1_new, y2_new] = crossover(y1, y2)
         
         crossover_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y1_new),objectives=objectives,performance_parameters=performance_parameters))        
@@ -123,29 +124,39 @@ def mutation_simple(self,individuals:List[Individual],nCrossover:int,nMutation:i
     for k in range(nMutation):
         rand_indx = np.random.randint(0,nIndividuals-1)
         y1 = individuals[rand_indx].eval_parameters
-        y1_new = mutate(y1,mu,sigma)
+        ymin = individuals[rand_indx].eval_parameter_min
+        ymax = individuals[rand_indx].eval_parameter_max
+
+        y1_new = mutate(y1,ymin,ymax,mu,sigma)
+
         mutation_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y1_new),objectives=objectives,performance_parameters=performance_parameters))
     crossover_individuals.extend(mutation_individuals)
     return crossover_individuals
 
 # Core functions 
-def mutate(x1:np.ndarray,mu:float=0.02,sigma:float=0.2):
-        '''
-            Mutate the evaluation parameters
-            Simple mutate
-            Inputs:
-                x1 - array of evaluation parameters
-                mu - percentage of population to mutate
-                sigma - mutation scale 
-        
-        '''
-        nMu = math.ceil(mu*len(x1))
-        j = np.random.randint(0,len(x1)-1,size=nMu)
-        y = x1 
-        for k in range(len(j)):
-            if (j[k]>0):
-                y[j[k]] = x1[j[k]]+sigma*np.random.randn(1)
-        return y
+def mutate(x1:np.ndarray,xmin:ndarray,xmax:ndarray,mu:float=0.02,sigma:float=0.2):
+    '''
+        Mutate the evaluation parameters
+        Simple mutate
+        Inputs:
+            x1 - array of evaluation parameters
+            mu - percentage of population to mutate
+            sigma - mutation scale 
+    
+    '''
+    nMu = math.ceil(mu*len(x1))
+    j = np.random.randint(0,len(x1)-1,size=nMu)
+    y = x1 
+    for k in range(len(j)):
+        indx = j[k]
+        if (indx>0):
+            y[indx] = x1[indx]+sigma*np.random.randn(1)
+
+            if (xmin is not None) and (y[indx]<xmin[indx]):
+                y[indx]=xmin[indx]
+            if (xmax is not None) and (y[indx]>xmax[indx]):
+                y[indx]=xmax[indx]
+    return ys
 
 def crossover(x1:np.ndarray,x2:np.ndarray):
     '''
@@ -160,7 +171,7 @@ def crossover(x1:np.ndarray,x2:np.ndarray):
     return y1,y2
         
 # Mutate x1 using a,b,c
-def mutate_crossover_de(x:ndarray,xp:List[np.array],F=0.6,C=0.8):
+def mutate_crossover_de(x:ndarray,xp:List[np.array],xmin:ndarray,xmax:ndarray,F=0.6,C=0.8):
     '''
         Differential evolution mutation de/1/rand/bin
         Inputs: 
@@ -176,18 +187,24 @@ def mutate_crossover_de(x:ndarray,xp:List[np.array],F=0.6,C=0.8):
     
     y = x*0 # Creates a copy
     z = y*0   
-    for i in range(0,len(x)): # Mutate each index of the inputs
+    for i in range(len(x)): # Mutate each index of the inputs
         temp = 0
         for j in range(1,len(xp)-1): # Iterates for the number of parents 
             temp += xp[j+1][i]-xp[j][i]        
-        y[i] = (xp[0][i] + F*temp) 
+        y[i] = (xp[0][i] + F*temp)
+        
+        if (xmin is not None) and (y[i]<xmin[i]):
+            y[i]=xmin[i]
+        if (xmax is not None) and (y[i]>xmax[i]):
+            y[i]=xmax[i]
+        
         if (random.random() <= C):
             z[i] =  y[i]
         else:
             z[i] =  x[i]
     return z
 
-def mutate_crossover_de_best_2_bin(x_best:ndarray,x_r1:ndarray,x_r2:ndarray,x_r3:ndarray,x_r4:ndarray,F=0.5,C=0.8):
+def mutate_crossover_de_best_2_bin(x_best:ndarray,x_r1:ndarray,x_r2:ndarray,x_r3:ndarray,x_r4:ndarray,xmin:ndarray,xmax:ndarray,F=0.5,C=0.8):
     '''
         Differential evolution mutation de/1/rand/bin, Used for single objective not multi
         Inputs: 
@@ -203,6 +220,12 @@ def mutate_crossover_de_best_2_bin(x_best:ndarray,x_r1:ndarray,x_r2:ndarray,x_r3
     z = x_best*0
     for i in range(len(y)):
         y[i] = x_best[i]+F*(x_r1[i]-x_r2[i])+F*(x_r3[i]-x_r4[i])
+        
+        if (xmin is not None) and (y[i]<xmin[i]):
+            y[i]=xmin[i]
+        if (xmax is not None) and (y[i]>xmax[i]):
+            y[i]=xmax[i]
+
         if (random.random() <= C):
             z[i] =  y[i]
         else:

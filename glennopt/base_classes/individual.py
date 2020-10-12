@@ -110,6 +110,20 @@ class Individual:
         for i in range(len(self.__eval_parameters)):
             y[i] = self.__eval_parameters[i].value
         return y
+    
+    @property
+    def eval_parameter_min(self):
+        y = np.zeros(len(self.__eval_parameters))
+        for i in range(len(self.__eval_parameters)):
+            y[i] = self.__eval_parameters[i].min_value
+        return y
+    
+    @property
+    def eval_parameter_max(self):
+        y = np.zeros(len(self.__eval_parameters))
+        for i in range(len(self.__eval_parameters)):
+            y[i] = self.__eval_parameters[i].min_value
+        return y
 
     @eval_parameters.setter
     def eval_parameters(self,v):
