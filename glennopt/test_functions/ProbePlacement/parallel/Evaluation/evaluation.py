@@ -3,6 +3,8 @@ import numpy as np
 # import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 import time
+import matplotlib.pyplot as plt
+
 '''
 This example comes from the paper of 
 RECONSTRUCTING COMPRESSOR NON-UNIFORM CIRCUMFERENTIAL FLOW FIELD
@@ -92,9 +94,30 @@ def solveForWaveletCoefficients(probeTheta, waveNumber, theta, trueSignal):
 def opt_func(probeTheta, waveNumber, theta, trueSignal):
     '''
         Vary the location of probeTheta location so that we pick up the true signal
+        Inputs
+            probeTheta - this is what we are solving for
     '''  
     A, F = solveForWaveletCoefficients(probeTheta, waveNumber, theta, trueSignal)
-    cost = cost_function(probeTheta, waveNumber, A)    
+    cost = cost_function(probeTheta, waveNumber, A)
+
+    # Code below creates the signal comparison plot
+    A, F = solveForWaveletCoefficients(probeTheta, waveNumber, theta, trueSignal)
+    N          = len(waveNumber)*2 + 1
+    xR = F[-1]
+    xR = np.zeros(len(theta))
+    for i,t in enumerate(theta):
+        xRtemp = 0
+        for j in np.arange((N-1)//2):
+            xRtemp = xRtemp + (F[2*j]*np.sin(waveNumber[j]*t*np.pi/180) +
+                            F[2*j+1]*np.cos(waveNumber[j]*t*np.pi/180))
+        xR[i] = xRtemp + F[-1]
+
+    plt.figure()
+    plt.plot(theta,trueSignal)
+    plt.plot(theta,xR,'--')
+    plt.xlim((0,60))
+    plt.savefig('signal_compare.png')
+    
     return cost
     
     
@@ -112,4 +135,6 @@ if __name__ == '__main__':
     x = read_input("input.dat") 
     theta,trueSignal, waveNumber = true_signal_construction()
     y = opt_func(x,waveNumber, theta, trueSignal)
-    print_output(y)   
+    print_output(y)
+
+    

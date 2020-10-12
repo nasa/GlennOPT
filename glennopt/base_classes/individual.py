@@ -49,7 +49,7 @@ class Individual:
                 y[i] = self.__objectives[i].value
             
         return y
-
+    
     def __apply_dynamic_penalty(self,C,a):
         '''
             C = penalty coefficient, this reduces the impact of bad designs at higher populations

@@ -20,6 +20,9 @@ if __name__ == '__main__':
     # Call Rosebrock test function 
     import rosenbrock as rb
     y = rb.rosenbrock(x)
-    print_output(y,[1,2])
 
+    p1 = x[0] + x[1]
+    p2 = x[0]**2 + x[1]**2
+    print_output(y,[p1,p2])
+    print('done')
     

@@ -12,6 +12,7 @@ import subprocess
 import time
 import math
 import pprint
+import logging
 
 """
     External Modules
@@ -19,6 +20,7 @@ import pprint
 import numpy as np
 from glennopt.base_classes import Individual
 from glennopt.helpers import Parameter, copy_helper, parallel_settings
+import psutil
 
 class Optimizer: 
     """
@@ -38,6 +40,9 @@ class Optimizer:
                 single_folder_eval - saves space by deleting the population folder when completed. by default this is false
         """
         self.name = name        
+        
+        logging.basicConfig(filename=os.path.join(opt_folder,'log.dat'),  level=logging.DEBUG)
+        self.logger = logging.getLogger()
 
         if (not os.path.isabs(eval_script)):
             eval_script = os.path.join(os.getcwd(),eval_script)
@@ -82,6 +87,8 @@ class Optimizer:
         # Cache storage
         self.pandas_cache = {} # Appends individuals to pandas dataframe each dictionar contains the population number
         self.single_folder_eval = single_folder_eval
+
+
     @property
     def use_calculation_folder(self):
         """
@@ -152,6 +159,11 @@ class Optimizer:
                     val = float(split_val[1].strip())
                     individual.set_objective(name=key,val=val)
                     individual.set_performance_parameter(name=key,val=val)
+        else:   # no output.txt found, something bad happened
+            for objective in individual.get_objectives_list():                
+                individual.set_objective(name=objective.name,val=objective.value_if_failed)
+            for param in individual.get_performance_parameters_list():
+                individual.set_performance_parameter(name=param.name,val=param.value_if_failed)
         return individual
     
     def __read_input_file__(self, individual:Individual):
@@ -240,7 +252,7 @@ class Optimizer:
             n_evalulations = self.parallel_settings.concurrent_executions
             use_cores = False
 
-        pid_list = [] # keep track of the process id and start time
+        pid_list = list()   # keep track of the process id and start time        
         eval_count = 0;# c is the counter for cores per interation [['paht_cpu1','paht_cpu1','paht_cpu1'],['paht_cpu2','paht_cpu2','paht_cpu2']]
         # Evaluate each individual
         for ind_indx in range(len(individuals)):            
@@ -254,24 +266,29 @@ class Optimizer:
                 # Evaluate Individual (calls method in base class)
                 if (use_cores):
                     c = self.__select_cores_per_execution__(pid_list)
-                    pid = self.__evaluate_individual__(individual=individuals[ind_indx],individual_directory=ind_dir,cores_per_execution=self.cores_per_evalulation[c])
-                    pid_list.append({'pid':pid,'start_time':time.perf_counter(),'cores_per_execution_indx':c})                    
+                    pid,p = self.__evaluate_individual__(individual=individuals[ind_indx],individual_directory=ind_dir,cores_per_execution=self.cores_per_evalulation[c])
+                    pid_list.append({'pid':pid,'start_time':time.perf_counter(),'cores_per_execution_indx':c,'proc':p,'pop':str(individuals[ind_indx].population),'ind':individuals[ind_indx].name})
                 else:                    
-                    pid = self.__evaluate_individual__(individual=individuals[ind_indx],individual_directory=ind_dir)
-                    pid_list.append({'pid':pid,'start_time':time.perf_counter()})
+                    pid,p = self.__evaluate_individual__(individual=individuals[ind_indx],individual_directory=ind_dir)
+                    pid_list.append({'pid':pid,'start_time':time.perf_counter(),'proc':p,'pop':str(individuals[ind_indx].population),'ind':individuals[ind_indx].name})
 
-                while (len(pid_list)==n_evalulations):
-                    # Loop to check if PID is still active and execution time is less than timeout
-                    inActive_pids = []
+                inActive_pids = list()
+                while (len(inActive_pids)<n_evalulations):
+                    # Loop to check if PID is still active and execution time is less than timeout                    
                     for i in range(len(pid_list)):
-                        pid = pid_list[i]['pid']
-                        if self.__check_PID_running__(pid): # If PID is running check if it exceeded the execution time
+                        pid = pid_list[i]['pid']; p = pid_list[i]['proc']; pop = pid_list[i]['pop']; ind_name = pid_list[i]['ind']
+                        if self.__check_process_running__(p): # If PID is running check if it exceeded the execution time
                             start_time = pid_list[i]['start_time']
                             time.sleep(0.1) # Check every 0.01 seconds
                             if (time.perf_counter() - start_time)/60 > self.parallel_settings.execution_timeout:
-                                os.kill(pid, signal.SIGTERM)
+                                try:
+                                    self.__write_proc_log__(p,pop,ind_name)
+                                    os.kill(pid, signal.SIGTERM)
+                                except:
+                                    pass
                                 inActive_pids.append(i)
-                        else: # PID isn't running, remove it 
+                        else: # PID isn't running, remove it
+                            self.__write_proc_log__(p,pop,ind_name)
                             inActive_pids.append(i)
                     
                     for index in sorted(inActive_pids, reverse=True): # removing the inactive PIDs from the list 
@@ -281,6 +298,12 @@ class Optimizer:
                 output = subprocess.check_output(['python', self.evaluation_script])
                 # Append output to results, need to check first how the output is structured
     
+    def __check_process_running__(self,p):
+        if p is not None:
+            poll = p.poll()
+            if poll == None:
+                return True
+        return False
     def __check_PID_running__(self,pid):
         """
             Checks if a pid is still running (UNIX works, windows we'll see)
@@ -299,15 +322,8 @@ class Optimizer:
             else:
                 return True
         elif (platform.system() == 'Windows'):
-            kernel32 = ctypes.windll.kernel32
-            SYNCHRONIZE = 0x100000
-
-            process = kernel32.OpenProcess(SYNCHRONIZE, 0, pid)
-            if process != 0:
-                kernel32.CloseHandle(process)
-                return True
-            else:
-                return False
+            return pid in (p.pid for p in psutil.process_iter())
+            
     
     
     def __evaluate_individual__(self,individual:Individual,individual_directory:str,cores_per_execution:list=[]):
@@ -328,11 +344,19 @@ class Optimizer:
                     f.write('\n'.join(cores_per_execution))
                     
             # Evaluate
-            p = subprocess.Popen(['python', self.evaluation_script]) # Note: evaluation_script has to read the local machine file. This is not my problem
+            p = subprocess.Popen(['python', self.evaluation_script],stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # Note: evaluation_script has to read the local machine file. This is not my problem            
             os.chdir(cur_dir)
-            return p.pid
-        return -1
+            return p.pid, p
+        return -1,None
     
+    def __write_proc_log__(self,p,pop,ind_name):
+        '''
+            Write the log for each process 
+        '''   
+        if p is not None:     
+            for line in p.stdout:
+                self.logger.debug('POP {0} Indivudual: {1} Message: {2}'.format(pop,ind_name,line.decode("utf-8").replace('\n', ' ').replace('\r', '')).strip())
+        
     
     def append_restart_file(self, individuals:List[Individual]):
         """
@@ -503,7 +527,7 @@ class Optimizer:
         fig.canvas.flush_events()
         plt.show()
     
-    def get_best(self):
+    def get_pop_best(self):
         '''
             Get the best individuals from each population
 
@@ -520,7 +544,7 @@ class Optimizer:
         individuals = self.read_calculation_folder()            # Reads as an array of arrays 
         
         # (Compromise Target) At the minimum index of each objective what are the values of the other objectives
-        nobjectives = len(self.objectives)        
+        nobjectives = len(self.objectives)
         min_objective_values = np.ndarray( (nobjectives,),dtype=float)
         
         for indx,pop_individuals in enumerate(individuals):
@@ -572,7 +596,29 @@ class Optimizer:
             comp_individual_temp.clear()
             prev_pop = pop
         return best_individuals, comp_individual
-        
+    
+    def get_best(self):
+        '''
+            Gets the best individual vs Pop
+            Some populations won't generate a better design but the best design will always be carried to the next population for crossover + mutation            
+        '''
+        best_individuals, _ = self.get_pop_best()
+        objectives = list()
+        nobjectives = len(self.objectives)
+        for j in range(best_individuals):
+            temp_objectives = list()
+            if j == 0:
+                for o in range(nobjectives):
+                    temp_objectives.append(best_individuals[j].objectives[o])
+            else:
+                for o in range(nobjectives):
+                    if best_individuals[j].objectives[o] < best_individuals[j-1].objectives[o]:
+                        temp_objectives.append(best_individuals[j].objectives[o])
+                    else:
+                        temp_objectives.append(best_individuals[j-1].objectives[o])
+            objectives.append(temp_objectives)            
+        return objectives
+
     def plot_best_objective(self,objective_index):
         """
             Creates a plot of the population vs the objective value

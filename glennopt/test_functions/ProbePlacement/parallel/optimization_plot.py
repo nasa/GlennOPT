@@ -20,12 +20,7 @@ objectives = []
 objectives.append(Parameter(name='objective1'))
 sode.add_objectives(objectives=objectives)
 
-# No performance Parameters
-performance_parameters = []
-performance_parameters.append(Parameter(name='p1'))
-performance_parameters.append(Parameter(name='p2'))
-sode.add_performance_parameters(performance_params = performance_parameters)
-
 # Get the best individual in each population for objective 1
 best_individuals, comp_individual = sode.get_best()
 sode.plot_best_objective(objective_index=0)
+print('done')

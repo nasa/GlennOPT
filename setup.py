@@ -18,7 +18,7 @@ setup(
     keywords = "multi-objective, optimization, nsga, differential evolution",
     url = "https://github.com/nasa/GlennOPT",
     packages=['base_classes', "helpers", "nsga3", "sode"],
-    install_requires =["matplotlib","numpy","pandas"],
+    install_requires =["matplotlib","numpy","pandas","psutil"],
     package_dir={'': 'glennopt'}  # Optional
 
 )

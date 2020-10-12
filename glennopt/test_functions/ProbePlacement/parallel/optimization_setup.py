@@ -36,16 +36,16 @@ sode.add_objectives(objectives=objectives)
 
 # Serial Execution but with a shorter execution timeout. This is needed for numpy.linalg.lstsq timing out or failing
 parallelSettings = parallel_settings()
-parallelSettings.concurrent_executions = 8
+parallelSettings.concurrent_executions = 16
 parallelSettings.cores_per_execution: 1
-parallelSettings.execution_timeout = 0.1 # minutes
+parallelSettings.execution_timeout = 0.2 # minutes
 sode.parallel_settings = parallelSettings
 
 # params = mutation_parameters
 sode.mutation_params.mutation_type = de_mutation_type.de_1_rand_bin
 sode.mutation_params.min_parents = int(0.2*pop_size)
 sode.mutation_params.max_parents = pop_size
-sode.start_doe(doe_size=128)
+# sode.start_doe(doe_size=128)
 sode.optimize_from_population(pop_start=-1,n_generations=20)
 
 

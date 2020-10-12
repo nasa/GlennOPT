@@ -5,14 +5,15 @@ from random import shuffle
 import operator
 import subprocess, copy, math
 import sys
-# import matplotlib.pyplot as plt
+from typing import List
+
 import numpy as np
 import matplotlib.pyplot as plt
 from ..helpers import Parameter
 from ..base_classes import Optimizer, Individual
 from ..nsga3.mutate import mutation_de_1_rand_bin, mutation_de_best_2_bin, mutation_simple, mutation_parameters, de_mutation_type
 from random import seed, gauss, random
-from typing import List
+from tqdm import trange
 
 class SODE(Optimizer):
     def __init__(self,eval_script:str = "evaluation.py", eval_folder:str = "Evaluation",pop_size:int=32, optimization_folder:str=None):
@@ -63,7 +64,7 @@ class SODE(Optimizer):
             Starts a design of experiments. If the DOE has already started and there is an output file for an individual then the individual won't be evaluated 
         """        
         doe_individuals = []
-        for i in range(doe_size):
+        for i in trange(doe_size):
             parameters = copy.deepcopy(self.eval_parameters)
             for eval_param in parameters:
                 eval_param.value = np.random.uniform(eval_param.min_value,eval_param.max_value,1)[0]
@@ -98,7 +99,7 @@ class SODE(Optimizer):
         individuals = sorted(individuals, key=operator.attrgetter('objectives'))
         individuals = individuals[:self.pop_size]
         # best_sc = np.zeros(n_generations)
-        for pop in range(pop_start+1,n_generations):
+        for pop in trange(pop_start+1,n_generations):
             newIndividuals = self.__crossover_mutate__(individuals)
             self.evaluate_population(newIndividuals,pop) 
             newIndividuals = self.read_population(pop)
