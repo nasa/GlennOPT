@@ -17,9 +17,11 @@ import logging
 """
     External Modules
 """
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import numpy as np
 from glennopt.base_classes import Individual
-from glennopt.helpers import Parameter, copy_helper, parallel_settings
+from glennopt.helpers import Parameter, copy_helper, parallel_settings, convert_to_ndarray
 import psutil
 
 class Optimizer: 
@@ -500,8 +502,6 @@ class Optimizer:
             Creates a 2D plot scatter plot of all the individuals for the two objectives specified
 
         """
-        import matplotlib.pyplot as plt
-        import matplotlib.cm as cm
         fig,ax = plt.subplots()
 
         colors = cm.rainbow(np.linspace(0, 1, len(self.pandas_cache.keys())))        
@@ -605,56 +605,73 @@ class Optimizer:
         best_individuals, _ = self.get_pop_best()
         objectives = list()
         nobjectives = len(self.objectives)
-        for j in range(best_individuals):
+        keys = list(best_individuals.keys())
+        for i in range(len(best_individuals.keys())):
+            key = keys[i]
             temp_objectives = list()
-            if j == 0:
+            if i == 0:
                 for o in range(nobjectives):
-                    temp_objectives.append(best_individuals[j].objectives[o])
+                    temp_objectives.append(best_individuals[key][o].objectives[o])
             else:
                 for o in range(nobjectives):
-                    if best_individuals[j].objectives[o] < best_individuals[j-1].objectives[o]:
-                        temp_objectives.append(best_individuals[j].objectives[o])
+                    if best_individuals[key][o].objectives[o] < objectives[-1][o]:
+                        temp_objectives.append(best_individuals[key][o].objectives[o])
                     else:
-                        temp_objectives.append(best_individuals[j-1].objectives[o])
+                        temp_objectives.append(objectives[-1][o])
             objectives.append(temp_objectives)            
-        return objectives
+        return objectives, keys
 
-    def plot_best_objective(self,objective_index):
+    def plot_best_pop(self,objective_index):
         """
             Creates a plot of the population vs the objective value
             INPUTS:
                 objective_name - objective to compare 
         """
-        best_individuals, comp_individual = self.get_best()
-        
-        import matplotlib.pyplot as plt
-        import matplotlib.cm as cm
+        best_objectives,_ = self.get_pop_best()
         
         indx = 0
-        legend_labels = []
+        legend_labels = list()
         
         objective_data = list()
         best_indivduals = list()
-        for _,ind in best_individuals.items():
+        for _,ind in best_objectives.items():
             objective_data.append(ind[objective_index].objectives[objective_index])
             best_indivduals.append(ind[objective_index].name)
         
         fig,ax = plt.subplots()
         colors = cm.rainbow(np.linspace(0, 1, len(self.pandas_cache.keys())))
-        ax.scatter(best_individuals.keys(), objective_data,color='blue',s=5)
+        ax.scatter(list(best_objectives.keys()), objective_data,color='blue',s=5)
         ax.set_yscale('log')
-        ax.set_xticks(list(best_individuals.keys()))
+        ax.set_xticks(list(best_objectives.keys()))
         ax.set_xlabel('Population')
         ax.set_ylabel('Objective Value')
-        ax.legend(legend_labels)
         ax.set_title('Objective Index: ' + str(objective_index))
         fig.canvas.draw()
         fig.canvas.flush_events()
         plt.show()
 
-        print('Best Individuals for Objective Index ' + str(objective_index))
+    def plot_best_objective(self,objective_index):
+        '''
+            Creates a plot of the best objective vs population number
+            INPUTS:
+                objective_index - objective to plot
+        '''
+        best_objectives, pop_folders = self.get_best()
+        best_objectives = convert_to_ndarray(best_objectives)
 
-    # def plot_best_compromise(self)
+        indx = 0
+        
+        fig,ax = plt.subplots()
+        colors = cm.rainbow(np.linspace(0, 1, len(self.pandas_cache.keys())))
+        ax.scatter(pop_folders, best_objectives,color='blue',s=5)
+        ax.set_yscale('log')
+        ax.set_xticks(pop_folders)
+        ax.set_xlabel('Population')
+        ax.set_ylabel('Objective Value')
+        ax.set_title('Objective Index: ' + str(objective_index))
+        fig.canvas.draw()
+        fig.canvas.flush_events()
+        plt.show()
 
     def read_calculation_folder(self):
         """
