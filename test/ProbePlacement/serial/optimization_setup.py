@@ -2,7 +2,7 @@
     Simple, non parallel optimization set up example. 
 """
 import sys,os
-sys.path.insert(0,'../../../../')
+sys.path.insert(0,'../../../')
 from glennopt.helpers import Parameter, parallel_settings
 from glennopt.sode import SODE
 from glennopt.nsga3 import de_mutation_type, mutation_parameters

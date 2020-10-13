@@ -1,7 +1,7 @@
 #TODO: Change this to plotting for SODE
 
 import sys,os
-sys.path.insert(0,'../../../../')
+sys.path.insert(0,'../../../')
 from glennopt.helpers import Parameter
 from glennopt.nsga3 import NSGA3,mutation_parameters, de_mutation_type
 from glennopt.sode import SODE
