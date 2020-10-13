@@ -9,19 +9,21 @@ from glennopt.nsga3 import de_mutation_type, mutation_parameters
 import numpy as np
 
 eval_parameters = list()
+
 # Define evaluation parameters 
-dim = 9 # Dimension of X
-probeSpacing = 360/dim
-tLo     = np.zeros(dim)
-tHi     = np.zeros(dim)
+nProbes = 10
 minSpacing = 3
-for i in range(dim):
+probeSpacing = 360/nProbes
+tLo     = np.zeros(nProbes)
+tHi     = np.zeros(nProbes)
+for i in range(nProbes):
     tLo[i] = probeSpacing*i
-    if i != dim-1:
-        tHi[i] = probeSpacing*(i+1) + minSpacing
+    if i != nProbes-1:
+        tHi[i] = probeSpacing*(i+1) - minSpacing
     else:
-        tHi[-1] = probeSpacing*(i+1) - minSpacing
+        tHi[-1] = probeSpacing*(i+1)    
     eval_parameters.append(Parameter(name="x"+str(i+1),min_value=tLo[i],max_value=tHi[i]))
+constraints = (tLo,tHi)
 
 # Generate the DOE
 current_dir = os.getcwd()
@@ -34,7 +36,11 @@ objectives = list()
 objectives.append(Parameter(name='objective1'))
 sode.add_objectives(objectives=objectives)
 
-# Serial Execution but with a shorter execution timeout. This is needed for numpy.linalg.lstsq timing out or failing
+perf_parameters = list()
+perf_parameters.append(Parameter(name='PearsonR',min_value=None,max_value=None))
+perf_parameters.append(Parameter(name='RMS_Error',min_value=None,max_value=None))
+sode.add_performance_parameters(perf_parameters)
+# Serial Execution but with a shorter execution timeout.
 # parallelSettings = parallel_settings()
 # parallelSettings.concurrent_executions = 16
 # parallelSettings.cores_per_execution: 1
@@ -45,8 +51,8 @@ sode.add_objectives(objectives=objectives)
 sode.mutation_params.mutation_type = de_mutation_type.de_1_rand_bin
 sode.mutation_params.min_parents = int(0.1*pop_size)
 sode.mutation_params.max_parents = int(0.9*pop_size)
-# sode.start_doe(doe_size=128)
-sode.optimize_from_population(pop_start=-1,n_generations=20)
+sode.start_doe(doe_size=64)
+sode.optimize_from_population(pop_start=-1,n_generations=12)
 
 
 
