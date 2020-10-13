@@ -1,9 +1,8 @@
 import sys
-sys.path.insert(0,'../')
-from collections import OrderedDict
+from typing import TypeVar,List
 from glennopt.helpers.parameter import Parameter
 import numpy as np
-from typing import TypeVar,List
+
 
 
 class Individual:
