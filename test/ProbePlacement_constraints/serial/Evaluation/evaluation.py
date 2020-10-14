@@ -58,31 +58,31 @@ def true_signal_construction():
             if abs(fk-fhr) < step/10:
                 XHR[i] = XKnown[j]
 
-    # Plot the true signal 
-    pp.setFigFormat('pres')
-    # frequency plot of true signal
-    _, ax = plt.subplots(1,1)
-    ax.plot(fHR,XHR)
-    ax.set_xlim(0,120)
-    ax.set_xlabel('Wavenumber')
-    ax.set_ylabel('Signal Units')
-    yMax = round(max(XHR)*2)/2
-    ax.set_ylim(0,yMax)
-    ax.grid(False)
-    plt.tight_layout()
-    plt.savefig('circumferentialReconstructionTestSingalFrequency.png')
+    # # Plot the true signal 
+    # pp.setFigFormat('pres')
+    # # frequency plot of true signal
+    # _, ax = plt.subplots(1,1)
+    # ax.plot(fHR,XHR)
+    # ax.set_xlim(0,120)
+    # ax.set_xlabel('Wavenumber')
+    # ax.set_ylabel('Signal Units')
+    # yMax = round(max(XHR)*2)/2
+    # ax.set_ylim(0,yMax)
+    # ax.grid(False)
+    # plt.tight_layout()
+    # plt.savefig('circumferentialReconstructionTestSingalFrequency.png')
 
-    # time domain plot of true signal
-    _, ax = plt.subplots(1,1)
-    ax.plot(theta,trueSignal)
-    ax.set_xlim(0,360)
-    ax.set_xlabel('Circumferential Position [$^\circ$]')
-    ax.set_ylabel('Signal Units')
-    yMin = round(min(trueSignal)*2)/2
-    yMax = round(max(trueSignal)*2)/2
-    ax.set_ylim(yMin, yMax)
-    plt.tight_layout()
-    plt.savefig('circumferentialReconstructionTestSingalTime.png')
+    # # time domain plot of true signal
+    # _, ax = plt.subplots(1,1)
+    # ax.plot(theta,trueSignal)
+    # ax.set_xlim(0,360)
+    # ax.set_xlabel('Circumferential Position [$^\circ$]')
+    # ax.set_ylabel('Signal Units')
+    # yMin = round(min(trueSignal)*2)/2
+    # yMax = round(max(trueSignal)*2)/2
+    # ax.set_ylim(yMin, yMax)
+    # plt.tight_layout()
+    # plt.savefig('circumferentialReconstructionTestSingalTime.png')
 
     return theta,trueSignal, tsInterp
 
@@ -153,11 +153,11 @@ def objective_function(probeTheta, tsInterp, theta, trueSignal):
     # line plot of true signal vs best reconstructed signal
     bestIndex     = np.argmax(pearsonR)
         
-    plt.figure()
-    plt.plot(theta,trueSignal)
-    plt.plot(theta,xR[bestIndex],'--')
-    plt.xlim((0,60))
-    plt.savefig('signal_comparison.png')
+    # plt.figure()
+    # plt.plot(theta,trueSignal)
+    # plt.plot(theta,xR[bestIndex],'--')
+    # plt.xlim((0,60))
+    # plt.savefig('signal_comparison.png')
 
     bestIndex     = np.argmax(pearsonR)
 

@@ -210,7 +210,7 @@ class Optimizer:
         
         ind_directories = sorted(ind_directories)
         
-        individuals = []
+        individuals = list()
         for ind_dir in ind_directories:
             ind = Individual(objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters)
             ind.name = ind_dir
@@ -306,7 +306,7 @@ class Optimizer:
             if poll == None:
                 return True
         return False
-        
+
     def __check_PID_running__(self,pid):
         """
             Checks if a pid is still running (UNIX works, windows we'll see)
@@ -398,6 +398,7 @@ class Optimizer:
                 offset = 3 # this is the column where data starts
                 for index,row in df.iterrows():
                     ind = Individual(eval_parameters=self.eval_parameters,objectives=self.objectives,performance_parameters=self.performance_parameters)
+                    ind.name = row['individual']
                     [ind.set_eval_parameter(p.name,row[p.name]) for p in self.eval_parameters]
                     [ind.set_objective(p.name,row[p.name]) for p in self.objectives]
                     [ind.set_performance_parameter(p.name,row[p.name]) for p in self.performance_parameters]                    
@@ -619,7 +620,7 @@ class Optimizer:
                         temp_objectives.append(best_individuals[key][o].objectives[o])
                     else:
                         temp_objectives.append(objectives[-1][o])
-            objectives.append(temp_objectives)            
+            objectives.append(temp_objectives)
         return objectives, keys
 
     def plot_best_pop(self,objective_index):

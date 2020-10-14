@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from ..helpers import Parameter
 from ..base_classes import Optimizer, Individual
 from ..nsga3.mutate import mutation_de_1_rand_bin, mutation_de_best_2_bin, mutation_simple, mutation_parameters, de_mutation_type
-from random import seed, gauss, random
+from random import seed, gauss, random, randint
 from tqdm import trange
 
 class SODE(Optimizer):
@@ -98,9 +98,7 @@ class SODE(Optimizer):
         # self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1,params=params,F=F)
         individuals = sorted(individuals, key=operator.attrgetter('objectives'))
         individuals = individuals[:self.pop_size]
-        shuffle(individuals)
-
-        # best_sc = np.zeros(n_generations)
+        
         for pop in trange(pop_start+1,n_generations):
             newIndividuals = self.__crossover_mutate__(individuals)
             self.evaluate_population(newIndividuals,pop) 
@@ -108,10 +106,9 @@ class SODE(Optimizer):
 
             individuals.extend(newIndividuals) # add the previous population to the pool 
             # Sort and select
-            sorted_inds =  sorted(individuals, key=operator.attrgetter('objectives'))
+            sorted_inds =  sorted(individuals, key=operator.attrgetter('objectives'))            
             self.append_restart_file(sorted_inds)
             individuals = sorted_inds[:self.pop_size]
-            shuffle(individuals)
             
 
     def __crossover_mutate__(self,individuals:List[Individual]):
@@ -120,11 +117,9 @@ class SODE(Optimizer):
         '''
         
         nIndividuals = len(individuals)
-        num_params = len(individuals[0].eval_parameters)
-        import random
-        nParents = random.randint(self.mutation_params.min_parents,self.mutation_params.max_parents)
+        num_params = len(individuals[0].eval_parameters)        
         if self.mutation_params.mutation_type == de_mutation_type.de_1_rand_bin:
-            newIndividuals = mutation_de_1_rand_bin(individuals=individuals,objectives=self.objectives,nParents=nParents,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,F=self.mutation_params.F,C=self.mutation_params.C)
+            newIndividuals = mutation_de_1_rand_bin(individuals=individuals,objectives=self.objectives,min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.simple:
             newIndividuals = mutation_simple(individuals=individuals,nCrossover=nParents,nMutation=nParents,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
         elif self.mutation_params.mutation_type == de_mutation_type.mutation_de_best_2_bin:

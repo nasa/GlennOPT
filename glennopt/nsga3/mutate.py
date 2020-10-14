@@ -43,29 +43,32 @@ class mutation_parameters:
     min_parents:int = field(repr=True,default=2)
     max_parents:int = field(repr=True,default=10)
 
-def mutation_de_1_rand_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],nParents:int,F:float, C:float):
+def mutation_de_1_rand_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int,max_parents:int,F:float, C:float):
     """
         Applies mutation and crossover using de_1_rand_bin to a list of individuals 
         Inputs:
-            individuals - list of individuals
+            individuals - list of individuals. Takes the best individual[0] (sorted lowest to highest)
             objectives - list of objectives List[Parameter]
             performance_parameters - list of parameters List[parameter]
             F - Amplification Factor [0,2]
             C - Crossover factor [0,1]
     """
-    newIndividuals=list()
-    for i in range(len(individuals)):   # Loop for every individual
-        ind1 = individuals[i]           # Select an individual 
-        x1 = ind1.eval_parameters
-        parent_indicies = get_pairs(len(individuals),nParents,[i])
-        parent_indicies.remove(i)
-        xp = []                         # gets a list of evaluation parameters
-        for indx in parent_indicies:
-            xp.append(individuals[indx].eval_parameters)
-
-        x1 = mutate_crossover_de(x1,xp,ind1.eval_parameter_min, ind1.eval_parameter_max,F,C)
-        
-        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,x1),objectives=objectives,performance_parameters=performance_parameters))
+    ind_best = individuals[0]
+    x1 = ind_best.eval_parameters
+    newIndividuals=list()        
+    for i in range(len(individuals)):   # Loop for every individual        
+        nParents = random.randint(min_parents,max_parents) 
+        z = copy.deepcopy(x1)
+        for p in range(nParents): # Call the mutation             
+            r1 = random.randint(0,len(individuals)-1)            
+            r2 = random.randint(0,len(individuals)-1)
+            while r2 == r1:
+                r2 = random.randint(0,len(individuals)-1)            
+            xp = list()                       # gets a list of evaluation parameters
+            for indx in [r1,r2]:
+                xp.append(individuals[indx].eval_parameters)
+            z = mutate_crossover_de(z,xp,ind_best.eval_parameter_min, ind_best.eval_parameter_max,F,C)
+        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
     return newIndividuals 
 
 def mutation_de_best_2_bin(best_indx:int,individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],F:float,C:float):
@@ -185,16 +188,16 @@ def mutate_crossover_de(x:ndarray,xp:List[np.array],xmin:ndarray=None,xmax:ndarr
         returns z mutated vector
     '''
     
-    y = x*0 # Creates a copy
-    z = y*0   
+    z = x*0 # Creates a copy    
+    
     for i in range(len(x)): # Mutate each index of the inputs
         temp = 0
         for j in range(len(xp)-1): # Iterates for the number of parents 
             temp += (xp[j+1][i]-xp[j][i])
-        y[i] = xp[0][i] + F*temp
+        y = x[i] + F*temp        
         
-        if (random.random() <= C):
-            z[i] =  y[i]
+        if (random.random() <= C or i==random.randint(0,len(x))):
+            z[i] =  y
         else:
             z[i] =  x[i]
         
@@ -241,19 +244,11 @@ def get_pairs(nIndividuals:int,nParents:int,parent_indx_seed=[]):
             nIndividuals - number of individuals
             nParents - number of parents 
             parent_indx_seed - pre-populate the parent index array
-    """
-    if len(parent_indx_seed)>0:
-        parent_indx = parent_indx_seed
-        nParents += len(parent_indx_seed)
-    else:
-        parent_indx = []
-    rand_indx = -1        
-    while(rand_indx in parent_indx or rand_indx==-1):
-        rand_indx = np.random.randint(0,nIndividuals-1)
-        parent_indx.append(rand_indx)
-        if (len(parent_indx)>=nParents):
-            break
-    return parent_indx
+    """    
+    rand_indx = random.sample(range(0,nIndividuals),nParents)
+    # while(any(x in rand_indx for x in parent_indx_seed)):
+    #     rand_indx = random.sample(range(0,nIndividuals),nParents)
+    return rand_indx
 
 def set_eval_parameters(eval_parameters:List[Parameter], x:np.ndarray):
     """
