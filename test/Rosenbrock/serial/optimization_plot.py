@@ -1,11 +1,10 @@
-"""
-    Simple, non parallel optimization set up example. 
-"""
+#TODO: Change this to plotting for SODE
+
 import sys,os
-sys.path.insert(0,'../../../../')
+sys.path.insert(0,'../../../')
 from glennopt.helpers import Parameter
+from glennopt.nsga3 import NSGA3,mutation_parameters, de_mutation_type
 from glennopt.sode import SODE
-from glennopt.nsga3 import de_mutation_type, mutation_parameters
 
 # Generate the DOE
 current_dir = os.getcwd()
@@ -27,12 +26,6 @@ performance_parameters.append(Parameter(name='p1'))
 performance_parameters.append(Parameter(name='p2'))
 sode.add_performance_parameters(performance_params = performance_parameters)
 
-# params = mutation_parameters
-sode.mutation_params.mutation_type = de_mutation_type.de_1_rand_bin
-sode.mutation_params.min_parents = int(0.1*pop_size)
-sode.mutation_params.max_parents = int(0.9*pop_size)
-sode.start_doe(doe_size=32)
-sode.optimize_from_population(pop_start=-1,n_generations=15)
-
-
-
+# Get the best individual in each population for objective 1
+best_individuals, comp_individual = sode.get_best()
+sode.plot_best_objective(objective_index=0)

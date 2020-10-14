@@ -1,7 +1,7 @@
 #TODO: Change this to plotting for SODE
 
 import sys,os
-sys.path.insert(0,'../../../../')
+sys.path.insert(0,'../../../')
 from glennopt.helpers import Parameter
 from glennopt.nsga3 import NSGA3,mutation_parameters, de_mutation_type
 from glennopt.sode import SODE
@@ -37,6 +37,6 @@ sode.add_objectives(objectives=objectives)
 best_individuals,best_compromise = sode.get_pop_best()
 # Track the best objective as population advances 
 best_objective = sode.get_best()
-# sode.plot_best_objective(objective_index=0)
+sode.plot_best_objective(objective_index=0)
 sode.plot_best_pop(objective_index=0)
 print('done')
