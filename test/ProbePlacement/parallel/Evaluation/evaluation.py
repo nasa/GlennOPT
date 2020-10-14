@@ -22,7 +22,7 @@ GT2020-15465
 Globals
 '''
 singleOrCombos = 'single' # only one wavenumber combination or try multiple combos
-waveNumberGuesses = [[1,8,96,104]] # guesses of wave numbers
+waveNumberGuesses = [[8,96,104]] # guesses of wave numbers
 
 if singleOrCombos == 'combos':
     wnCombos = list()

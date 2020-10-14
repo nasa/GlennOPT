@@ -53,8 +53,8 @@ sode.mutation_params.min_parents = 2
 sode.mutation_params.max_parents = 2
 sode.mutation_params.F = 0.6
 sode.mutation_params.C = 0.8
-# sode.start_doe(doe_size=256)
-sode.optimize_from_population(pop_start=19,n_generations=20)
+sode.start_doe(doe_size=256)
+sode.optimize_from_population(pop_start=-1,n_generations=20)
 
 
 
