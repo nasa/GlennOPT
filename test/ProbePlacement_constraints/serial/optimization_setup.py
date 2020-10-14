@@ -41,11 +41,11 @@ perf_parameters.append(Parameter(name='PearsonR',min_value=None,max_value=None))
 perf_parameters.append(Parameter(name='RMS_Error',min_value=None,max_value=None))
 sode.add_performance_parameters(perf_parameters)
 # Serial Execution but with a shorter execution timeout.
-# parallelSettings = parallel_settings()
-# parallelSettings.concurrent_executions = 16
-# parallelSettings.cores_per_execution: 1
-# parallelSettings.execution_timeout = 0.2 # minutes
-# sode.parallel_settings = parallelSettings
+parallelSettings = parallel_settings()
+parallelSettings.concurrent_executions = 8
+parallelSettings.cores_per_execution: 1
+parallelSettings.execution_timeout = 0.2 # minutes
+sode.parallel_settings = parallelSettings
 
 # params = mutation_parameters
 sode.mutation_params.mutation_type = de_mutation_type.de_1_rand_bin

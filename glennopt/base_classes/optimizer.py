@@ -273,15 +273,15 @@ class Optimizer:
                 else:                    
                     pid,p = self.__evaluate_individual__(individual=individuals[ind_indx],individual_directory=ind_dir)
                     pid_list.append({'pid':pid,'start_time':time.perf_counter(),'proc':p,'pop':str(individuals[ind_indx].population),'ind':individuals[ind_indx].name})
-
-                inActive_pids = list()
-                while (len(inActive_pids)<n_evalulations):
+                
+                while (len(pid_list)==n_evalulations): # Pause any new executions once we reach maximum number of evaluations 
+                    inActive_pids = list()
                     # Loop to check if PID is still active and execution time is less than timeout                    
                     for i in range(len(pid_list)):
                         pid = pid_list[i]['pid']; p = pid_list[i]['proc']; pop = pid_list[i]['pop']; ind_name = pid_list[i]['ind']
                         if self.__check_process_running__(p): # If PID is running check if it exceeded the execution time
                             start_time = pid_list[i]['start_time']
-                            time.sleep(0.1) # Check every 0.01 seconds
+                            time.sleep(0.1) # Check every "x" seconds
                             if (time.perf_counter() - start_time)/60 > self.parallel_settings.execution_timeout:
                                 try:
                                     self.__write_proc_log__(p,pop,ind_name)
@@ -294,7 +294,7 @@ class Optimizer:
                             inActive_pids.append(i)
                     
                     for index in sorted(inActive_pids, reverse=True): # removing the inactive PIDs from the list 
-                        del pid_list[index]                    
+                        del pid_list[index]  
                     
             else: # TODO execute individual without creating a bunch of directories. Maybe create execution directories and delete them
                 output = subprocess.check_output(['python', self.evaluation_script])
