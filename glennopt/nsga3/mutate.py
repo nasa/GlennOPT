@@ -40,7 +40,7 @@ class mutation_parameters:
     mu: float = field(repr=True,default=0.02)
     F: float = field(repr=True,default=0.6)
     C: float = field(repr=True,default=0.8)
-    min_parents:int = field(repr=True,default=0)
+    min_parents:int = field(repr=True,default=2)
     max_parents:int = field(repr=True,default=10)
 
 def mutation_de_1_rand_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],nParents:int,F:float, C:float):
@@ -53,7 +53,7 @@ def mutation_de_1_rand_bin(individuals:List[Individual],objectives:List[Paramete
             F - Amplification Factor [0,2]
             C - Crossover factor [0,1]
     """
-    newIndividuals=[] 
+    newIndividuals=list()
     for i in range(len(individuals)):   # Loop for every individual
         ind1 = individuals[i]           # Select an individual 
         x1 = ind1.eval_parameters
@@ -171,7 +171,7 @@ def crossover(x1:np.ndarray,x2:np.ndarray):
     return y1,y2
         
 # Mutate x1 using a,b,c
-def mutate_crossover_de(x:ndarray,xp:List[np.array],xmin:ndarray,xmax:ndarray,F=0.6,C=0.8):
+def mutate_crossover_de(x:ndarray,xp:List[np.array],xmin:ndarray=None,xmax:ndarray=None,F=0.6,C=0.8):
     '''
         Differential evolution mutation de/1/rand/bin
         Inputs: 
@@ -189,19 +189,19 @@ def mutate_crossover_de(x:ndarray,xp:List[np.array],xmin:ndarray,xmax:ndarray,F=
     z = y*0   
     for i in range(len(x)): # Mutate each index of the inputs
         temp = 0
-        for j in range(1,len(xp)-1): # Iterates for the number of parents 
-            temp += xp[j+1][i]-xp[j][i]        
-        y[i] = (xp[0][i] + F*temp)
-        
-        if (xmin is not None) and (y[i]<xmin[i]):
-            y[i]=xmin[i]
-        if (xmax is not None) and (y[i]>xmax[i]):
-            y[i]=xmax[i]
+        for j in range(len(xp)-1): # Iterates for the number of parents 
+            temp += (xp[j+1][i]-xp[j][i])
+        y[i] = xp[0][i] + F*temp
         
         if (random.random() <= C):
             z[i] =  y[i]
         else:
             z[i] =  x[i]
+        
+        if (xmin is not None) and (z[i]<xmin[i]):
+            z[i]=xmin[i]    
+        if (xmax is not None) and (z[i]>xmax[i]):
+            z[i]=xmax[i]
     return z
 
 def mutate_crossover_de_best_2_bin(x_best:ndarray,x_r1:ndarray,x_r2:ndarray,x_r3:ndarray,x_r4:ndarray,xmin:ndarray,xmax:ndarray,F=0.5,C=0.8):

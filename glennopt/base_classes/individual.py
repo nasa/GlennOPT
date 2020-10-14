@@ -121,7 +121,7 @@ class Individual:
     def eval_parameter_max(self):
         y = np.zeros(len(self.__eval_parameters))
         for i in range(len(self.__eval_parameters)):
-            y[i] = self.__eval_parameters[i].min_value
+            y[i] = self.__eval_parameters[i].max_value
         return y
 
     @eval_parameters.setter

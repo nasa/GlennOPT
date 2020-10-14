@@ -37,6 +37,6 @@ sode.add_objectives(objectives=objectives)
 best_individuals,best_compromise = sode.get_pop_best()
 # Track the best objective as population advances 
 best_objective = sode.get_best()
-# sode.plot_best_objective(objective_index=0)
+sode.plot_best_objective(objective_index=0)
 sode.plot_best_pop(objective_index=0)
 print('done')
