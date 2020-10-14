@@ -99,7 +99,7 @@ class SODE(Optimizer):
         individuals = sorted(individuals, key=operator.attrgetter('objectives'))
         individuals = individuals[:self.pop_size]
         
-        for pop in trange(pop_start+1,n_generations):
+        for pop in trange(pop_start+1,pop_start+n_generations):
             newIndividuals = self.__crossover_mutate__(individuals)
             self.evaluate_population(newIndividuals,pop) 
             newIndividuals = self.read_population(pop)
