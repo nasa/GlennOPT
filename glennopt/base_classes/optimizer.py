@@ -306,6 +306,7 @@ class Optimizer:
             if poll == None:
                 return True
         return False
+        
     def __check_PID_running__(self,pid):
         """
             Checks if a pid is still running (UNIX works, windows we'll see)
