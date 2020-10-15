@@ -15,7 +15,7 @@ from .nsga_individual import NSGA_Individual
 from .non_dominated_sorting import non_dominated_sorting
 from .associate_to_reference_point import associate_to_reference_point
 from .generate_reference_points import generate_reference_points
-from .mutate import mutation_simple, mutation_de_1_rand_bin, mutation_de_best_2_bin, de_mutation_type, mutation_parameters
+from .mutate import mutation_simple, de_best_1_bin, de_best_2_bin, de_rand_1_bin, de_rand_2_bin, de_mutation_type, mutation_parameters
 
 individual_list = List[NSGA_Individual]
 
@@ -145,10 +145,8 @@ class NSGA3(Optimizer):
         for pop in range(pop_start,pop_start+n_generations):
             new_pop = []
             nParents = randint(self.mutation_params.min_parents,self.mutation_params.max_parents)
-            if self.mutation_params.mutation_type == de_mutation_type.de_1_rand_bin:                                        
-                newIndividuals = mutation_de_1_rand_bin(individuals=individuals,nParents=nParents,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,F=self.mutation_params.F,C=self.mutation_params.C)
-            else:   # simple mutation
-                newIndividuals = mutation_simple(individuals=individuals,nCrossover=nParents,nMutation=nParents,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
+
+            newIndividuals = self.__crossover_mutate__(individuals)
             # concatenante lists
             new_pop.extend(newIndividuals)
             # Evaluate
@@ -311,6 +309,38 @@ class NSGA3(Optimizer):
             a = np.transpose(1.0/w) # 1 divided by each element
             # * --- sort and select ---
         return a
+    
+    def __crossover_mutate__(self,individuals:List[NSGA_Individual]):
+        '''
+            Applies Crossover and Mutate
+        '''
+        
+        nIndividuals = len(individuals)
+        num_params = len(individuals[0].eval_parameters)        
+        if self.mutation_params.mutation_type == de_mutation_type.de_best_1_bin:
+            newIndividuals = de_best_1_bin(individuals=individuals,objectives=self.objectives,
+                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
+                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
+                F=self.mutation_params.F,C=self.mutation_params.C)
+        elif self.mutation_params.mutation_type == de_mutation_type.de_best_2_bin:
+            newIndividuals = de_best_2_bin(individuals=individuals,objectives=self.objectives,
+                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
+                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
+                F=self.mutation_params.F,C=self.mutation_params.C)
+        elif self.mutation_params.mutation_type == de_mutation_type.de_rand_1_bin:
+            newIndividuals = de_rand_1_bin(individuals=individuals,objectives=self.objectives,
+                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
+                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
+                F=self.mutation_params.F,C=self.mutation_params.C)
+        elif self.mutation_params.mutation_type == de_mutation_type.de_rand_2_bin:
+            newIndividuals = de_rand_2_bin(individuals=individuals,objectives=self.objectives,
+                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
+                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
+                F=self.mutation_params.F,C=self.mutation_params.C)
+        elif self.mutation_params.mutation_type == de_mutation_type.simple:
+            newIndividuals = mutation_simple(individuals=individuals,nCrossover=nParents,nMutation=nParents,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
+
+        return newIndividuals
     
     
     

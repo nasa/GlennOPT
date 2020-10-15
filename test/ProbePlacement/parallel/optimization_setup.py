@@ -48,9 +48,9 @@ parallelSettings.execution_timeout = 0.2 # minutes
 sode.parallel_settings = parallelSettings
 
 # params = mutation_parameters
-sode.mutation_params.mutation_type = de_mutation_type.de_1_rand_bin
+sode.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
 sode.mutation_params.min_parents = 2
-sode.mutation_params.max_parents = 2
+sode.mutation_params.max_parents = pop_size
 sode.mutation_params.F = 0.6
 sode.mutation_params.C = 0.8
 sode.start_doe(doe_size=256)

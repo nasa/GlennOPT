@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ..helpers import Parameter
 from ..base_classes import Optimizer, Individual
-from ..nsga3.mutate import mutation_de_1_rand_bin, mutation_de_best_2_bin, mutation_simple, mutation_parameters, de_mutation_type
+from ..nsga3.mutate import de_best_1_bin,de_best_2_bin,de_rand_1_bin,de_rand_2_bin, mutation_parameters, de_mutation_type
 from random import seed, gauss, random, randint
 from tqdm import trange
 
@@ -118,17 +118,27 @@ class SODE(Optimizer):
         
         nIndividuals = len(individuals)
         num_params = len(individuals[0].eval_parameters)        
-        if self.mutation_params.mutation_type == de_mutation_type.de_1_rand_bin:
-            newIndividuals = mutation_de_1_rand_bin(individuals=individuals,objectives=self.objectives,min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,F=self.mutation_params.F,C=self.mutation_params.C)
+        if self.mutation_params.mutation_type == de_mutation_type.de_best_1_bin:
+            newIndividuals = de_best_1_bin(individuals=individuals,objectives=self.objectives,
+                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
+                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
+                F=self.mutation_params.F,C=self.mutation_params.C)
+        elif self.mutation_params.mutation_type == de_mutation_type.de_best_2_bin:
+            newIndividuals = de_best_2_bin(individuals=individuals,objectives=self.objectives,
+                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
+                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
+                F=self.mutation_params.F,C=self.mutation_params.C)
+        elif self.mutation_params.mutation_type == de_mutation_type.de_rand_1_bin:
+            newIndividuals = de_rand_1_bin(individuals=individuals,objectives=self.objectives,
+                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
+                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
+                F=self.mutation_params.F,C=self.mutation_params.C)
+        elif self.mutation_params.mutation_type == de_mutation_type.de_rand_2_bin:
+            newIndividuals = de_rand_2_bin(individuals=individuals,objectives=self.objectives,
+                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
+                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
+                F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.simple:
             newIndividuals = mutation_simple(individuals=individuals,nCrossover=nParents,nMutation=nParents,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
-        elif self.mutation_params.mutation_type == de_mutation_type.mutation_de_best_2_bin:
-            # find best value
-            best_indx = 0
-            for indx in range(1,nIndividuals):
-                if individuals[indx].objectives[0]<individuals[best_indx].objectives[0]:
-                    best_indx = indx
-            
-            newIndividuals = mutation_de_best_2_bin(best_indx=best_indx,individuals=individuals,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,F=self.mutation_params.F,C=self.mutation_params.C)                
 
         return newIndividuals
