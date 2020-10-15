@@ -115,8 +115,8 @@ def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
     min_parents = max([3,min_parents])
     max_parents = max([3,max_parents])
     nparents = random.randint(min_parents,max_parents)          # Number of parents for crossover
-    w = np.random.dirichlet(np.ones(nparents),size=1)           # Random weights that sum to 1
-    w = w[0]
+    # w = np.random.dirichlet(np.ones(nparents),size=1)           # Random weights that sum to 1
+    # w = w[0]
     for i in range(len(individuals)):                           # Start loop through population  
         x1 = individuals[i].eval_parameters                
         
@@ -132,7 +132,7 @@ def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
                 temp = 0                                        # Summation for number of parents 
                 if nparents > 3:                                # Use mult-parent mutation
                     for k in range(1,math.floor(nparents/2)):   
-                        temp += F*(xp[2*k-1][j]-xp[2*k][j])
+                        temp += F*(xp[2*k-1][j]-xp[2*k][j])     # Removed w and replaced with F 
                 else:
                     temp = F*(xp[1][j]-xp[2][j])                # Use default
                 z[j] = xp[0][j] + temp
