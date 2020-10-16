@@ -54,42 +54,8 @@ def non_dominated_sorting(individuals:List[NSGA_Individual]):
                     Q.append(j) # This tells us which are the best individuals
                     q.rank = k+1
                 individuals[j] = q
+        
         F.append(Q) # the second array in F contains the fronts. 
         k+=1
-    
+    F = list(filter(None, F))
     return individuals,F
-    # Fnew = list(filter(None, F))
-    # P.sort(key=lambda x: x.rank, reverse=False) # Sort the individuals based on rank
-    # P = CrowdingDistance(P,Fnew,nObj)
-
-# This is basically the crowding distance
-def associate_to_reference_point(individuals:List[NSGA_Individual],zr):
-    '''
-        returns
-            individuals - List of individuals with parameters associatedref and distanceToAssociatedRef populated
-
-            d - distance
-            rho - number of individuals near reference point? # TODO Not sure about this one
-    '''
-    
-    nZr = len(zr) # Number of reference points
-    rho = np.zeros((nZr,))
-    nPop = len(individuals)
-    d = np.zeros((nPop,nZr))
-
-    for i in range(nPop):
-        for j in range(nZr):
-            w = zr[j,:]/LA.norm(zr[j,:])
-            z = individuals[i].normalized_cost
-            a = np.matmul(np.transpose(w),z)
-            a = np.matmul(a,w) # np.transpose(w)*z*w
-            d[i,j] = LA.norm(z - a) # compute distance 
-        # Get minimum distance
-        min_indx = np.argmin(d[i,:])
-        dmin = d[i,min_indx]
-
-        individuals[i].associatedRef = min_indx
-        individuals[i].distanceToAssociatedRef = dmin
-        rho[min_indx] = rho[min_indx] + 1
-
-    return individuals, d, rho

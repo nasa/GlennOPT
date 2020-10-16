@@ -21,3 +21,5 @@ class NSGA_Individual(Individual):
         self.association_ref = []
         self.distance_to_association_ref = []
         super().__init__(eval_parameters=eval_parameters, objectives=objectives, performance_parameters=performance_parameters) 
+    
+    

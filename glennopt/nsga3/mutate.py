@@ -52,6 +52,12 @@ def get_eval_param_matrix(individuals:List[Individual]):
         pop[i,:] = ind.eval_parameters
     return pop,xmin,xmax
 
+def get_objective_matrix(individuals:List[Individual]):    
+    pop = np.zeros((len(individuals),len(individuals[0].objectives)))
+    for i,ind in enumerate(individuals):
+        pop[i,:] = ind.objectives
+    return pop
+
 def shuffle_population(pop,nIndividuals,nparents):
     index = (1+np.random.permutation(nIndividuals))[0:nparents]     # Pick Random Parents
     rot = convert_to_ndarray([range(0,nIndividuals)])
@@ -131,13 +137,10 @@ def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
     """ 
     nIndividuals = len(individuals)
     pop,xmin,xmax = get_eval_param_matrix(individuals)
-    
-    min_parents = max([3,min_parents])
-    max_parents = max([3,max_parents])
-    nparents = random.randint(min_parents,max_parents) 
+        
     nEvalParams = len(individuals[0].eval_parameters)
     #-------------- Mutation --------------
-    pop_shuffled = shuffle_population(pop,nIndividuals,nparents)
+    pop_shuffled = shuffle_population(pop,nIndividuals,max_parents)
     pop_rand = pop_shuffled.pop()
     # Generate the new mutated population
     temp = pop*0
@@ -162,6 +165,7 @@ def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
         z = new_pop[i,:]
         newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
     return newIndividuals 
+
 
 def simple(individuals:List[Individual],nCrossover:int,nMutation:int,objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],mu:float,sigma:float):
     """
