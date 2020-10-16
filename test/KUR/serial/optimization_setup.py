@@ -7,7 +7,7 @@ from glennopt.helpers import Parameter
 from glennopt.nsga3 import NSGA3,mutation_parameters, de_mutation_type
 
 # Generate the DOE
-pop_size=32
+pop_size=80
 current_dir = os.getcwd()
 ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
@@ -29,8 +29,8 @@ performance_parameters.append(Parameter(name='p2'))
 performance_parameters.append(Parameter(name='p3'))
 ns.add_performance_parameters(performance_params = performance_parameters)
 
-ns.mutation_params.mutation_type = de_mutation_type.de_1_rand_bin
-ns.mutation_params.min_parents = int(0.2*pop_size)
-ns.mutation_params.max_parents = pop_size
-# ns.start_doe(doe_size=64)
-ns.optimize_from_population(pop_start=-1,n_generations=10)
+ns.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
+ns.mutation_params.min_parents = 3
+ns.mutation_params.max_parents = 3
+ns.start_doe(doe_size=64)
+ns.optimize_from_population(pop_start=-1,n_generations=100)

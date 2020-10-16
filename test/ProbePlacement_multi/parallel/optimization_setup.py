@@ -53,5 +53,5 @@ ns.mutation_params.min_parents = 2
 ns.mutation_params.max_parents = 10
 ns.mutation_params.F = 0.5
 ns.mutation_params.C = 0.8
-ns.start_doe(doe_size=256)
-ns.optimize_from_population(pop_start=102,n_generations=500)
+# ns.start_doe(doe_size=256)
+ns.optimize_from_population(pop_start=-1,n_generations=150)

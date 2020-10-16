@@ -144,7 +144,6 @@ class NSGA3(Optimizer):
         # * Loop through all individuals
         for pop in range(pop_start,pop_start+n_generations):
             new_pop = []
-            nParents = randint(self.mutation_params.min_parents,self.mutation_params.max_parents)
 
             newIndividuals = self.__crossover_mutate__(individuals)
             # concatenante lists
