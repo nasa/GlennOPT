@@ -163,7 +163,7 @@ def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
         newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
     return newIndividuals 
 
-def mutation_simple(self,individuals:List[Individual],nCrossover:int,nMutation:int,objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],mu:float,sigma:float):
+def simple(individuals:List[Individual],nCrossover:int,nMutation:int,objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],mu:float,sigma:float):
     """
         Performs a simple mutation and crossover on the individuals
         Inputs:
@@ -177,7 +177,7 @@ def mutation_simple(self,individuals:List[Individual],nCrossover:int,nMutation:i
     nIndividuals = len(individuals)
     # Perform Crossover
     crossover_individuals = []
-    for k in range(int(nCrossover/2)):
+    for k in range(nCrossover):
         rand_indx = np.random.randint(0,nIndividuals-1)
         y1 = individuals[rand_indx].eval_parameters
 
@@ -225,7 +225,7 @@ def mutate(x1:np.ndarray,xmin:ndarray,xmax:ndarray,mu:float=0.02,sigma:float=0.2
                 y[indx]=xmin[indx]
             if (xmax is not None) and (y[indx]>xmax[indx]):
                 y[indx]=xmax[indx]
-    return ys
+    return y
 
 def crossover(x1:np.ndarray,x2:np.ndarray):
     '''

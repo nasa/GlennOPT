@@ -15,7 +15,7 @@ from .nsga_individual import NSGA_Individual
 from .non_dominated_sorting import non_dominated_sorting
 from .associate_to_reference_point import associate_to_reference_point
 from .generate_reference_points import generate_reference_points
-from .mutate import mutation_simple, de_best_1_bin, de_rand_1_bin, de_mutation_type, mutation_parameters
+from .mutate import simple, de_best_1_bin, de_rand_1_bin, de_mutation_type, mutation_parameters
 
 individual_list = List[NSGA_Individual]
 
@@ -328,7 +328,7 @@ class NSGA3(Optimizer):
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.simple:
-            newIndividuals = mutation_simple(individuals=individuals,nCrossover=nParents,nMutation=nParents,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
+            newIndividuals = simple(individuals=individuals,nCrossover=nParents,nMutation=nParents,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
 
         return newIndividuals
     
