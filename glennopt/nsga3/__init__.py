@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from .mutate import de_mutation_type,mutation_parameters,mutation_simple, de_best_1_bin, de_best_2_bin, de_rand_1_bin,de_rand_2_bin
+from .mutate import de_mutation_type,mutation_parameters,mutation_simple, de_best_1_bin, de_rand_1_bin
 from .nsga_individual import NSGA_Individual
 from .nsga3 import NSGA3
 from .non_dominated_sorting import non_dominated_sorting

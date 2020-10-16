@@ -15,7 +15,7 @@ from .nsga_individual import NSGA_Individual
 from .non_dominated_sorting import non_dominated_sorting
 from .associate_to_reference_point import associate_to_reference_point
 from .generate_reference_points import generate_reference_points
-from .mutate import mutation_simple, de_best_1_bin, de_best_2_bin, de_rand_1_bin, de_rand_2_bin, de_mutation_type, mutation_parameters
+from .mutate import mutation_simple, de_best_1_bin, de_rand_1_bin, de_mutation_type, mutation_parameters
 
 individual_list = List[NSGA_Individual]
 
@@ -322,18 +322,8 @@ class NSGA3(Optimizer):
                 min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)
-        elif self.mutation_params.mutation_type == de_mutation_type.de_best_2_bin:
-            newIndividuals = de_best_2_bin(individuals=individuals,objectives=self.objectives,
-                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
-                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
-                F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.de_rand_1_bin:
             newIndividuals = de_rand_1_bin(individuals=individuals,objectives=self.objectives,
-                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
-                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
-                F=self.mutation_params.F,C=self.mutation_params.C)
-        elif self.mutation_params.mutation_type == de_mutation_type.de_rand_2_bin:
-            newIndividuals = de_rand_2_bin(individuals=individuals,objectives=self.objectives,
                 min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)

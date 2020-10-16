@@ -8,4 +8,4 @@ def rosenbrock(vector):
     b = 100
     x = vector[0]
     y= vector[1]
-    return ( a-x )**2 +b*( y - x**2 )**2
+    return b*(( a-x )**2 +( y - x**2 )**2)
