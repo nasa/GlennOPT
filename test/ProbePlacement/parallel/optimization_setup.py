@@ -27,7 +27,7 @@ constraints = (tLo,tHi)
 
 # Generate the DOE
 current_dir = os.getcwd()
-pop_size = 32
+pop_size = 72
 sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 sode.add_eval_parameters(eval_params = eval_parameters)
@@ -50,8 +50,8 @@ sode.parallel_settings = parallelSettings
 # params = mutation_parameters
 sode.mutation_params.mutation_type = de_mutation_type.de_best_1_bin
 sode.mutation_params.min_parents = 2
-sode.mutation_params.max_parents = 5
-sode.mutation_params.F = 0.6
-sode.mutation_params.C = 0.8
-sode.start_doe(doe_size=128)
-sode.optimize_from_population(pop_start=-1,n_generations=50)
+sode.mutation_params.max_parents = 20
+sode.mutation_params.F = 0.8
+sode.mutation_params.C = 0.7
+# sode.start_doe(doe_size=128)
+sode.optimize_from_population(pop_start=48,n_generations=50)

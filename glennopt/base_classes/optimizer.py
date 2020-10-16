@@ -399,6 +399,7 @@ class Optimizer:
                 for index,row in df.iterrows():
                     ind = Individual(eval_parameters=self.eval_parameters,objectives=self.objectives,performance_parameters=self.performance_parameters)
                     ind.name = row['individual']
+                    ind.population = int(row['population'].replace('DOE','-1').replace('POP',''))
                     [ind.set_eval_parameter(p.name,row[p.name]) for p in self.eval_parameters]
                     [ind.set_objective(p.name,row[p.name]) for p in self.objectives]
                     [ind.set_performance_parameter(p.name,row[p.name]) for p in self.performance_parameters]                    
