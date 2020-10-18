@@ -4,8 +4,7 @@
 import sys,os
 sys.path.insert(0,'../../../')
 from glennopt.helpers import Parameter, parallel_settings
-from glennopt.sode import SODE
-from glennopt.nsga3 import de_mutation_type, mutation_parameters
+from glennopt.nsga3 import de_mutation_type, mutation_parameters, NSGA3
 import numpy as np
 
 eval_parameters = list()
@@ -28,30 +27,31 @@ constraints = (tLo,tHi)
 # Generate the DOE
 current_dir = os.getcwd()
 pop_size = 48
-sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
+ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
-sode.add_eval_parameters(eval_params = eval_parameters)
+ns.add_eval_parameters(eval_params = eval_parameters)
 
 objectives = list()
 objectives.append(Parameter(name='objective1'))
-sode.add_objectives(objectives=objectives)
+objectives.append(Parameter(name='objective2'))
+ns.add_objectives(objectives=objectives)
 
 perf_parameters = list()
 perf_parameters.append(Parameter(name='PearsonR',min_value=None,max_value=None))
 perf_parameters.append(Parameter(name='RMS_Error',min_value=None,max_value=None))
-sode.add_performance_parameters(perf_parameters)
+ns.add_performance_parameters(perf_parameters)
 # Serial Execution but with a shorter execution timeout.
 parallelSettings = parallel_settings()
 parallelSettings.concurrent_executions = 8
 parallelSettings.cores_per_execution: 1
 parallelSettings.execution_timeout = 0.2 # minutes
-sode.parallel_settings = parallelSettings
+ns.parallel_settings = parallelSettings
 
 # params = mutation_parameters
-sode.mutation_params.mutation_type = de_mutation_type.simple
-sode.mutation_params.min_parents = pop_size/2
-sode.mutation_params.max_parents = pop_size
-sode.mutation_params.F = 0.5
-sode.mutation_params.C = 0.8
-# sode.start_doe(doe_size=256)
-sode.optimize_from_population(pop_start=-1,n_generations=200)
+ns.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
+ns.mutation_params.min_parents = 2
+ns.mutation_params.max_parents = 10
+ns.mutation_params.F = 0.5
+ns.mutation_params.C = 0.8
+# ns.start_doe(doe_size=256)
+ns.optimize_from_population(pop_start=-1,n_generations=150)

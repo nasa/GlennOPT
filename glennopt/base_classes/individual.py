@@ -21,6 +21,18 @@ class Individual:
         #self.__perf_constraint_penalty = np.zeros(len(performance_parameters))
         #self.__obj_constraint_penalty = np.zeros(len(objectives))
     
+    def __hash__(self):        
+        return hash(tuple(self.objectives))
+
+    def __str__(self):        
+        return str(tuple(self.objectives))
+    
+    def __repr__(self):
+        '''
+            Returns a readable format where you can see Object at 
+        '''
+        return "%s.%s(%s)" % (self.__module__, self.__class__.__name__, str(tuple(self.objectives)))
+
     @property 
     def name(self):
         return self.__name
@@ -56,11 +68,12 @@ class Individual:
         '''
         perf_constraint = 0
         y = np.zeros(len(self.__objectives))
-        for j in range(len(self.performance_parameters)):
-            if (self.__performance_parameters[j].constraint_less_than is not None):
-                perf_constraint += (self.__performance_parameters[j].value - self.__performance_parameters[j].constraint_less_than)
-            if (self.__performance_parameters[j].constraint_greater_than is not None):
-                perf_constraint += (self.__performance_parameters[j].constraint_greater_than - self.__performance_parameters[j].value)
+        if (self.performance_parameters is not None):
+            for j in range(len(self.performance_parameters)):
+                if (self.__performance_parameters[j].constraint_less_than is not None):
+                    perf_constraint += (self.__performance_parameters[j].value - self.__performance_parameters[j].constraint_less_than)
+                if (self.__performance_parameters[j].constraint_greater_than is not None):
+                    perf_constraint += (self.__performance_parameters[j].constraint_greater_than - self.__performance_parameters[j].value)
         
         obj_constraint = 0
         for i in range(len(self.__objectives)):
@@ -98,7 +111,8 @@ class Individual:
         '''
         for i in range(len(self.__objectives)):
             if (self.__objectives[i].name.lower() == name.lower()):
-                self.__objectives[i].value = val        
+                self.__objectives[i].value = val     
+                break
 
     def set_objective_at_indx(self,indx,val):
         self.__eval_parameters[indx].value = val
@@ -154,10 +168,12 @@ class Individual:
 
     @property
     def performance_parameters(self):
-        y = np.zeros(len(self.__performance_parameters))
-        for i in range(len(self.__performance_parameters)):
-            y[i] = self.__performance_parameters[i].value
-        return y
+        if (self.__performance_parameters is not None):
+            y = np.zeros(len(self.__performance_parameters))
+            for i in range(len(self.__performance_parameters)):
+                y[i] = self.__performance_parameters[i].value
+            return y
+        return None
 
     @performance_parameters.setter
     def performance_parameters(self,v):

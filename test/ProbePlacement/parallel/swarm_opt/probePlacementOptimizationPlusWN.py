@@ -38,7 +38,7 @@ import plotParty as pp
 
 # signal reconstruction parameters
 nProbes           = 10                               # numbers of probes
-waveNumberGuesses = [[1,8,96,104]]                # guesses of wave numbers
+waveNumberGuesses = [[8,96,104]]                # guesses of wave numbers
 singleOrCombos    = 'single'                        # only one wavenumber combination or try multiple combos
 maxCombo          = 3          # maximum number of wavenumbers to combine
 

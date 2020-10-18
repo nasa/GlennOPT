@@ -5,7 +5,7 @@ from glennopt.nsga3 import NSGA3,mutation_parameters, de_mutation_type
 
 # Generate the DOE
 current_dir = os.getcwd()
-ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",num_populations=10,pop_size=20,optimization_folder=current_dir)
+ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=20,optimization_folder=current_dir)
 
 eval_parameters = []
 eval_parameters.append(Parameter(name="x1",min_value=-10,max_value=10))

@@ -3,14 +3,14 @@
 """
 import sys,os
 sys.path.insert(0,'../../../')
-from glennopt.helpers import Parameter, mutation_parameters, de_mutation_type, parallel_settings
-from glennopt.nsga3 import NSGA3
-from glennopt.doe import generate_reference_points
+from glennopt.helpers import Parameter
+from glennopt.nsga3 import NSGA3,mutation_parameters, de_mutation_type
 
 
 # Generate the DOE
 current_dir = os.getcwd()
-ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",num_populations=10,pop_size=40,optimization_folder=current_dir)
+pop_size = 32
+ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 eval_parameters = []
 eval_parameters.append(Parameter(name="x1",min_value=-5,max_value=5))
@@ -31,21 +31,20 @@ performance_parameters.append(Parameter(name='p3'))
 ns.add_performance_parameters(performance_params = performance_parameters)
 
 # Mutation settings
-params = mutation_parameters
-ns.mutation_params.mutation_type = de_mutation_type.de_best_2_bin
+ns.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
+ns.mutation_params.F = 0.4
+ns.mutation_params.C = 0.7
 
 # Parallel settings
-parallelSettings = parallel_settings()
-parallelSettings.concurrent_executions = 4
-parallelSettings.cores_per_execution = 4
-parallelSettings.execution_timeout = 1 # minutes
+ns.parallel_settings.concurrent_executions = 4
+ns.parallel_settings.cores_per_execution = 4
+ns.parallel_settings.execution_timeout = 1 # minutes
 # * These are not needed 
-parallelSettings.machine_filename = 'machinefile.txt' 
-# parallelSettings.database_filename = 'database.csv'
-ns.parallel_settings = parallelSettings
+ns.parallel_settings.machine_filename = 'machinefile.txt' 
 
-ns.start_doe(doe_size=128)
-ns.optimize_from_population(pop_start=-1,n_generations=10)
+
+ns.start_doe(doe_size=64)
+ns.optimize_from_population(pop_start=-1,n_generations=50)
 
 
 

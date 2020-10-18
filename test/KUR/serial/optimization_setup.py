@@ -29,8 +29,8 @@ performance_parameters.append(Parameter(name='p2'))
 performance_parameters.append(Parameter(name='p3'))
 ns.add_performance_parameters(performance_params = performance_parameters)
 
-ns.mutation_params.mutation_type = de_mutation_type.de_1_rand_bin
-ns.mutation_params.min_parents = int(0.2*pop_size)
-ns.mutation_params.max_parents = pop_size
-# ns.start_doe(doe_size=64)
-ns.optimize_from_population(pop_start=-1,n_generations=10)
+ns.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
+ns.mutation_params.F = 0.8
+ns.mutation_params.C = 0.7
+ns.start_doe(doe_size=64)
+ns.optimize_from_population(pop_start=-1,n_generations=40)
