@@ -33,17 +33,13 @@ class mutation_parameters:
             mu: 
             F:
             C:
-            min_parents = 0.1
-            max_parents = 0.9
     """
     mutation_type: de_mutation_type = field(repr=True,default=de_mutation_type.de_rand_1_bin)
     sigma: float = field(repr=True,default=0.2)
     mu: float = field(repr=True,default=0.02)
     F: float = field(repr=True,default=0.6)
     C: float = field(repr=True,default=0.8)
-    min_parents:int = field(repr=True,default=2)
-    max_parents:int = field(repr=True,default=10)
-
+    
 def get_eval_param_matrix(individuals:List[Individual]):    
     pop = np.zeros((len(individuals),len(individuals[0].eval_parameters)))
     xmin = individuals[0].eval_parameter_min
@@ -72,7 +68,7 @@ def shuffle_population(pop,nIndividuals,nparents):
         pop_shuffled.append(pop[a[:,i]])                            # List of shuffled population
     return pop_shuffled
 
-def de_best_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int,max_parents:int,F:float, C:float):
+def de_best_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int,max_parents:int=2,F:float=0.6, C:float=0.7):
     """
         Applies mutation and crossover using de_1_rand_bin to a list of individuals 
         Inputs:
@@ -121,7 +117,7 @@ def de_best_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
 
     return newIndividuals 
 
-def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int,max_parents:int,F:float, C:float):
+def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int=3,max_parents:int=3,F:float=0.6, C:float=0.7):
     """
         Applies mutation and crossover using de_rand_1_bin to a list of individuals 
         Inputs:
@@ -181,7 +177,7 @@ def simple(individuals:List[Individual],nCrossover:int,nMutation:int,objectives:
     nIndividuals = len(individuals)
     # Perform Crossover
     crossover_individuals = []
-    for k in range(nCrossover):
+    for k in range(int(nCrossover/2)):
         rand_indx = np.random.randint(0,nIndividuals-1)
         y1 = individuals[rand_indx].eval_parameters
 
@@ -191,9 +187,9 @@ def simple(individuals:List[Individual],nCrossover:int,nMutation:int,objectives:
         
         crossover_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y1_new),objectives=objectives,performance_parameters=performance_parameters))        
         crossover_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y2_new),objectives=objectives,performance_parameters=performance_parameters))
-
-    # Perform Mutation
-    mutation_individuals = []
+    
+    # Perform Mutation    
+    mutation_individuals = list()
     for k in range(nMutation):
         rand_indx = np.random.randint(0,nIndividuals-1)
         y1 = individuals[rand_indx].eval_parameters

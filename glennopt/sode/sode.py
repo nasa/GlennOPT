@@ -124,18 +124,14 @@ class SODE(Optimizer):
         num_params = len(individuals[0].eval_parameters)        
         if self.mutation_params.mutation_type == de_mutation_type.de_best_1_bin:
             newIndividuals = de_best_1_bin(individuals=individuals,objectives=self.objectives,
-                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.de_rand_1_bin:
             newIndividuals = de_rand_1_bin(individuals=individuals,objectives=self.objectives,
-                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.simple:
-            min_parents = max([2,self.mutation_params.min_parents])
-            max_parents = min([self.pop_size,self.mutation_params.max_parents])
-            nCrossover = randint(min_parents,max_parents)
+            nCrossover = int(self.pop_size/2)
             nMutation = self.pop_size-nCrossover
             newIndividuals = simple(individuals=individuals,nCrossover=nCrossover,nMutation=nMutation,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
 

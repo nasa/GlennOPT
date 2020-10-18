@@ -1,11 +1,11 @@
-from glennopt.nsga3 import NSGA_Individual
 import copy
 import numpy as np
 from collections import defaultdict
 from numpy import linalg as LA
 from typing import TypeVar,List
+from ..base_classes import Individual
 
-def non_dominated_sorting(individuals:List[NSGA_Individual],k:int,first_front_only=False):
+def non_dominated_sorting(individuals:List[Individual],k:int,first_front_only=False):
     '''
         Loops through the list of individuals and checks which one
         Inputs:
@@ -20,14 +20,7 @@ def non_dominated_sorting(individuals:List[NSGA_Individual],k:int,first_front_on
         '''
         b = np.all(x <= y) & np.any(x<y)
         return b
-        # not_equal = False
-        # for xv, yv in zip(x,y):
-        #     if xv > yv:
-        #         not_equal = True
-        #     elif xv < yv:
-        #         return False
-        # return not_equal
-    
+
     map_fit_ind = defaultdict(list)
     for ind in individuals:
         map_fit_ind[ind].append(ind)

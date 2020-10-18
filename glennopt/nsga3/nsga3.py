@@ -13,8 +13,6 @@ from itertools import chain
 from ..base_classes import Optimizer, Individual
 from ..helpers import Parameter
 from .non_dominated_sorting import non_dominated_sorting
-from .associate_to_reference_point import associate_to_reference_point
-from .generate_reference_points import generate_reference_points
 from .mutate import simple, de_best_1_bin, de_rand_1_bin, de_mutation_type, mutation_parameters
 
 individual_list = List[Individual]
@@ -316,12 +314,10 @@ class NSGA3(Optimizer):
         num_params = len(individuals[0].eval_parameters)        
         if self.mutation_params.mutation_type == de_mutation_type.de_best_1_bin:
             newIndividuals = de_best_1_bin(individuals=individuals,objectives=self.objectives,
-                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.de_rand_1_bin:
             newIndividuals = de_rand_1_bin(individuals=individuals,objectives=self.objectives,
-                min_parents=self.mutation_params.min_parents,max_parents=self.mutation_params.max_parents,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.simple:
