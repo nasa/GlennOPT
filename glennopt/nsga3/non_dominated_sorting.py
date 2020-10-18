@@ -1,61 +1,74 @@
 from glennopt.nsga3 import NSGA_Individual
 import copy
 import numpy as np
+from collections import defaultdict
 from numpy import linalg as LA
 from typing import TypeVar,List
 
-def non_dominated_sorting(individuals:List[NSGA_Individual]):
+def non_dominated_sorting(individuals:List[NSGA_Individual],k:int,first_front_only=False):
     '''
         Loops through the list of individuals and checks which one
+        Inputs:
+            fitnesses - array of objectives
+            k - number of individuals to select 
+            first_front_only - gets only the best individuals
     '''
     
-    def dominates(x: NSGA_Individual,y : NSGA_Individual) -> bool:
+    def dominates(x:np.ndarray,y:np.ndarray) -> bool:
         '''
-            Returns true if all the objectives of x are less than y
+            Returns true if all or any the objectives of x are less than y
         '''
-        b = np.all(x.objectives <= y.objectives) & np.any(x.objectives<y.objectives)
+        b = np.all(x <= y) & np.any(x<y)
         return b
-
-    nIndividuals = len(individuals)
-    for i in range(nIndividuals):
-        individuals[i].dominated_count = 0
-        individuals[i].domination_set = []
+        # not_equal = False
+        # for xv, yv in zip(x,y):
+        #     if xv > yv:
+        #         not_equal = True
+        #     elif xv < yv:
+        #         return False
+        # return not_equal
     
-    F = []
-    # Start the sortind find the first set
-    for i in range(nIndividuals):
-        for j in range(i+1,nIndividuals):
-            p = copy.deepcopy(individuals[i])
-            q = copy.deepcopy(individuals[j])
+    map_fit_ind = defaultdict(list)
+    for ind in individuals:
+        map_fit_ind[ind].append(ind)
+    fits = list(map_fit_ind.keys())
 
-            if (dominates(p,q)):                    # Calls Dominates 
-                p.domination_set.append(j)
-                q.dominated_count+=1
-            elif (dominates(q,p)):
-                q.domination_set.append(i)
-                p.dominated_count+=1
-            
-            individuals[i] = p
-            individuals[j] = q
-        # After j loop ends 
-        if (individuals[i].dominated_count==0):
-            F.append(i) # This is saying Individual_1 does not dominate individual i. this vector tells which individual has no dominatant
-            individuals[i].rank = 1
-    F = [F] 
-    k = 0   # Find subsequent fronts
-    while len(F[k])!=0:
-        Q = []
-        for i in F[k]:            # Look at each individual that doesn't have a dominant and checks it against the other individuals that don't have a dominant 
-            p = copy.deepcopy(individuals[i])
-            for j in p.domination_set:  
-                q = copy.deepcopy(individuals[j])
-                q.dominated_count = q.dominated_count - 1
-                if q.dominated_count == 0:                        
-                    Q.append(j) # This tells us which are the best individuals
-                    q.rank = k+1
-                individuals[j] = q
-        
-        F.append(Q) # the second array in F contains the fronts. 
-        k+=1
-    F = list(filter(None, F))
-    return individuals,F
+    current_front = []
+    next_front = []
+    dominating_fits = defaultdict(int)
+    dominated_fits = defaultdict(list)
+
+    # Rank first Pareto front
+    for i, fit_i in enumerate(fits):
+        for fit_j in fits[i+1:]:
+            if dominates(fit_i.objectives,fit_j.objectives):
+                dominating_fits[fit_j] += 1
+                dominated_fits[fit_i].append(fit_j)
+            elif dominates(fit_j.objectives,fit_i.objectives):
+                dominating_fits[fit_i] += 1
+                dominated_fits[fit_j].append(fit_i)
+        if dominating_fits[fit_i] == 0:
+            current_front.append(fit_i)
+
+    fronts = [[]]
+    for fit in current_front:
+        fronts[-1].extend(map_fit_ind[fit])
+    pareto_sorted = len(fronts[-1])
+
+    # Rank the next front until all individuals are sorted or
+    # the given number of individual are sorted.
+    if not first_front_only:
+        N = min(len(individuals), k)
+        while pareto_sorted < N:
+            fronts.append([])
+            for fit_p in current_front:
+                for fit_d in dominated_fits[fit_p]:
+                    dominating_fits[fit_d] -= 1
+                    if dominating_fits[fit_d] == 0:
+                        next_front.append(fit_d)
+                        pareto_sorted += len(map_fit_ind[fit_d])
+                        fronts[-1].extend(map_fit_ind[fit_d])
+            current_front = next_front
+            next_front = []
+
+    return fronts

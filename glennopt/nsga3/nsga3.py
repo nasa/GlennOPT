@@ -8,16 +8,16 @@ from typing import List
 from dataclasses import dataclass, field
 import numpy as np 
 import glob
+from itertools import chain
 
-from ..base_classes import Optimizer
+from ..base_classes import Optimizer, Individual
 from ..helpers import Parameter
-from .nsga_individual import NSGA_Individual
 from .non_dominated_sorting import non_dominated_sorting
 from .associate_to_reference_point import associate_to_reference_point
 from .generate_reference_points import generate_reference_points
 from .mutate import simple, de_best_1_bin, de_rand_1_bin, de_mutation_type, mutation_parameters
 
-individual_list = List[NSGA_Individual]
+individual_list = List[Individual]
 
 class NSGA3(Optimizer):
     def __init__(self,eval_script:str = "evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval=False):
@@ -42,6 +42,7 @@ class NSGA3(Optimizer):
         self.pop_size = pop_size
         self.individuals = None        
         self.__mutation_params = mutation_parameters()
+        
     
     # * Part of initialization    
     def add_eval_parameters(self,eval_params:List[Parameter]):
@@ -73,22 +74,15 @@ class NSGA3(Optimizer):
             for eval_param in parameters:
                 eval_param.value = np.random.uniform(eval_param.min_value,eval_param.max_value,1)[0]
             
-            doe_individuals.append(NSGA_Individual(eval_parameters=parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
+            doe_individuals.append(Individual(eval_parameters=parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
         
         # * Begin the evaluation
         self.evaluate_population(individuals=doe_individuals,population_number=-1)
         # * Read the DOE
         individuals = self.read_population(population_number=-1)
-        params = {}
-        params['nPop'] = self.pop_size
-        params['Zr'] = generate_reference_points(len(self.objectives),4)
-        _, params['nZr'] = params['Zr'].shape
-        params['zmin'] = []
-        params['zmax'] = []
-        params['smin'] = []
-        [sorted_individuals,_,params] = self.sort_and_select_population(individuals=individuals,params=params)
+        self.append_restart_file(individuals)
         
-        if self.single_folder_eval:
+        if self.single_folder_eval: 
             # Delete the population folder
             population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(-1))
             if os.path.isdir(population_folder):
@@ -111,15 +105,16 @@ class NSGA3(Optimizer):
         individuals = self.read_restart_file()
         
         if (len(individuals)==0):
-            individuals = self.read_population(population_number=pop_start)
+            individuals = self.read_calculation_folder()
 
         # Crossover and Mutate the doe individuals to generate the next individuals used in the population
         # Sort the population into [fill in here]
-        [individuals,F,params] = self.sort_and_select_population(individuals=individuals)
-        self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1,params=params,F=F)
+        ref_points = self.uniform_reference_points(len(self.objectives), p=4, scaling=None)
+        individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(individuals=individuals,reference_points=ref_points)
+        self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1, reference_points=ref_points)
 
 
-    def __optimize__(self,individuals:individual_list,n_generations:int,pop_start:int,params:dict,F:list):
+    def __optimize__(self,individuals:individual_list,n_generations:int,pop_start:int, reference_points:np.ndarray):
         """ 
             NSGA-III main loop
             Note: This function will read given starting population's results in, perform necessary crossover and mutation to generate enough individuals for the next iteration (self.pop_size)
@@ -131,7 +126,7 @@ class NSGA3(Optimizer):
         """
         
         nIndividuals = len(individuals)
-
+         
         # * Loop through all individuals
         for pop in range(pop_start,pop_start+n_generations):
             newIndividuals = self.__crossover_mutate__(individuals)
@@ -140,7 +135,7 @@ class NSGA3(Optimizer):
             newIndividuals = self.read_population(pop_start)
             # Sort and select
             newIndividuals.extend(individuals) # add the previous population to the pool                        
-            [individuals,F,params] = self.sort_and_select_population(newIndividuals,params)
+            individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(newIndividuals,reference_points)            
             self.append_restart_file(newIndividuals)
             if self.single_folder_eval:
                 # Delete the population folder
@@ -150,7 +145,7 @@ class NSGA3(Optimizer):
             pop_start+=1 # increment the population
         # * End Loop through all individuals
     
-    def sort_and_select_population(self,individuals:individual_list):
+    def sort_and_select_population(self,individuals:individual_list, reference_points:np.ndarray):
         '''
             Takes a list of individuals, finds the fronts and the best designs
             Inputs: 
@@ -163,8 +158,9 @@ class NSGA3(Optimizer):
         if (self.pop_size>len(individuals)):
             raise Exception("population size needs to be <= the number of individuals")
         
-        [individuals, pareto_fronts] = non_dominated_sorting(individuals)
-        fitnesses = np.array([individuals[f].objectives for front in pareto_fronts for f in front])
+
+        pareto_fronts = non_dominated_sorting(individuals,self.pop_size)
+        fitnesses = np.array([ind.objectives for f in pareto_fronts for ind in f])
         fitnesses *= -1
 
         best_point = np.min(fitnesses,axis=0)
@@ -176,7 +172,7 @@ class NSGA3(Optimizer):
         niches, dist = self.__associate_to_niche__(fitnesses, reference_points, best_point, intercepts)
         
         # Get counts per niche for individuals in all front but the last
-        niche_counts = np.zeros(len(ref_points), dtype=int)
+        niche_counts = np.zeros(len(reference_points), dtype=int)
         index, counts = np.unique(niches[:-len(pareto_fronts[-1])], return_counts=True)
         niche_counts[index] = counts
 
@@ -185,13 +181,11 @@ class NSGA3(Optimizer):
 
         # Use niching to select the remaining individuals
         sel_count = len(chosen)
-        n = k - sel_count
-        selected = niching(pareto_fronts[-1], n, niches[sel_count:], dist[sel_count:], niche_counts)
+        n = self.pop_size - sel_count
+        selected = self.__niching__(pareto_fronts[-1], n, niches[sel_count:], dist[sel_count:], niche_counts)
         chosen.extend(selected)
-        print('stop')
 
-        [individuals, F] = non_dominated_sorting(newpop)
-        return individuals,F,params
+        return chosen, best_point, worst_point, extreme_points
 
     
     def __find_extreme_points__(self,fitnesses, best_point, extreme_points=None):
@@ -307,14 +301,14 @@ class NSGA3(Optimizer):
                     points.extend(gen_refs_recursive(ref.copy(), nobj, left - i, total, depth + 1))
             return points
 
-        ref_points = numpy.array(gen_refs_recursive(numpy.zeros(nobj), nobj, p, p, 0))
+        ref_points = np.array(gen_refs_recursive(np.zeros(nobj), nobj, p, p, 0))
         if scaling is not None:
             ref_points *= scaling
             ref_points += (1 - scaling) / nobj
 
         return ref_points
 
-    def __crossover_mutate__(self,individuals:List[NSGA_Individual]):
+    def __crossover_mutate__(self,individuals:List[Individual]):
         '''
             Applies Crossover and Mutate
         '''
