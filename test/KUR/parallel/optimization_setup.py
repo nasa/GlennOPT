@@ -34,14 +34,13 @@ ns.mutation_params.mutation_type = de_mutation_type.simple
 ns.mutation_params.F = 0.6
 ns.mutation_params.C = 0.7
 # Parallel settings
-parallelSettings = parallel_settings()
-parallelSettings.concurrent_executions = 8
-parallelSettings.cores_per_execution: 1
-parallelSettings.execution_timeout = 1 # minutes
+
+ns.parallel_settings.concurrent_executions = 8
+ns.parallel_settings.cores_per_execution: 1
+ns.parallel_settings.execution_timeout = 1 # minutes
 # * These are not needed 
 # parallelSettings.machine_filename = 'machinefile.txt' 
 # parallelSettings.database_filename = 'database.csv'
-ns.parallel_settings = parallelSettings
 
 ns.start_doe(doe_size=64)
 ns.optimize_from_population(pop_start=-1,n_generations=50)

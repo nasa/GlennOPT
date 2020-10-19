@@ -500,7 +500,7 @@ class Optimizer:
         individuals = self.read_calculation_folder()
         self.append_restart_file(individuals)
 
-    def plot_2D(self,obj1_name:str,obj2_name:str):
+    def plot_2D(self,obj1_name:str,obj2_name:str,xlim:list=None,ylim:list=None):
         """
             Creates a 2D plot scatter plot of all the individuals for the two objectives specified
 
@@ -525,6 +525,10 @@ class Optimizer:
 
         ax.set_xlabel(obj1_name)
         ax.set_ylabel(obj2_name)
+        if xlim is not None:
+            ax.set_xlim(xlim[0],xlim[1])
+        if ylim is not None:
+            ax.set_ylim(ylim[0],ylim[1])
         ax.legend(legend_labels)
         fig.canvas.draw()
         fig.canvas.flush_events()
