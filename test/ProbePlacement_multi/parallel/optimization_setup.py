@@ -26,7 +26,7 @@ constraints = (tLo,tHi)
 
 # Generate the DOE
 current_dir = os.getcwd()
-pop_size = 32
+pop_size = 48
 ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 ns.add_eval_parameters(eval_params = eval_parameters)
@@ -50,4 +50,4 @@ ns.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
 ns.mutation_params.F = 0.6
 ns.mutation_params.C = 0.7
 ns.start_doe(doe_size=128)
-ns.optimize_from_population(pop_start=-1,n_generations=80)
+ns.optimize_from_population(pop_start=-1,n_generations=150)

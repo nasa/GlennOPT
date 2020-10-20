@@ -99,8 +99,7 @@ def objective_function(probeTheta, tsInterp, theta, trueSignal):
     '''  
     k = np.zeros(len(wnCombos))
     for j,wn in enumerate(wnCombos):
-        signal = tsInterp(probeTheta)
-        A, _ = fLou.solveForWaveletCoefficients(probeTheta, signal, wn)
+        A = fLou.buildDesignMatrix(probeTheta, wn)
         k[j] = np.linalg.cond(A)
     cost = np.sum(k**2)
 
@@ -112,7 +111,7 @@ def objective_function(probeTheta, tsInterp, theta, trueSignal):
     signal = tsInterp(probeTheta)
     # do for best of each combination
     for i,wn in enumerate(wnCombos):
-        A[i], F[i] = fLou.solveForWaveletCoefficients(probeTheta, signal, wn)
+        F[i], A[i] = fLou.solveForWaveletCoefficients(probeTheta, signal, wn)
         xR[i] = np.zeros(len(theta))
         # for j,t in enumerate(theta):
         xRtemp = 0
