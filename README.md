@@ -36,6 +36,8 @@ End Goal
 Integrate into OpenMDAO for a complete optimization package (needs to be debated)
 
 # Tutorials
-[Simple Tutorial](/%2E%2E/wikis/Tutorial:-Prerequisites-and-simplified-example)
+[Multi-Objective Kursawe Function](https://colab.research.google.com/github/nasa/GlennOPT/blob/master/test/KUR/multi_objective_example.ipynb)
 
-[Advance Reference](/%2E%2E/wikis/Tutorial:-Advance)
+[Multi-Objective Probe Placement](https://colab.research.google.com/github/nasa/GlennOPT/blob/master/test/ProbePlacement_multi/ProbePlacementExample.ipynb)
+
+
