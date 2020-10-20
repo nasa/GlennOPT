@@ -40,4 +40,11 @@ Integrate into OpenMDAO for a complete optimization package (needs to be debated
 
 [Multi-Objective Probe Placement](https://colab.research.google.com/github/nasa/GlennOPT/blob/master/test/ProbePlacement_multi/ProbePlacementExample.ipynb)
 
+# Contributors 
+|                   | Position      | Dates            | Responsibility                      |   |
+|-------------------|---------------|------------------|-------------------------------------|---|
+| Nadeem Kever      | LERCIP Intern | Summer-Fall 2020 | Single Objective DE                 |   |
+| Trey Harrison     | Researcher    | Fall 2020-       | Probe Optimization test case        |   |
+| Paht Juangphanich | Researcher    | Spring 2020-     | Architect                           |   |
+
 
