@@ -14,7 +14,7 @@ class CCD:
 
     def coded_calculation(self,min_val,max_val,coded_variable):
         cal = (max_val-min_val)/2
-        return cal*(coded_variable)+(min_val)
+        return (cal*coded_variable)+(min_val)
 
     def create_design(self):
         df = pd.DataFrame(data=doe.ccdesign(n=self.num,center=(4,4)),columns=[f'x{i+1}_coded'for i in range(self.num)])
