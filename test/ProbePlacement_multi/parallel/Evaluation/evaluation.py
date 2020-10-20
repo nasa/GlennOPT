@@ -146,11 +146,11 @@ def objective_function(probeTheta, tsInterp, theta, trueSignal):
     # line plot of true signal vs best reconstructed signal
     bestIndex     = np.argmax(pearsonR)
         
-    # plt.figure()
-    # plt.plot(theta,trueSignal)
-    # plt.plot(theta,xR[bestIndex],'--')
-    # plt.xlim((0,60))
-    # plt.savefig('signal_comparison.png')
+    plt.figure()
+    plt.plot(theta,trueSignal)
+    plt.plot(theta,xR[bestIndex],'--')
+    plt.xlim((0,60))
+    plt.savefig('signal_comparison.png')
 
     bestIndex     = np.argmax(pearsonR)
 
