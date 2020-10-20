@@ -24,14 +24,8 @@ Globals
 singleOrCombos = 'combos' # only one wavenumber combination or try multiple combos
 waveNumberGuesses = [[8,96,104],[8,96,80]] # guesses of wave numbers
 
-if singleOrCombos == 'combos':
-    wnCombos = list()
-    for i in range(1,len(waveNumberGuesses)+1):
-        subCombos = [np.asarray(x) for x in itertools.combinations(waveNumberGuesses,i)]
-        wnCombos.extend(subCombos)
-else:
-    wnCombos = waveNumberGuesses
-wnCombos = [[8, 96, 104], [8, 96, 80]]
+wnCombos = waveNumberGuesses
+
 
 #* Start of Trey's code
 def true_signal_construction():
@@ -99,8 +93,7 @@ def objective_function(probeTheta, tsInterp, theta, trueSignal):
     '''  
     k = np.zeros(len(wnCombos))
     for j,wn in enumerate(wnCombos):
-        signal = tsInterp(probeTheta)
-        A, _ = fLou.solveForWaveletCoefficients(probeTheta, signal, wn)
+        A = fLou.buildDesignMatrix(probeTheta, wn)
         k[j] = np.linalg.cond(A)
     cost = k
 
@@ -112,7 +105,7 @@ def objective_function(probeTheta, tsInterp, theta, trueSignal):
     signal = tsInterp(probeTheta)
     # do for best of each combination
     for i,wn in enumerate(wnCombos):
-        A[i], F[i] = fLou.solveForWaveletCoefficients(probeTheta, signal, wn)
+        F[i], A[i] = fLou.solveForWaveletCoefficients(probeTheta, signal, wn)
         xR[i] = np.zeros(len(theta))
         # for j,t in enumerate(theta):
         xRtemp = 0
@@ -142,12 +135,12 @@ def objective_function(probeTheta, tsInterp, theta, trueSignal):
     # rects2 = ax[1].bar(x-width/2, rmsR)
 
     # format plot
-    # ax[0].set_ylabel('Pearson R')
-    # ax[1].set_ylabel('RMS Error')
-    # ax[0].set_ylim(0.75,1)
-    # for i in range(len(ax)):
-    #     ax[i].set_xticks(x)
-    #     ax[i].set_xticklabels(xLabel)
+    ax[0].set_ylabel('Pearson R')
+    ax[1].set_ylabel('RMS Error')
+    ax[0].set_ylim(0.75,1)
+    for i in range(len(ax)):
+        ax[i].set_xticks(x)
+        ax[i].set_xticklabels(xLabel)
 
 
     # line plot of true signal vs best reconstructed signal
@@ -175,9 +168,8 @@ def read_input(input_filename):
     return x
  
 def print_output(y,perf=None):
-    # Output should contain [Name of the Objective/Parameter] = [value] This is read by the optimizer 
     with open("output.txt", "w") as f:        
-        f.write('objective1 = {0:.6f}\n'.format(y[0]))
+        f.write('objective1 = {0:.6f}\n'.format(y[0])) # Output should contain [Name of the Objective/Parameter] = [value] This is read by the optimizer 
         f.write('objective2 = {0:.6f}\n'.format(y[1]))
         if perf is not None:
             f.write('PearsonR = {0:.6f}\n'.format(perf[0]))
