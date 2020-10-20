@@ -210,7 +210,7 @@ class Optimizer:
         
         ind_directories = sorted(ind_directories)
         
-        individuals = []
+        individuals = list()
         for ind_dir in ind_directories:
             ind = Individual(objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters)
             ind.name = ind_dir
@@ -273,15 +273,15 @@ class Optimizer:
                 else:                    
                     pid,p = self.__evaluate_individual__(individual=individuals[ind_indx],individual_directory=ind_dir)
                     pid_list.append({'pid':pid,'start_time':time.perf_counter(),'proc':p,'pop':str(individuals[ind_indx].population),'ind':individuals[ind_indx].name})
-
-                inActive_pids = list()
-                while (len(inActive_pids)<n_evalulations):
+                
+                while (len(pid_list)==n_evalulations): # Pause any new executions once we reach maximum number of evaluations 
+                    inActive_pids = list()
                     # Loop to check if PID is still active and execution time is less than timeout                    
                     for i in range(len(pid_list)):
                         pid = pid_list[i]['pid']; p = pid_list[i]['proc']; pop = pid_list[i]['pop']; ind_name = pid_list[i]['ind']
                         if self.__check_process_running__(p): # If PID is running check if it exceeded the execution time
                             start_time = pid_list[i]['start_time']
-                            time.sleep(0.1) # Check every 0.01 seconds
+                            time.sleep(0.1) # Check every "x" seconds
                             if (time.perf_counter() - start_time)/60 > self.parallel_settings.execution_timeout:
                                 try:
                                     self.__write_proc_log__(p,pop,ind_name)
@@ -294,7 +294,7 @@ class Optimizer:
                             inActive_pids.append(i)
                     
                     for index in sorted(inActive_pids, reverse=True): # removing the inactive PIDs from the list 
-                        del pid_list[index]                    
+                        del pid_list[index]  
                     
             else: # TODO execute individual without creating a bunch of directories. Maybe create execution directories and delete them
                 output = subprocess.check_output(['python', self.evaluation_script])
@@ -306,6 +306,7 @@ class Optimizer:
             if poll == None:
                 return True
         return False
+
     def __check_PID_running__(self,pid):
         """
             Checks if a pid is still running (UNIX works, windows we'll see)
@@ -397,6 +398,8 @@ class Optimizer:
                 offset = 3 # this is the column where data starts
                 for index,row in df.iterrows():
                     ind = Individual(eval_parameters=self.eval_parameters,objectives=self.objectives,performance_parameters=self.performance_parameters)
+                    ind.name = row['individual']
+                    ind.population = int(row['population'].replace('DOE','-1').replace('POP',''))
                     [ind.set_eval_parameter(p.name,row[p.name]) for p in self.eval_parameters]
                     [ind.set_objective(p.name,row[p.name]) for p in self.objectives]
                     [ind.set_performance_parameter(p.name,row[p.name]) for p in self.performance_parameters]                    
@@ -497,7 +500,7 @@ class Optimizer:
         individuals = self.read_calculation_folder()
         self.append_restart_file(individuals)
 
-    def plot_2D(self,obj1_name:str,obj2_name:str):
+    def plot_2D(self,obj1_name:str,obj2_name:str,xlim:list=None,ylim:list=None):
         """
             Creates a 2D plot scatter plot of all the individuals for the two objectives specified
 
@@ -522,6 +525,10 @@ class Optimizer:
 
         ax.set_xlabel(obj1_name)
         ax.set_ylabel(obj2_name)
+        if xlim is not None:
+            ax.set_xlim(xlim[0],xlim[1])
+        if ylim is not None:
+            ax.set_ylim(ylim[0],ylim[1])
         ax.legend(legend_labels)
         fig.canvas.draw()
         fig.canvas.flush_events()
@@ -618,7 +625,7 @@ class Optimizer:
                         temp_objectives.append(best_individuals[key][o].objectives[o])
                     else:
                         temp_objectives.append(objectives[-1][o])
-            objectives.append(temp_objectives)            
+            objectives.append(temp_objectives)
         return objectives, keys
 
     def plot_best_pop(self,objective_index):

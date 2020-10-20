@@ -11,8 +11,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ..helpers import Parameter
 from ..base_classes import Optimizer, Individual
-from ..nsga3.mutate import mutation_de_1_rand_bin, mutation_de_best_2_bin, mutation_simple, mutation_parameters, de_mutation_type
-from random import seed, gauss, random
+from ..nsga3.mutate import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple
+from random import seed, gauss, random, randint
 from tqdm import trange
 
 class SODE(Optimizer):
@@ -98,18 +98,21 @@ class SODE(Optimizer):
         # self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1,params=params,F=F)
         individuals = sorted(individuals, key=operator.attrgetter('objectives'))
         individuals = individuals[:self.pop_size]
-        # best_sc = np.zeros(n_generations)
-        for pop in trange(pop_start+1,n_generations):
+        if pop_start == -1: 
+            pop_end = n_generations+pop_start
+        else:
+            pop_end = n_generations +pop_start+1
+
+        for pop in trange(pop_start+1,pop_end):
             newIndividuals = self.__crossover_mutate__(individuals)
             self.evaluate_population(newIndividuals,pop) 
             newIndividuals = self.read_population(pop)
 
             individuals.extend(newIndividuals) # add the previous population to the pool 
             # Sort and select
-            sorted_inds =  sorted(individuals, key=operator.attrgetter('objectives'))
+            sorted_inds =  sorted(individuals, key=operator.attrgetter('objectives'))            
             self.append_restart_file(sorted_inds)
             individuals = sorted_inds[:self.pop_size]
-            shuffle(individuals)
             
 
     def __crossover_mutate__(self,individuals:List[Individual]):
@@ -118,20 +121,18 @@ class SODE(Optimizer):
         '''
         
         nIndividuals = len(individuals)
-        num_params = len(individuals[0].eval_parameters)
-        import random
-        nParents = random.randint(self.mutation_params.min_parents,self.mutation_params.max_parents)
-        if self.mutation_params.mutation_type == de_mutation_type.de_1_rand_bin:
-            newIndividuals = mutation_de_1_rand_bin(individuals=individuals,objectives=self.objectives,nParents=nParents,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,F=self.mutation_params.F,C=self.mutation_params.C)
+        num_params = len(individuals[0].eval_parameters)        
+        if self.mutation_params.mutation_type == de_mutation_type.de_best_1_bin:
+            newIndividuals = de_best_1_bin(individuals=individuals,objectives=self.objectives,
+                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
+                F=self.mutation_params.F,C=self.mutation_params.C)
+        elif self.mutation_params.mutation_type == de_mutation_type.de_rand_1_bin:
+            newIndividuals = de_rand_1_bin(individuals=individuals,objectives=self.objectives,
+                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
+                F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.simple:
-            newIndividuals = mutation_simple(individuals=individuals,nCrossover=nParents,nMutation=nParents,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
-        elif self.mutation_params.mutation_type == de_mutation_type.mutation_de_best_2_bin:
-            # find best value
-            best_indx = 0
-            for indx in range(1,nIndividuals):
-                if individuals[indx].objectives[0]<individuals[best_indx].objectives[0]:
-                    best_indx = indx
-            
-            newIndividuals = mutation_de_best_2_bin(best_indx=best_indx,individuals=individuals,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,F=self.mutation_params.F,C=self.mutation_params.C)                
+            nCrossover = int(self.pop_size/2)
+            nMutation = self.pop_size-nCrossover
+            newIndividuals = simple(individuals=individuals,nCrossover=nCrossover,nMutation=nMutation,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
 
         return newIndividuals

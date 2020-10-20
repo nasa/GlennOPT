@@ -6,10 +6,11 @@ from enum import Enum
 import random
 import math
 import copy
+import time
 import numpy as np
 from numpy import ndarray
 from typing import List
-from ..helpers import Parameter
+from ..helpers import Parameter, convert_to_ndarray
 from ..base_classes import Individual
 
 
@@ -17,8 +18,8 @@ class de_mutation_type(Enum):
     """
         differential evolution mutation type. users can select what kind of mutation type to use 
     """
-    de_1_rand_bin = 1
-    de_best_2_bin = 2
+    de_rand_1_bin = 1
+    de_best_1_bin = 2
     simple = 3
 
 @dataclass
@@ -32,69 +33,137 @@ class mutation_parameters:
             mu: 
             F:
             C:
-            min_parents = 0.1
-            max_parents = 0.9
     """
-    mutation_type: de_mutation_type = field(repr=True,default=de_mutation_type.de_1_rand_bin)
+    mutation_type: de_mutation_type = field(repr=True,default=de_mutation_type.de_rand_1_bin)
     sigma: float = field(repr=True,default=0.2)
     mu: float = field(repr=True,default=0.02)
     F: float = field(repr=True,default=0.6)
     C: float = field(repr=True,default=0.8)
-    min_parents:int = field(repr=True,default=0)
-    max_parents:int = field(repr=True,default=10)
+    
+def get_eval_param_matrix(individuals:List[Individual]):    
+    pop = np.zeros((len(individuals),len(individuals[0].eval_parameters)))
+    xmin = individuals[0].eval_parameter_min
+    xmax = individuals[0].eval_parameter_max
+    for i,ind in enumerate(individuals):
+        pop[i,:] = ind.eval_parameters
+    return pop,xmin,xmax
 
-def mutation_de_1_rand_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],nParents:int,F:float, C:float):
+def get_objective_matrix(individuals:List[Individual]):    
+    pop = np.zeros((len(individuals),len(individuals[0].objectives)))
+    for i,ind in enumerate(individuals):
+        pop[i,:] = ind.objectives
+    return pop
+
+def shuffle_population(pop,nIndividuals,nparents):
+    index = (1+np.random.permutation(nIndividuals))[0:nparents]     # Pick Random Parents
+    rot = convert_to_ndarray([range(0,nIndividuals)])
+    a_perm = np.random.permutation(nIndividuals)
+    
+    a = np.zeros((nIndividuals,len(index)),dtype=int)
+    pop_shuffled = list()
+    for i in range(len(index)):
+        rt = (index[i]+rot) % nIndividuals
+        rt = rt.astype(int)
+        a[:,i] = a_perm[rt[0]]
+        pop_shuffled.append(pop[a[:,i]])                            # List of shuffled population
+    return pop_shuffled
+
+def de_best_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int,max_parents:int=2,F:float=0.6, C:float=0.7):
     """
         Applies mutation and crossover using de_1_rand_bin to a list of individuals 
         Inputs:
-            individuals - list of individuals
+            individuals - list of individuals. Takes the best individual[0] (sorted lowest to highest)
             objectives - list of objectives List[Parameter]
             performance_parameters - list of parameters List[parameter]
             F - Amplification Factor [0,2]
             C - Crossover factor [0,1]
-    """
-    newIndividuals=[] 
-    for i in range(len(individuals)):   # Loop for every individual
-        ind1 = individuals[i]           # Select an individual 
-        x1 = ind1.eval_parameters
-        parent_indicies = get_pairs(len(individuals),nParents,[i])
-        parent_indicies.remove(i)
-        xp = []                         # gets a list of evaluation parameters
-        for indx in parent_indicies:
-            xp.append(individuals[indx].eval_parameters)
+        Citatons:
+            https://gist.github.com/martinus/7434625df79d820cd4d9
+            Storn, R., & Price, K. (1997). Differential Evolution -- A Simple and Efficient Heuristic for global Optimization over Continuous Spaces. Journal of Global Optimization, 11(4), 341–359. https://doi.org/10.1023/A:1008202821328 
+            Ao, Y., & Chi, H. (2009). Multi-parent Mutation in Differential Evolution for Multi-objective Optimization. 2009 Fifth International Conference on Natural Computation, 4, 618–622. https://doi.org/10.1109/ICNC.2009.149
+    """ 
+    nIndividuals = len(individuals)
+    pop,xmin,xmax = get_eval_param_matrix(individuals)
+    
+    min_parents = max([2,min_parents])
+    max_parents = max([2,max_parents])
+    nparents = random.randint(min_parents,max_parents) 
 
-        x1 = mutate_crossover_de(x1,xp,ind1.eval_parameter_min, ind1.eval_parameter_max,F,C)
-        
-        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,x1),objectives=objectives,performance_parameters=performance_parameters))
+    x1 = individuals[0].eval_parameters                             # Use the best individual
+    #-------------- Mutation --------------
+    pop_shuffled = shuffle_population(pop,nIndividuals,nparents)
+    # Generate the new mutated population
+    temp = pop*0
+    for i in range(0,len(pop_shuffled)-1,2):
+        temp += pop_shuffled[i] - pop_shuffled[i+1]
+    pop_mutate = x1+F*temp                          
+    
+    #-------------- Crossover --------------
+    cr_part1 = (np.random.rand(nIndividuals,len(x1)) < C)                     # Crossover    
+    cr_part2 = np.random.randint(0,len(x1),size=pop_mutate.shape)
+    cr = np.logical_or(cr_part1,cr_part2)
+
+    new_pop = pop*np.logical_not(cr) + pop_mutate*cr
+    #------------- Min Max Check -----------
+    xmin = xmin.reshape(1,-1)*np.ones((nIndividuals,1))
+    xmax = xmax.reshape(1,-1)*np.ones((nIndividuals,1))
+    new_pop = np.minimum(new_pop,xmax)
+    new_pop = np.maximum(new_pop,xmin)
+    #------------- Create The Individuals ------------
+    newIndividuals = list()
+    for i in range(new_pop.shape[0]): # loop for each individual set (nIndividuals)
+        z = new_pop[i,:]
+        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
+
     return newIndividuals 
 
-def mutation_de_best_2_bin(best_indx:int,individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],F:float,C:float):
+def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int=3,max_parents:int=3,F:float=0.6, C:float=0.7):
     """
-        mutation and crossover using de_best_2_bin (single objective only)
+        Applies mutation and crossover using de_rand_1_bin to a list of individuals 
         Inputs:
-            individuals - list of individuals
+            individuals - list of individuals. Takes the best individual[0] (sorted lowest to highest)
             objectives - list of objectives List[Parameter]
             performance_parameters - list of parameters List[parameter]
             F - Amplification Factor [0,2]
             C - Crossover factor [0,1]
-    """
-    newIndividuals=[]
-    x_best = individuals[best_indx].eval_parameters
-    for i in range(len(individuals)): # Loop for every individual            
-        parent_indicies = get_pairs(len(individuals),4,[best_indx]) # pre-populate with the best index
-        parent_indicies.remove(best_indx)            
-        x1 = individuals[parent_indicies[0]].eval_parameters
-        x2 = individuals[parent_indicies[1]].eval_parameters
-        x3 = individuals[parent_indicies[2]].eval_parameters
-        x4 = individuals[parent_indicies[3]].eval_parameters
+        Citatons:
+            https://gist.github.com/martinus/7434625df79d820cd4d9
+            Storn, R., & Price, K. (1997). Differential Evolution -- A Simple and Efficient Heuristic for global Optimization over Continuous Spaces. Journal of Global Optimization, 11(4), 341–359. https://doi.org/10.1023/A:1008202821328 
+            Ao, Y., & Chi, H. (2009). Multi-parent Mutation in Differential Evolution for Multi-objective Optimization. 2009 Fifth International Conference on Natural Computation, 4, 618–622. https://doi.org/10.1109/ICNC.2009.149
+    """ 
+    nIndividuals = len(individuals)
+    pop,xmin,xmax = get_eval_param_matrix(individuals)
         
-        x = mutate_crossover_de_best_2_bin(x_best,x1,x2,x3,x4,ind1.eval_parameter_min, ind1.eval_parameter_max,F,C)
+    nEvalParams = len(individuals[0].eval_parameters)
+    #-------------- Mutation --------------
+    pop_shuffled = shuffle_population(pop,nIndividuals,max_parents)
+    pop_rand = pop_shuffled.pop()
+    # Generate the new mutated population
+    temp = pop*0
+    for i in range(0,len(pop_shuffled)-1,2):
+        temp += pop_shuffled[i] - pop_shuffled[i+1]
+    pop_mutate = pop_rand+F*temp                          
+    
+    #-------------- Crossover --------------
+    cr_part1 = (np.random.rand(nIndividuals,nEvalParams) < C)                     # Crossover    
+    cr_part2 = np.random.randint(0,nEvalParams,size=pop_mutate.shape)
+    cr = np.logical_or(cr_part1,cr_part2)
 
-        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,x),objectives=objectives,performance_parameters=performance_parameters))
-                
+    new_pop = pop*np.logical_not(cr) + pop_mutate*cr
+    #------------- Min Max Check -----------
+    xmin = xmin.reshape(1,-1)*np.ones((nIndividuals,1))
+    xmax = xmax.reshape(1,-1)*np.ones((nIndividuals,1))
+    new_pop = np.minimum(new_pop,xmax)
+    new_pop = np.maximum(new_pop,xmin)
+    #------------- Create The Individuals ------------
+    newIndividuals = list()
+    for i in range(new_pop.shape[0]): # loop for each individual set (nIndividuals)
+        z = new_pop[i,:]
+        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
     return newIndividuals 
 
-def mutation_simple(self,individuals:List[Individual],nCrossover:int,nMutation:int,objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],mu:float,sigma:float):
+
+def simple(individuals:List[Individual],nCrossover:int,nMutation:int,objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],mu:float,sigma:float):
     """
         Performs a simple mutation and crossover on the individuals
         Inputs:
@@ -118,9 +187,9 @@ def mutation_simple(self,individuals:List[Individual],nCrossover:int,nMutation:i
         
         crossover_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y1_new),objectives=objectives,performance_parameters=performance_parameters))        
         crossover_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y2_new),objectives=objectives,performance_parameters=performance_parameters))
-
-    # Perform Mutation
-    mutation_individuals = []
+    
+    # Perform Mutation    
+    mutation_individuals = list()
     for k in range(nMutation):
         rand_indx = np.random.randint(0,nIndividuals-1)
         y1 = individuals[rand_indx].eval_parameters
@@ -156,7 +225,7 @@ def mutate(x1:np.ndarray,xmin:ndarray,xmax:ndarray,mu:float=0.02,sigma:float=0.2
                 y[indx]=xmin[indx]
             if (xmax is not None) and (y[indx]>xmax[indx]):
                 y[indx]=xmax[indx]
-    return ys
+    return y
 
 def crossover(x1:np.ndarray,x2:np.ndarray):
     '''
@@ -169,69 +238,6 @@ def crossover(x1:np.ndarray,x2:np.ndarray):
     y1=alpha*x1+(1.0-alpha)*x2
     y2=alpha*x2+(1.0-alpha)*x1
     return y1,y2
-        
-# Mutate x1 using a,b,c
-def mutate_crossover_de(x:ndarray,xp:List[np.array],xmin:ndarray,xmax:ndarray,F=0.6,C=0.8):
-    '''
-        Differential evolution mutation de/1/rand/bin
-        Inputs: 
-            x - vector of design variables 
-            xp - List of parents (min parents = 3)
-            xa - random vector of design variables
-            xb - random vector of design variables
-            xc - random vector of design variables
-            F - Amplification Factor [0,2]
-            C - Crossover factor [0,1]
-        returns z mutated vector
-    '''
-    
-    y = x*0 # Creates a copy
-    z = y*0   
-    for i in range(len(x)): # Mutate each index of the inputs
-        temp = 0
-        for j in range(1,len(xp)-1): # Iterates for the number of parents 
-            temp += xp[j+1][i]-xp[j][i]        
-        y[i] = (xp[0][i] + F*temp)
-        
-        if (xmin is not None) and (y[i]<xmin[i]):
-            y[i]=xmin[i]
-        if (xmax is not None) and (y[i]>xmax[i]):
-            y[i]=xmax[i]
-        
-        if (random.random() <= C):
-            z[i] =  y[i]
-        else:
-            z[i] =  x[i]
-    return z
-
-def mutate_crossover_de_best_2_bin(x_best:ndarray,x_r1:ndarray,x_r2:ndarray,x_r3:ndarray,x_r4:ndarray,xmin:ndarray,xmax:ndarray,F=0.5,C=0.8):
-    '''
-        Differential evolution mutation de/1/rand/bin, Used for single objective not multi
-        Inputs: 
-            x_best - vector of design variables 
-            x_r1 - random vector of design variables
-            x_r2 - random vector of design variables
-            x_r3 - random vector of design variables
-            x_r4 - random vector of design variables
-            F - Amplification Factor [0,2]
-            C - Crossover factor [0,1]
-    '''
-    y = x_best*0
-    z = x_best*0
-    for i in range(len(y)):
-        y[i] = x_best[i]+F*(x_r1[i]-x_r2[i])+F*(x_r3[i]-x_r4[i])
-        
-        if (xmin is not None) and (y[i]<xmin[i]):
-            y[i]=xmin[i]
-        if (xmax is not None) and (y[i]>xmax[i]):
-            y[i]=xmax[i]
-
-        if (random.random() <= C):
-            z[i] =  y[i]
-        else:
-            z[i] =  x_best[i]
-    return z
-
 
 # Helper functions
 def get_pairs(nIndividuals:int,nParents:int,parent_indx_seed=[]):
@@ -241,19 +247,14 @@ def get_pairs(nIndividuals:int,nParents:int,parent_indx_seed=[]):
             nIndividuals - number of individuals
             nParents - number of parents 
             parent_indx_seed - pre-populate the parent index array
-    """
-    if len(parent_indx_seed)>0:
-        parent_indx = parent_indx_seed
-        nParents += len(parent_indx_seed)
-    else:
-        parent_indx = []
-    rand_indx = -1        
-    while(rand_indx in parent_indx or rand_indx==-1):
-        rand_indx = np.random.randint(0,nIndividuals-1)
-        parent_indx.append(rand_indx)
-        if (len(parent_indx)>=nParents):
-            break
-    return parent_indx
+    """    
+    parent_indicies = list()
+    for i in range(nParents):
+        rand_indx = random.randint(0,nIndividuals-1)
+        while(rand_indx in parent_indx_seed):
+            rand_indx = random.randint(0,nIndividuals-1)
+        parent_indicies.append(rand_indx)
+    return parent_indicies
 
 def set_eval_parameters(eval_parameters:List[Parameter], x:np.ndarray):
     """
