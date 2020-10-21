@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ..helpers import Parameter
 from ..base_classes import Optimizer, Individual
-from ..nsga3.mutate import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple
+from ..nsga3.mutate import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn
 from random import seed, gauss, random, randint
 from tqdm import trange
 
@@ -107,10 +107,9 @@ class SODE(Optimizer):
             newIndividuals = self.__crossover_mutate__(individuals)
             self.evaluate_population(newIndividuals,pop) 
             newIndividuals = self.read_population(pop)
-
             individuals.extend(newIndividuals) # add the previous population to the pool 
             # Sort and select
-            sorted_inds =  sorted(individuals, key=operator.attrgetter('objectives'))            
+            sorted_inds = sorted(individuals, key=operator.attrgetter('objectives'))            
             self.append_restart_file(sorted_inds)
             individuals = sorted_inds[:self.pop_size]
             
@@ -127,12 +126,20 @@ class SODE(Optimizer):
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.de_rand_1_bin:
+            shuffle(individuals)
             newIndividuals = de_rand_1_bin(individuals=individuals,objectives=self.objectives,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.simple:
+            shuffle(individuals)
             nCrossover = int(self.pop_size/2)
             nMutation = self.pop_size-nCrossover
             newIndividuals = simple(individuals=individuals,nCrossover=nCrossover,nMutation=nMutation,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
+        elif self.mutation_params.mutation_type == de_mutation_type.de_rand_1_bin_spawn:
+            shuffle(individuals)
+            parents = individuals[0:self.mutation_params.nParents]
+            newIndividuals = de_rand_1_bin_spawn(individuals=parents,objectives=self.objectives,
+                eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
+                F=self.mutation_params.F,C=self.mutation_params.C,num_children=len(individuals))
 
         return newIndividuals

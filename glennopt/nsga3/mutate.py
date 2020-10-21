@@ -21,6 +21,7 @@ class de_mutation_type(Enum):
     de_rand_1_bin = 1
     de_best_1_bin = 2
     simple = 3
+    de_rand_1_bin_spawn = 1
 
 @dataclass
 class mutation_parameters:
@@ -39,6 +40,7 @@ class mutation_parameters:
     mu: float = field(repr=True,default=0.02)
     F: float = field(repr=True,default=0.6)
     C: float = field(repr=True,default=0.8)
+    nParents:int = field(repr=True,default=16) # this is useful for single objective where you want x parents to spawn all the children
     
 def get_eval_param_matrix(individuals:List[Individual]):    
     pop = np.zeros((len(individuals),len(individuals[0].eval_parameters)))
@@ -116,6 +118,8 @@ def de_best_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
         newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
 
     return newIndividuals 
+
+
 
 def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int=3,max_parents:int=3,F:float=0.6, C:float=0.7):
     """
@@ -267,3 +271,49 @@ def set_eval_parameters(eval_parameters:List[Parameter], x:np.ndarray):
     for indx in range(len(parameters)):
         parameters[indx].value = x[indx]
     return parameters
+
+def de_rand_1_bin_spawn(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int,F:float=0.6, C:float=0.7):
+    """
+        Applies mutation and crossover using de_rand_1_bin to a list of individuals to spawn even more individual combinations
+        Inputs:
+            individuals - list of individuals. Takes the best individual[0] (sorted lowest to highest)
+            objectives - list of objectives List[Parameter]
+            performance_parameters - list of parameters List[parameter]
+            F - Amplification Factor [0,2]
+            C - Crossover factor [0,1]
+        Citatons:
+           
+    """ 
+    nIndividuals = len(individuals)
+    pop,xmin,xmax = get_eval_param_matrix(individuals)
+    nEvalParams = len(individuals[0].eval_parameters)
+    newIndividuals = list()
+
+    while (len(newIndividuals)<num_children):
+        #-------------- Mutation --------------
+        pop_shuffled = shuffle_population(pop,nIndividuals,3)
+        pop_rand = pop_shuffled.pop()
+        # Generate the new mutated population
+        temp = pop*0
+        for i in range(0,len(pop_shuffled)-1,2):
+            temp += pop_shuffled[i] - pop_shuffled[i+1]
+        pop_mutate = pop_rand+F*temp                          
+        
+        #-------------- Crossover --------------
+        cr_part1 = (np.random.rand(nIndividuals,nEvalParams) < C)                     # Crossover    
+        cr_part2 = np.random.randint(0,nEvalParams,size=pop_mutate.shape)
+        cr = np.logical_or(cr_part1,cr_part2)
+
+        new_pop = pop*np.logical_not(cr) + pop_mutate*cr
+        #------------- Min Max Check -----------
+        xmin_reshape = xmin.reshape(1,-1)*np.ones((nIndividuals,1))
+        xmax_reshape = xmax.reshape(1,-1)*np.ones((nIndividuals,1))
+        new_pop = np.minimum(new_pop,xmax_reshape)
+        new_pop = np.maximum(new_pop,xmin_reshape)
+        #------------- Create The Individuals ------------    
+        for i in range(new_pop.shape[0]): # loop for each individual set (nIndividuals)
+            z = new_pop[i,:]
+            newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
+        
+    random.shuffle(newIndividuals)
+    return newIndividuals[0:num_children]

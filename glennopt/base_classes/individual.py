@@ -31,7 +31,7 @@ class Individual:
         '''
             Returns a readable format where you can see Object at 
         '''
-        return "%s.%s(%s)" % (self.__module__, self.__class__.__name__, str(tuple(self.objectives)))
+        return "%s.(%s)(%s)" % (self.__class__.__name__,str(tuple(self.objectives)), str(tuple(self.eval_parameters)))
 
     @property 
     def name(self):

@@ -51,5 +51,5 @@ sode.parallel_settings = parallelSettings
 sode.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
 sode.mutation_params.F = 0.6
 sode.mutation_params.C = 0.7
-sode.start_doe(doe_size=256)
-sode.optimize_from_population(pop_start=-1,n_generations=50)
+sode.start_doe(doe_size=64)
+sode.optimize_from_population(pop_start=-1,n_generations=500)
