@@ -115,9 +115,11 @@ def de_best_1_bin(best:Individual,individuals:List[Individual],objectives:List[P
 
     return newIndividuals 
 
-def de_best_dmp(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int):
+def de_dmp(best:List[Individual],individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int):
     '''
+    Difference Mean Based Perturbation - less greedy than DE/best/1 = less chance of getting stuck at local minima, prefers exploration. 
     Individuals:
+        best - best individual, can be actual best or an average of the top X designs
         individuals - list of individuals 50% best performing. Takes the best individual[0] (sorted lowest to highest)
         objectives - list of objectives List[Parameter]
         eval_parameters - List[glennopt.helpers.Paramameters]
@@ -132,6 +134,9 @@ def de_best_dmp(individuals:List[Individual],objectives:List[Parameter],eval_par
     nIndividuals = len(individuals)
     pop,xmin,xmax = get_eval_param_matrix(individuals)        
 
+    # ------------ Average best individual dimension wise ---------------
+    X_best = 1/len(best) * 
+    delta_M = X_best
     x1 = best[0].eval_parameters                             # Use the best individual
     #-------------- Mutation --------------
     pop_shuffled = shuffle_population(pop,nIndividuals,2)
