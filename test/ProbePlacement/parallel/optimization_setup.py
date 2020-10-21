@@ -7,6 +7,7 @@ from glennopt.helpers import Parameter, parallel_settings
 from glennopt.sode import SODE
 from glennopt.nsga3 import de_mutation_type, mutation_parameters
 import numpy as np
+import pyDOE2 as doe
 
 eval_parameters = list()
 
@@ -43,7 +44,7 @@ sode.add_performance_parameters(perf_parameters)
 # Serial Execution but with a shorter execution timeout.
 parallelSettings = parallel_settings()
 parallelSettings.concurrent_executions = 8
-parallelSettings.cores_per_execution: 1
+parallelSettings.cores_per_execution = 1
 parallelSettings.execution_timeout = 0.2 # minutes
 sode.parallel_settings = parallelSettings
 
@@ -51,5 +52,10 @@ sode.parallel_settings = parallelSettings
 sode.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
 sode.mutation_params.F = 0.6
 sode.mutation_params.C = 0.7
+
+levels = [2, 3, 4]  # Three factors with 2, 3 or 4 levels respectively.
+reduction = 3       # Reduce the number of experiment to approximately a third.
+
+doe.ccdesign(n=256,center=(4,4))
 sode.start_doe(doe_size=256)
-sode.optimize_from_population(pop_start=-1,n_generations=50)
+sode.optimize_from_population(pop_start=-1,n_generations=150)
