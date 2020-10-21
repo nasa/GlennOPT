@@ -68,7 +68,7 @@ def shuffle_population(pop,nIndividuals,nparents):
         pop_shuffled.append(pop[a[:,i]])                            # List of shuffled population
     return pop_shuffled
 
-def de_best_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int,max_parents:int=2,F:float=0.6, C:float=0.7):
+def de_best_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int=2,max_parents:int=2,F:float=0.6, C:float=0.7):
     """
         Applies mutation and crossover using de_1_rand_bin to a list of individuals 
         Inputs:
