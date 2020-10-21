@@ -27,7 +27,7 @@ constraints = (tLo,tHi)
 
 # Generate the DOE
 current_dir = os.getcwd()
-pop_size = 48
+pop_size = 96
 sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 sode.add_eval_parameters(eval_params = eval_parameters)
@@ -42,7 +42,7 @@ perf_parameters.append(Parameter(name='RMS_Error',min_value=None,max_value=None)
 sode.add_performance_parameters(perf_parameters)
 # Serial Execution but with a shorter execution timeout.
 parallelSettings = parallel_settings()
-parallelSettings.concurrent_executions = 8
+parallelSettings.concurrent_executions = 16
 parallelSettings.cores_per_execution: 1
 parallelSettings.execution_timeout = 0.2 # minutes
 sode.parallel_settings = parallelSettings
@@ -51,5 +51,5 @@ sode.parallel_settings = parallelSettings
 sode.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
 sode.mutation_params.F = 0.6
 sode.mutation_params.C = 0.7
-sode.start_doe(doe_size=64)
+sode.start_doe(doe_size=512)
 sode.optimize_from_population(pop_start=-1,n_generations=500)

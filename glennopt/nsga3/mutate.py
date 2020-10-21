@@ -70,7 +70,7 @@ def shuffle_population(pop,nIndividuals,nparents):
         pop_shuffled.append(pop[a[:,i]])                            # List of shuffled population
     return pop_shuffled
 
-def de_best_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int=2,max_parents:int=2,F:float=0.6, C:float=0.7):
+def de_best_1_bin(best:Individual,individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],F:float=0.6, C:float=0.7):
     """
         Applies mutation and crossover using de_1_rand_bin to a list of individuals 
         Inputs:
@@ -87,13 +87,9 @@ def de_best_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
     nIndividuals = len(individuals)
     pop,xmin,xmax = get_eval_param_matrix(individuals)
     
-    min_parents = max([2,min_parents])
-    max_parents = max([2,max_parents])
-    nparents = random.randint(min_parents,max_parents) 
-
-    x1 = individuals[0].eval_parameters                             # Use the best individual
+    x1 = best[0].eval_parameters                             # Use the best individual
     #-------------- Mutation --------------
-    pop_shuffled = shuffle_population(pop,nIndividuals,nparents)
+    pop_shuffled = shuffle_population(pop,nIndividuals,2)
     # Generate the new mutated population
     temp = pop*0
     for i in range(0,len(pop_shuffled)-1,2):
@@ -119,6 +115,48 @@ def de_best_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
 
     return newIndividuals 
 
+def de_best_dmp(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int):
+    '''
+    Individuals:
+        individuals - list of individuals 50% best performing. Takes the best individual[0] (sorted lowest to highest)
+        objectives - list of objectives List[Parameter]
+        eval_parameters - List[glennopt.helpers.Paramameters]
+        performance_parameters - List[glennopt.helpers.Paramameters]
+        F - Amplification Factor randomly switched from 0.5 to 2 randomly
+        C - Crossover factor sampled uniform at random from 0.3 to 1
+        b - Crossover blending rate randomly chosen from 0.1, 0.5(median), 0.9
+
+    Citatons:
+        Gosh, A., Das, S., Mallipeddi, R., Das, A. K., & Dash, S. S. (2017). A Modified Differential Evolution with Distance-based Selection for Continuous Optimization in Presence of Noise. IEEE Access, 5, 26944–26964. https://doi.org/10.1109/ACCESS.2017.2773825
+    '''
+    nIndividuals = len(individuals)
+    pop,xmin,xmax = get_eval_param_matrix(individuals)        
+
+    x1 = best[0].eval_parameters                             # Use the best individual
+    #-------------- Mutation --------------
+    pop_shuffled = shuffle_population(pop,nIndividuals,2)
+    # Generate the new mutated population
+    pop_mutate = pop_shuffled[0]+F*(x1-pop_shuffled[1])
+    
+    pop_v = np.random.rand(len(x1),pop_mutate.shape[1]) 
+    #-------------- Crossover --------------
+    cr_part1 = (np.random.rand(nIndividuals,len(x1)) < C)                     # Crossover    
+    cr_part2 = np.random.randint(0,len(x1),size=pop_mutate.shape)
+    cr = np.logical_or(cr_part1,cr_part2)
+
+    new_pop = pop*np.logical_not(cr) + pop_mutate*cr
+    #------------- Min Max Check -----------
+    xmin = xmin.reshape(1,-1)*np.ones((nIndividuals,1))
+    xmax = xmax.reshape(1,-1)*np.ones((nIndividuals,1))
+    new_pop = np.minimum(new_pop,xmax)
+    new_pop = np.maximum(new_pop,xmin)
+    #------------- Create The Individuals ------------
+    newIndividuals = list()
+    for i in range(new_pop.shape[0]): # loop for each individual set (nIndividuals)
+        z = new_pop[i,:]
+        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
+
+    return newIndividuals
 
 
 def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int=3,max_parents:int=3,F:float=0.6, C:float=0.7):
@@ -271,6 +309,8 @@ def set_eval_parameters(eval_parameters:List[Parameter], x:np.ndarray):
     for indx in range(len(parameters)):
         parameters[indx].value = x[indx]
     return parameters
+
+def de_dmp():
 
 def de_rand_1_bin_spawn(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int,F:float=0.6, C:float=0.7):
     """
