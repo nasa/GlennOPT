@@ -98,8 +98,8 @@ def de_best_1_bin(best:Individual,individuals:List[Individual],objectives:List[P
     
     #-------------- Crossover --------------
     cr_part1 = (np.random.rand(nIndividuals,len(x1)) < C)                     # Crossover    
-    cr_part2 = np.random.randint(0,len(x1),size=pop_mutate.shape)
-    cr = np.logical_or(cr_part1,cr_part2)
+    cr_part2 = np.array([np.random.permutation(pop.shape[1]) for i in range(nIndividuals)]) # cr_part2, randomly selects for each randomly generated individual, which parameter will be automatically true
+    cr = np.logical_or(cr_part1,cr_part2==1)
 
     new_pop = pop*np.logical_not(cr) + pop_mutate*cr
     #------------- Min Max Check -----------
@@ -115,11 +115,11 @@ def de_best_1_bin(best:Individual,individuals:List[Individual],objectives:List[P
 
     return newIndividuals 
 
-def de_dmp(best:List[Individual],individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int):
+def de_dmp(best:Individual,individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int,C:float=0.7):
     '''
     Difference Mean Based Perturbation - less greedy than DE/best/1 = less chance of getting stuck at local minima, prefers exploration. 
     Individuals:
-        best - best individual, can be actual best or an average of the top X designs
+        best - (Single objective) best individual for single objective. (Multi-objective) a random individual from the best front
         individuals - list of individuals 50% best performing. Takes the best individual[0] (sorted lowest to highest)
         objectives - list of objectives List[Parameter]
         eval_parameters - List[glennopt.helpers.Paramameters]
@@ -131,37 +131,42 @@ def de_dmp(best:List[Individual],individuals:List[Individual],objectives:List[Pa
     Citatons:
         Gosh, A., Das, S., Mallipeddi, R., Das, A. K., & Dash, S. S. (2017). A Modified Differential Evolution with Distance-based Selection for Continuous Optimization in Presence of Noise. IEEE Access, 5, 26944–26964. https://doi.org/10.1109/ACCESS.2017.2773825
     '''
-    nIndividuals = len(individuals)
-    pop,xmin,xmax = get_eval_param_matrix(individuals)        
-
-    # ------------ Average best individual dimension wise ---------------
-    X_best = 1/len(best) * 
-    delta_M = X_best
-    x1 = best[0].eval_parameters                             # Use the best individual
-    #-------------- Mutation --------------
-    pop_shuffled = shuffle_population(pop,nIndividuals,2)
-    # Generate the new mutated population
-    pop_mutate = pop_shuffled[0]+F*(x1-pop_shuffled[1])
-    
-    pop_v = np.random.rand(len(x1),pop_mutate.shape[1]) 
-    #-------------- Crossover --------------
-    cr_part1 = (np.random.rand(nIndividuals,len(x1)) < C)                     # Crossover    
-    cr_part2 = np.random.randint(0,len(x1),size=pop_mutate.shape)
-    cr = np.logical_or(cr_part1,cr_part2)
-
-    new_pop = pop*np.logical_not(cr) + pop_mutate*cr
-    #------------- Min Max Check -----------
-    xmin = xmin.reshape(1,-1)*np.ones((nIndividuals,1))
-    xmax = xmax.reshape(1,-1)*np.ones((nIndividuals,1))
-    new_pop = np.minimum(new_pop,xmax)
-    new_pop = np.maximum(new_pop,xmin)
-    #------------- Create The Individuals ------------
+    # * Preprocessing Step: Do this first before generating the deisgns 
+    Np = len(individuals)   # This is actually Np/2
+    pop,xmin,xmax = get_eval_param_matrix(individuals)
+    x_best_avg = 2/Np * np.sum(pop,axis=1) # Sum along the rows, each column is an evaluation parameter 
+    x_best = get_eval_param_matrix([best])
+    rand_v = np.random.rand(Np,1)           # Generate random vector
     newIndividuals = list()
-    for i in range(new_pop.shape[0]): # loop for each individual set (nIndividuals)
-        z = new_pop[i,:]
-        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
 
-    return newIndividuals
+    while len(newIndividuals<num_children):
+        # * Generate all individuals for mutation strategy 1
+        F = [2 if x==0 else 0.5 for x in np.random.randint(2,size=Np)]
+        pop_shuffled = shuffle_population(pop,Np,2) # TODO need to check
+        V1 = pop_shuffled[0] + F*(x_best_avg - pop_shuffled[1])
+
+        # * Generate all individuals for mutation strategy 2
+        M = np.random.random(size=Np)
+        D = np.random.choice([0,1],size=pop.shape[1])   # Randomizes the selection of which evaluation parameter to use
+        V2 = pop_shuffled[0] + D*(x_best-pop_shuffled[1])*M/np.linalg.norm(M)
+        
+        # * Now we need to select between elements of V1 and V2 using mutation_selection
+        V = V1*(rand_v<=0.5) + V2*(rand_v>0.5) 
+
+        # * Crossover
+        Cr = np.random.uniform(low=0.3, high=1, size=Np) < C                           # sample the value of Cr from interval 0.3 to 1 uniform at random for all individuals
+        Cr_j = np.array([np.random.permutation(pop.shape[1]) for i in range(Np)]) == 1 # cr_part2, randomly selects for each randomly generated individual, which parameter will be automatically true        
+        Cr = np.logical_or(Cr,Cr_j)
+        b = np.random.choice([0.1,0.5,0.9], size=Np, replace=True, p=None)
+        u = (b*pop_shuffled[0]+(1-b)*V) * Cr  + pop * np.logical_not(Cr) 
+
+        #------------- Create The Individuals ------------
+        for i in range(V.shape[0]): # loop for each individual set (nIndividuals)
+            z = V[i,:]
+            newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
+        
+    random.shuffle(newIndividuals)
+    return newIndividuals[0:num_children]
 
 
 def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int=3,max_parents:int=3,F:float=0.6, C:float=0.7):
@@ -193,8 +198,8 @@ def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
     
     #-------------- Crossover --------------
     cr_part1 = (np.random.rand(nIndividuals,nEvalParams) < C)                     # Crossover    
-    cr_part2 = np.random.randint(0,nEvalParams,size=pop_mutate.shape)
-    cr = np.logical_or(cr_part1,cr_part2)
+    cr_part2 = np.array([np.random.permutation(nEvalParams) for i in range(nIndividuals)]) # cr_part2, randomly selects for each randomly generated individual, which parameter will be automatically true
+    cr = np.logical_or(cr_part1,cr_part2==1)
 
     new_pop = pop*np.logical_not(cr) + pop_mutate*cr
     #------------- Min Max Check -----------
@@ -315,8 +320,6 @@ def set_eval_parameters(eval_parameters:List[Parameter], x:np.ndarray):
         parameters[indx].value = x[indx]
     return parameters
 
-def de_dmp():
-
 def de_rand_1_bin_spawn(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int,F:float=0.6, C:float=0.7):
     """
         Applies mutation and crossover using de_rand_1_bin to a list of individuals to spawn even more individual combinations
@@ -346,8 +349,8 @@ def de_rand_1_bin_spawn(individuals:List[Individual],objectives:List[Parameter],
         
         #-------------- Crossover --------------
         cr_part1 = (np.random.rand(nIndividuals,nEvalParams) < C)                     # Crossover    
-        cr_part2 = np.random.randint(0,nEvalParams,size=pop_mutate.shape)
-        cr = np.logical_or(cr_part1,cr_part2)
+        cr_part2 = np.array([np.random.permutation(nEvalParams) for i in range(nIndividuals)]) # cr_part2, randomly selects for each randomly generated individual, which parameter will be automatically true
+        cr = np.logical_or(cr_part1,cr_part2==1)
 
         new_pop = pop*np.logical_not(cr) + pop_mutate*cr
         #------------- Min Max Check -----------
