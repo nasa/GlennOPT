@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ..helpers import Parameter
 from ..base_classes import Optimizer, Individual
-from ..nsga3.mutate import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn
+from ..nsga3.mutate import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn,de_dmp
 from random import seed, gauss, random, randint
 from tqdm import trange
 
@@ -127,19 +127,27 @@ class SODE(Optimizer):
                 F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.de_rand_1_bin:
             shuffle(individuals)
+
             newIndividuals = de_rand_1_bin(individuals=individuals,objectives=self.objectives,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)
         elif self.mutation_params.mutation_type == de_mutation_type.simple:
             shuffle(individuals)
             nCrossover = int(self.pop_size/2)
+
             nMutation = self.pop_size-nCrossover
             newIndividuals = simple(individuals=individuals,nCrossover=nCrossover,nMutation=nMutation,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
         elif self.mutation_params.mutation_type == de_mutation_type.de_rand_1_bin_spawn:
             shuffle(individuals)
             parents = individuals[0:self.mutation_params.nParents]
+            
             newIndividuals = de_rand_1_bin_spawn(individuals=parents,objectives=self.objectives,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C,num_children=len(individuals))
+        else:# self.mutation_params.mutation_type==mutation_parameters.de_dmp:
+            individuals_to_mutate = individuals[1:int(self.pop_size/2)+1]
+            newIndividuals = de_dmp(best=individuals[0], individuals=individuals_to_mutate,
+                objectives=self.objectives, eval_parameters=self.eval_parameters, performance_parameters=self.performance_parameters,                
+                C=self.mutation_params.C, num_children=len(individuals))
 
         return newIndividuals

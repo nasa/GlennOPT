@@ -21,7 +21,8 @@ class de_mutation_type(Enum):
     de_rand_1_bin = 1
     de_best_1_bin = 2
     simple = 3
-    de_rand_1_bin_spawn = 1
+    de_rand_1_bin_spawn = 4
+    de_dmp = 5
 
 @dataclass
 class mutation_parameters:
@@ -134,14 +135,15 @@ def de_dmp(best:Individual,individuals:List[Individual],objectives:List[Paramete
     # * Preprocessing Step: Do this first before generating the deisgns 
     Np = len(individuals)   # This is actually Np/2
     pop,xmin,xmax = get_eval_param_matrix(individuals)
-    x_best_avg = 2/Np * np.sum(pop,axis=1) # Sum along the rows, each column is an evaluation parameter 
+    x_best_avg = 2/Np * np.sum(pop,axis=0) # Sum along the rows, each column is an evaluation parameter 
+    x_best_avg = np.array([x_best_avg for i in range(Np)])
     x_best = get_eval_param_matrix([best])
     rand_v = np.random.rand(Np,1)           # Generate random vector
     newIndividuals = list()
 
-    while len(newIndividuals<num_children):
+    while len(newIndividuals)<num_children:
         # * Generate all individuals for mutation strategy 1
-        F = [2 if x==0 else 0.5 for x in np.random.randint(2,size=Np)]
+        F = np.array([2 if x==0 else 0.5 for x in np.random.randint(2,size=Np)]).reshape(-1,1)
         pop_shuffled = shuffle_population(pop,Np,2) # TODO need to check
         V1 = pop_shuffled[0] + F*(x_best_avg - pop_shuffled[1])
 

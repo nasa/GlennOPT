@@ -497,8 +497,9 @@ class Optimizer:
         ''' 
             Create a restart file containing all individuals of all populations
         '''
-        individuals = self.read_calculation_folder()
-        self.append_restart_file(individuals)
+        pop_individuals = self.read_calculation_folder()
+        for individuals in pop_individuals:
+            self.append_restart_file(individuals)
 
     def plot_2D(self,obj1_name:str,obj2_name:str,xlim:list=None,ylim:list=None):
         """
