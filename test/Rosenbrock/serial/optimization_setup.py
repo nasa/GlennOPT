@@ -6,16 +6,18 @@ sys.path.insert(0,'../../../')
 from glennopt.helpers import Parameter
 from glennopt.sode import SODE
 from glennopt.nsga3 import de_mutation_type, mutation_parameters
+from glennopt.helpers import Experiment
 
 # Generate the DOE
 current_dir = os.getcwd()
 pop_size = 20
 sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
-eval_parameters = []
-eval_parameters.append(Parameter(name="x1",min_value=-3,max_value=3))
-eval_parameters.append(Parameter(name="x2",min_value=-3,max_value=3))
-sode.add_eval_parameters(eval_params = eval_parameters)
+doe = Experiment.CCD(number_of_parameters=2)
+doe.add_parameter(name="x1",min_value=-3,max_value=3)
+doe.add_parameter(name="x2",min_value=-3,max_value=3)
+
+sode.add_eval_parameters(eval_params = doe.eval_parameters)
 
 objectives = []
 objectives.append(Parameter(name='objective1'))
@@ -33,7 +35,7 @@ sode.mutation_params.min_parents = 2
 sode.mutation_params.max_parents = 5
 sode.mutation_params.F = 0.8
 sode.mutation_params.C = 0.7
-sode.start_doe(doe_size=16) #64
+sode.start_doe(doe.get_eval_value())
 sode.optimize_from_population(pop_start=-1,n_generations=40)
 
 
