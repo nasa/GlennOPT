@@ -117,26 +117,28 @@ class SODE(Optimizer):
     def __crossover_mutate__(self,individuals:List[Individual]):
         '''
             Applies Crossover and Mutate
-        '''
-        
+        '''        
         nIndividuals = len(individuals)
         num_params = len(individuals[0].eval_parameters)        
         if self.mutation_params.mutation_type == de_mutation_type.de_best_1_bin:
             newIndividuals = de_best_1_bin(individuals=individuals,objectives=self.objectives,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)
+
         elif self.mutation_params.mutation_type == de_mutation_type.de_rand_1_bin:
             shuffle(individuals)
 
             newIndividuals = de_rand_1_bin(individuals=individuals,objectives=self.objectives,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)
+
         elif self.mutation_params.mutation_type == de_mutation_type.simple:
             shuffle(individuals)
             nCrossover = int(self.pop_size/2)
 
             nMutation = self.pop_size-nCrossover
             newIndividuals = simple(individuals=individuals,nCrossover=nCrossover,nMutation=nMutation,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
+
         elif self.mutation_params.mutation_type == de_mutation_type.de_rand_1_bin_spawn:
             shuffle(individuals)
             parents = individuals[0:self.mutation_params.nParents]
@@ -144,6 +146,7 @@ class SODE(Optimizer):
             newIndividuals = de_rand_1_bin_spawn(individuals=parents,objectives=self.objectives,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C,num_children=len(individuals))
+
         else:# self.mutation_params.mutation_type==mutation_parameters.de_dmp:
             individuals_to_mutate = individuals[1:int(self.pop_size/2)+1]
             newIndividuals = de_dmp(best=individuals[0], individuals=individuals_to_mutate,

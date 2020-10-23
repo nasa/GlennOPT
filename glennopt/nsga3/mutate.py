@@ -8,7 +8,6 @@ import math
 import copy
 import time
 import numpy as np
-from numpy import ndarray
 from typing import List
 from ..helpers import Parameter, convert_to_ndarray
 from ..base_classes import Individual
@@ -114,9 +113,9 @@ def de_best_1_bin(best:Individual,individuals:List[Individual],objectives:List[P
         z = new_pop[i,:]
         newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
 
-    return newIndividuals 
+    return newIndividuals
 
-def de_dmp(best:Individual,individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int,C:float=0.7):
+def de_dmp(best:Individual,individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int,C:float=0.5):
     '''
     Difference Mean Based Perturbation - less greedy than DE/best/1 = less chance of getting stuck at local minima, prefers exploration. 
     Individuals:
@@ -135,39 +134,53 @@ def de_dmp(best:Individual,individuals:List[Individual],objectives:List[Paramete
     # * Preprocessing Step: Do this first before generating the deisgns 
     Np = len(individuals)   # This is actually Np/2
     pop,xmin,xmax = get_eval_param_matrix(individuals)
+    D = pop.shape[1]
     x_best_avg = 2/Np * np.sum(pop,axis=0) # Sum along the rows, each column is an evaluation parameter 
     x_best_avg = np.array([x_best_avg for i in range(Np)])
-    x_best = get_eval_param_matrix([best])
-    rand_v = np.random.rand(Np,1)           # Generate random vector
+    x_best,_,_ = get_eval_param_matrix([best])
     newIndividuals = list()
 
     while len(newIndividuals)<num_children:
+        rand_v = np.random.rand(Np,1)           # Generate random vector
         # * Generate all individuals for mutation strategy 1
-        F = np.array([2 if x==0 else 0.5 for x in np.random.randint(2,size=Np)]).reshape(-1,1)
-        pop_shuffled = shuffle_population(pop,Np,2) # TODO need to check
+        #F = np.array([2 if x==0 else 0.5 for x in np.random.randint(2,size=Np)]).reshape(-1,1)
+        F = np.random.choice([0.5,2],size=(Np,1))
+        pop_shuffled = shuffle_population(pop,Np,3) 
         V1 = pop_shuffled[0] + F*(x_best_avg - pop_shuffled[1])
 
         # * Generate all individuals for mutation strategy 2
-        M = np.random.random(size=Np)
-        D = np.random.choice([0,1],size=pop.shape[1])   # Randomizes the selection of which evaluation parameter to use
-        V2 = pop_shuffled[0] + D*(x_best-pop_shuffled[1])*M/np.linalg.norm(M)
-        
+        M = np.random.random(size=pop.shape)
+        x_best_dim = 1/D * np.sum(x_best) 
+        X_dim = 1/D * np.sum(pop_shuffled[2])
+        V2 = (x_best-X_dim)*M
+        V2 = np.array([V2[i,:]/np.linalg.norm(M[i,:]) for i in range(V2.shape[0])])
+        V2 += pop_shuffled[2]                   
+
         # * Now we need to select between elements of V1 and V2 using mutation_selection
-        V = V1*(rand_v<=0.5) + V2*(rand_v>0.5) 
+        V = V1*(rand_v<=0.5) + V2*(rand_v>0.5)                      
 
         # * Crossover
-        Cr = np.random.uniform(low=0.3, high=1, size=Np) < C                           # sample the value of Cr from interval 0.3 to 1 uniform at random for all individuals
-        Cr_j = np.array([np.random.permutation(pop.shape[1]) for i in range(Np)]) == 1 # cr_part2, randomly selects for each randomly generated individual, which parameter will be automatically true        
+        Cr = np.random.uniform(low=0.3, high=1, size=pop.shape) <= C                           # sample the value of Cr from interval 0.3 to 1 uniform at random for all individuals
+        Cr_j = np.array([np.random.permutation(pop.shape[1]) for i in range(Np)]) == 1  # cr_part2, randomly selects for each randomly generated individual, which parameter will be automatically true        
         Cr = np.logical_or(Cr,Cr_j)
-        b = np.random.choice([0.1,0.5,0.9], size=Np, replace=True, p=None)
-        u = (b*pop_shuffled[0]+(1-b)*V) * Cr  + pop * np.logical_not(Cr) 
+        b = np.random.choice([0.1,0.5,0.9], size=(Np,1), replace=True, p=None)        
+            
+        u = (b*pop_shuffled[2]+(1-b)*V) * Cr  + pop * np.logical_not(Cr) 
+
+        #------------- Min Max Check -----------
+        xmin_reshape = xmin.reshape(1,-1)*np.ones((Np,1))
+        xmax_reshape = xmax.reshape(1,-1)*np.ones((Np,1))
+        u = np.minimum(u,xmax_reshape)
+        u = np.maximum(u,xmin_reshape)
 
         #------------- Create The Individuals ------------
-        for i in range(V.shape[0]): # loop for each individual set (nIndividuals)
-            z = V[i,:]
+        for i in range(u.shape[0]): # loop for each individual set (nIndividuals)
+            z = u[i,:]
             newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
         
+        
     random.shuffle(newIndividuals)
+        
     return newIndividuals[0:num_children]
 
 
@@ -214,7 +227,8 @@ def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
     for i in range(new_pop.shape[0]): # loop for each individual set (nIndividuals)
         z = new_pop[i,:]
         newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
-    return newIndividuals 
+
+    return newIndividuals
 
 
 def simple(individuals:List[Individual],nCrossover:int,nMutation:int,objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],mu:float,sigma:float):
@@ -254,10 +268,11 @@ def simple(individuals:List[Individual],nCrossover:int,nMutation:int,objectives:
 
         mutation_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y1_new),objectives=objectives,performance_parameters=performance_parameters))
     crossover_individuals.extend(mutation_individuals)
+
     return crossover_individuals
 
 # Core functions 
-def mutate(x1:np.ndarray,xmin:ndarray,xmax:ndarray,mu:float=0.02,sigma:float=0.2):
+def mutate(x1:np.ndarray,xmin:np.ndarray,xmax:np.ndarray,mu:float=0.02,sigma:float=0.2):
     '''
         Mutate the evaluation parameters
         Simple mutate
@@ -366,4 +381,5 @@ def de_rand_1_bin_spawn(individuals:List[Individual],objectives:List[Parameter],
             newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
         
     random.shuffle(newIndividuals)
+
     return newIndividuals[0:num_children]

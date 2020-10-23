@@ -28,8 +28,8 @@ performance_parameters.append(Parameter(name='p2'))
 sode.add_performance_parameters(performance_params = performance_parameters)
 
 # params = mutation_parameters
-sode.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
-sode.mutation_params.F = 0.8
+sode.mutation_params.mutation_type = de_mutation_type.de_dmp
+sode.mutation_params.F = 0.5
 sode.mutation_params.C = 0.7
 sode.start_doe(doe_size=64)
 sode.optimize_from_population(pop_start=-1,n_generations=40)

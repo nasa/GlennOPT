@@ -299,6 +299,7 @@ class Optimizer:
             else: # TODO execute individual without creating a bunch of directories. Maybe create execution directories and delete them
                 output = subprocess.check_output(['python', self.evaluation_script])
                 # Append output to results, need to check first how the output is structured
+        time.sleep(0.1)
     
     def __check_process_running__(self,p):
         if p is not None:
