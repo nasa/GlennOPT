@@ -9,9 +9,9 @@ from typing import List
 
 import numpy as np
 import matplotlib.pyplot as plt
-from ..helpers import Parameter
+from ..helpers import Parameter, diversity, distance
 from ..base_classes import Optimizer, Individual
-from ..nsga3.mutate import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn,de_dmp
+from ..nsga3.mutate import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn,de_dmp, get_eval_param_matrix, get_objective_matrix, set_eval_parameters
 from random import seed, gauss, random, randint
 from tqdm import trange
 
@@ -107,11 +107,13 @@ class SODE(Optimizer):
             newIndividuals = self.__crossover_mutate__(individuals)
             self.evaluate_population(newIndividuals,pop) 
             newIndividuals = self.read_population(pop)
-            individuals.extend(newIndividuals) # add the previous population to the pool 
-            # Sort and select
+            # Calculate population distance
+            pop_diversity = diversity(newIndividuals)
+            pop_dist = distance(newIndividuals)
+            # Calculate diversity 
+            individuals = self.select_individuals(individuals,newIndividuals)
             sorted_inds = sorted(individuals, key=operator.attrgetter('objectives'))            
             self.append_restart_file(sorted_inds)
-            individuals = sorted_inds[:self.pop_size]
             
 
     def __crossover_mutate__(self,individuals:List[Individual]):
@@ -148,9 +150,38 @@ class SODE(Optimizer):
                 F=self.mutation_params.F,C=self.mutation_params.C,num_children=len(individuals))
 
         else:# self.mutation_params.mutation_type==mutation_parameters.de_dmp:
-            individuals_to_mutate = individuals[1:int(self.pop_size/2)+1]
-            newIndividuals = de_dmp(best=individuals[0], individuals=individuals_to_mutate,
-                objectives=self.objectives, eval_parameters=self.eval_parameters, performance_parameters=self.performance_parameters,                
-                C=self.mutation_params.C, num_children=len(individuals))
+            newIndividuals = de_dmp(individuals=individuals,
+                objectives=self.objectives, eval_parameters=self.eval_parameters, performance_parameters=self.performance_parameters)
 
         return newIndividuals
+    
+    def select_individuals(self,prevIndividuals:List[Individual],newIndividuals:List[Individual]):
+        '''
+            Select individuals using diversity and distance. Use this only for single objective type problems. This is not suitable for multi-objective. 
+
+            Inputs:
+                previndividuals - previous population
+                newIndividuals - new population
+            Citations:
+                (described in) Ghosh, A., Das, S., Mallipeddi, R., Das, A. K., & Dash, S. S. (2017). A Modified Differential Evolution With Distance-based Selection for Continuous Optimization in Presence of Noise. IEEE Access, 5, 26944–26964. https://doi.org/10.1109/ACCESS.2017.2773825
+
+                (Modified version of) S. Das, A. Konar, and U. K. Chakraborty, ‘‘Improved differential evolution algorithms for handling noisy optimization problems,’’ in Proc. IEEE Congr. Evol. Comput., vol. 2. Sep. 2005, pp. 1691–1698.
+        '''
+        F = get_objective_matrix(prevIndividuals)
+        F_new = get_objective_matrix(newIndividuals)
+        
+        U = get_eval_param_matrix(newIndividuals)
+        X = get_eval_param_matrix(prevIndividuals)
+        
+        deltaF = np.absolute(F-F_new)   # Compute the delta objective
+        dist = np.absolute(U-X)         # Calculate distance
+
+        individuals = list()
+        for i in range(len(newIndividuals)):
+            if F_new[i]/F[i] < 1: 
+                individuals.append(newIndividuals[i])                                               # X_new[i,:] = U[i,:]
+            elif (F_new[i]/F[i] > 1) and (random.random() <= math.exp(-deltaF[i]/dist[i])):
+                individuals.append(newIndividuals[i])                                               # X_new[i,:] = U[i,:]
+            else:
+                individuals.append(prevIndividuals[i])                                              # X_new[i,:] = X[i,:]
+        return individuals

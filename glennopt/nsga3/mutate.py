@@ -50,7 +50,7 @@ def get_eval_param_matrix(individuals:List[Individual]):
         pop[i,:] = ind.eval_parameters
     return pop,xmin,xmax
 
-def get_objective_matrix(individuals:List[Individual]):    
+def get_objective_matrix(individuals:List[Individual]):
     pop = np.zeros((len(individuals),len(individuals[0].objectives)))
     for i,ind in enumerate(individuals):
         pop[i,:] = ind.objectives
@@ -115,7 +115,7 @@ def de_best_1_bin(best:Individual,individuals:List[Individual],objectives:List[P
 
     return newIndividuals
 
-def de_dmp(best:Individual,individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int,C:float=0.5):
+def de_dmp_bak(best:Individual,individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int,C:float=0.5):
     '''
     Difference Mean Based Perturbation - less greedy than DE/best/1 = less chance of getting stuck at local minima, prefers exploration. 
     Individuals:
@@ -182,6 +182,69 @@ def de_dmp(best:Individual,individuals:List[Individual],objectives:List[Paramete
     random.shuffle(newIndividuals)
         
     return newIndividuals[0:num_children]
+
+
+def de_dmp(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter]):
+    '''
+    Difference Mean Based Perturbation - less greedy than DE/best/1 = less chance of getting stuck at local minima, prefers exploration. 
+    Individuals:
+        individuals - list of all individuals, sorted in terms of best performing
+        objectives - list of objectives List[Parameter]
+        eval_parameters - List[glennopt.helpers.Paramameters]
+        performance_parameters - List[glennopt.helpers.Paramameters]
+        F - Amplification Factor randomly switched from 0.5 to 2 randomly
+        C - Crossover factor sampled uniform at random from 0.3 to 1
+        b - Crossover blending rate randomly chosen from 0.1, 0.5(median), 0.9
+
+    Citatons:
+        Gosh, A., Das, S., Mallipeddi, R., Das, A. K., & Dash, S. S. (2017). A Modified Differential Evolution with Distance-based Selection for Continuous Optimization in Presence of Noise. IEEE Access, 5, 26944–26964. https://doi.org/10.1109/ACCESS.2017.2773825
+    '''
+    # * Preprocessing Step: Do this first before generating the deisgns 
+    Np = len(individuals)                       # This is actually Np/2
+    pop,xmin,xmax = get_eval_param_matrix(individuals)
+    pop_half = pop[:int(Np/2),:]
+    D = pop.shape[1]                            # Number of parameters
+    x_best_avg = 2/Np * np.sum(pop_half,axis=0) # Sum along the rows, each column is an evaluation parameter         
+    x_best_dim = 1/D * np.sum(pop[0,:])
+    newIndividuals = list()
+
+    V = pop*0
+    U = V
+    for i in range(Np):
+        if random.random()<=0.5:
+            p = get_pairs(pop.shape[0],2,[i])
+            xr1 = pop[p[0],:]
+            xr2 = pop[p[0],:]
+            F = np.random.choice([0.5,2])
+            V[i,:] = xr1 + F*(x_best_avg-xr2)
+        else:
+            xi_dim = 1/D * np.sum(pop[i,:])
+            M = np.random.random(size=D)
+            V[i,:] = pop[i,:] + (x_best_dim - xi_dim) * M / np.linalg.norm(M)
+        Cr = np.random.uniform(0.3,1)
+        b = np.random.choice([0.1,0.5,0.9])
+        jr = random.randint(0,D-1)
+        for j in range(D):
+            if (random.random() < Cr or j ==jr):
+                U[i,j] = b*pop[i,j]+(1-b)*V[i,j]
+            else:
+                U[i,j] = pop[i,j]
+        
+        #------------- Min Max Check -----------
+        xmin_reshape = xmin.reshape(1,-1)*np.ones((Np,1))
+        xmax_reshape = xmax.reshape(1,-1)*np.ones((Np,1))
+        U = np.minimum(U,xmax_reshape)
+        U = np.maximum(U,xmin_reshape)
+
+    #------------- Create The Individuals ------------
+    for i in range(U.shape[0]): # loop for each individual set (nIndividuals)
+        z = U[i,:]
+        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
+        
+        
+    random.shuffle(newIndividuals)
+        
+    return newIndividuals
 
 
 def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int=3,max_parents:int=3,F:float=0.6, C:float=0.7):

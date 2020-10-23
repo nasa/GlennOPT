@@ -9,7 +9,7 @@ from glennopt.nsga3 import de_mutation_type, mutation_parameters
 
 # Generate the DOE
 current_dir = os.getcwd()
-pop_size = 48
+pop_size = 32
 sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 eval_parameters = []
