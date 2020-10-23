@@ -14,7 +14,7 @@ from ..base_classes import Optimizer, Individual
 from ..nsga3.mutate import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple
 from random import seed, gauss, random, randint
 from tqdm import trange
-from .DOE import CCD
+
 
 class SODE(Optimizer):
     def __init__(self,eval_script:str = "evaluation.py", eval_folder:str = "Evaluation",pop_size:int=32, optimization_folder:str=None):
@@ -40,6 +40,8 @@ class SODE(Optimizer):
 
     def add_performance_parameters(self,performance_params:List[Parameter] = None):
         self.performance_parameters = performance_params # Sets base class variable
+    
+   
     # *       
 
     # * Mutation Properties
@@ -60,20 +62,21 @@ class SODE(Optimizer):
             parameters[indx].value = y[indx]
         return parameters
 
-    def start_doe(self,doe_size:int=128):
+    def start_doe(self,eval_values):
         """
             Starts a design of experiments. If the DOE has already started and there is an output file for an individual then the individual won't be evaluated 
         """
-        indx_list = [i for i in range(doe_size)]
+        indx_list = [i for i in range(len(eval_values))]
         shuffle(indx_list)
 
         doe_individuals = []
-        for i in trange(doe_size):
+        for i in trange(len(indx_list)):
             parameters = copy.deepcopy(self.eval_parameters)
+            parameters[0].value, parameters[1].value = eval_values[indx_list[i]][0],eval_values[indx_list[i]][1]
+
             
-            for eval_param in parameters:
-                eval_param.value = CCD(eval_param,len(parameters))._get_eval_value_(indx_list[i])
-            doe_individuals.append(Individual(eval_parameters=parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
+                
+            doe_individuals.append(Individual(eval_parameters=self.eval_parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
         
         # * Begin the evaluation
         self.evaluate_population(individuals=doe_individuals,population_number=-1)
