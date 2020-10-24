@@ -5,7 +5,7 @@ import sys,os
 sys.path.insert(0,'../../../')
 from glennopt.base import Parameter
 from glennopt.sode import SODE
-from glennopt.nsga3 import de_mutation_type, mutation_parameters
+from glennopt.helpers import de_mutation_type, mutation_parameters
 
 # Generate the DOE
 current_dir = os.getcwd()

@@ -1,7 +1,7 @@
 """
     Single objective differential evolution
 """
-from random import shuffle
+from random import shuffle,random
 import operator
 import subprocess, copy, math
 import sys
@@ -9,9 +9,9 @@ from typing import List
 
 import numpy as np
 import matplotlib.pyplot as plt
-from glennopt.helpers import Parameter, diversity, distance
-from glennopt.base import Optimizer, Individual
-from glennopt.nsga3.mutate import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn,de_dmp, get_eval_param_matrix, get_objective_matrix, set_eval_parameters
+from ..helpers import diversity, distance
+from ..helpers import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn,de_dmp, get_eval_param_matrix, get_objective_matrix, set_eval_parameters
+from ..base import Parameter,Individual, Optimizer
 from random import seed, gauss, random, randint
 from tqdm import trange
 
@@ -109,12 +109,12 @@ class SODE(Optimizer):
             newIndividuals = self.read_population(pop)
             # Calculate population distance
             pop_diversity = diversity(newIndividuals)
-            pop_dist = distance(newIndividuals)
+            pop_dist = distance(individuals,newIndividuals)
             # Calculate diversity 
             individuals = self.select_individuals(individuals,newIndividuals)
             sorted_inds = sorted(individuals, key=operator.attrgetter('objectives'))
             self.append_restart_file(sorted_inds)
-            self.__append_history_file(pop,sorted_inds[0],pop_diversity,pop_dist)
+            self.append_history_file(pop,sorted_inds[0],pop_diversity,pop_dist)
             
 
     def __crossover_mutate__(self,individuals:List[Individual]):
@@ -171,17 +171,17 @@ class SODE(Optimizer):
         F = get_objective_matrix(prevIndividuals)
         F_new = get_objective_matrix(newIndividuals)
         
-        U = get_eval_param_matrix(newIndividuals)
-        X = get_eval_param_matrix(prevIndividuals)
+        U,_,_ = get_eval_param_matrix(newIndividuals)
+        X,_,_ = get_eval_param_matrix(prevIndividuals)
         
         deltaF = np.absolute(F-F_new)   # Compute the delta objective
-        dist = np.absolute(U-X)         # Calculate distance
+        dist = np.sum(np.absolute(U-X),axis=1)         # Calculate distance
 
         individuals = list()
         for i in range(len(newIndividuals)):
             if F_new[i]/F[i] < 1: 
                 individuals.append(newIndividuals[i])                                               # X_new[i,:] = U[i,:]
-            elif (F_new[i]/F[i] > 1) and (random.random() <= math.exp(-deltaF[i]/dist[i])):
+            elif (F_new[i]/F[i] > 1) and (random() <= math.exp(-deltaF[i]/dist[i])):
                 individuals.append(newIndividuals[i])                                               # X_new[i,:] = U[i,:]
             else:
                 individuals.append(prevIndividuals[i])                                              # X_new[i,:] = X[i,:]

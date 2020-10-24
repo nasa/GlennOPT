@@ -390,11 +390,9 @@ class Optimizer:
                     self.history = None
                     os.remove(self.__history_filename)
 
-    def __append_history_file(self, pop:int, best_ind:Individual,diversity:float,distance:float):
+    def append_history_file(self, pop:int, best_ind:Individual,diversity:float,distance:float):
         '''
-            (Protected)
             Writes a history.csv file containing the best design(s) this function is called by the inheriting class
-
         '''
         eval_params = best_ind.eval_parameters
         eval_param_names =  [p.name for p in best_ind.get_eval_parameter_list()]
@@ -406,7 +404,7 @@ class Optimizer:
         perf_param_names = [o.name for o in best_ind.get_performance_parameters_list()]
         
         header = ['Population', 'Best Individual']
-        data = [pop, '{:3d}_{1}'.format(best_ind.pop,best_ind.name)]
+        data = [pop, '{:3d}_{1}'.format(best_ind.population,best_ind.name)]
         
         def write_arrays(names,vals):
             for name,val in zip(names,vals):

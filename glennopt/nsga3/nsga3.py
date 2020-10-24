@@ -10,10 +10,9 @@ import numpy as np
 import glob
 from itertools import chain
 
-from glennopt.base import Optimizer, Individual
-from glennopt.helpers import Parameter
 from .non_dominated_sorting import non_dominated_sorting
-from .mutate import simple, de_best_1_bin, de_rand_1_bin, de_mutation_type, mutation_parameters
+from ..base import Parameter, Individual, Optimizer
+from ..helpers import simple, de_best_1_bin, de_rand_1_bin, de_mutation_type, mutation_parameters
 
 individual_list = List[Individual]
 
