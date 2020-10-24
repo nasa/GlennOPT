@@ -9,9 +9,8 @@ import copy
 import time
 import numpy as np
 from typing import List
-from ..helpers import Parameter, convert_to_ndarray
-from ..base_classes import Individual
-
+from ..base import Parameter, Individual
+from ..helpers import convert_to_ndarray
 
 class de_mutation_type(Enum):
     """

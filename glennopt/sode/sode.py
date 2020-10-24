@@ -9,9 +9,9 @@ from typing import List
 
 import numpy as np
 import matplotlib.pyplot as plt
-from ..helpers import Parameter, diversity, distance
-from ..base_classes import Optimizer, Individual
-from ..nsga3.mutate import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn,de_dmp, get_eval_param_matrix, get_objective_matrix, set_eval_parameters
+from glennopt.helpers import Parameter, diversity, distance
+from glennopt.base import Optimizer, Individual
+from glennopt.nsga3.mutate import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn,de_dmp, get_eval_param_matrix, get_objective_matrix, set_eval_parameters
 from random import seed, gauss, random, randint
 from tqdm import trange
 
@@ -112,8 +112,9 @@ class SODE(Optimizer):
             pop_dist = distance(newIndividuals)
             # Calculate diversity 
             individuals = self.select_individuals(individuals,newIndividuals)
-            sorted_inds = sorted(individuals, key=operator.attrgetter('objectives'))            
+            sorted_inds = sorted(individuals, key=operator.attrgetter('objectives'))
             self.append_restart_file(sorted_inds)
+            self.__append_history_file(pop,sorted_inds[0],pop_diversity,pop_dist)
             
 
     def __crossover_mutate__(self,individuals:List[Individual]):

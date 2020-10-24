@@ -3,7 +3,7 @@
 """
 import sys,os
 sys.path.insert(0,'../../../')
-from glennopt.helpers import Parameter
+from glennopt.base import Parameter
 from glennopt.sode import SODE
 from glennopt.nsga3 import de_mutation_type, mutation_parameters
 

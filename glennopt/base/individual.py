@@ -1,9 +1,7 @@
 import sys
 from typing import TypeVar,List
-from glennopt.helpers.parameter import Parameter
+from .parameter import Parameter
 import numpy as np
-
-
 
 class Individual:
     '''

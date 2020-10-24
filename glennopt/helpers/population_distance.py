@@ -1,5 +1,5 @@
 import numpy as np
-from ..base_classes.individual import Individual, Parameter
+from ..base import Individual, Parameter
 from typing import List
 import math
 from ..nsga3 import get_eval_param_matrix, get_objective_matrix, set_eval_parameters

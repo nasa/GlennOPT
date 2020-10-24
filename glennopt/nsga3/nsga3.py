@@ -10,8 +10,8 @@ import numpy as np
 import glob
 from itertools import chain
 
-from ..base_classes import Optimizer, Individual
-from ..helpers import Parameter
+from glennopt.base import Optimizer, Individual
+from glennopt.helpers import Parameter
 from .non_dominated_sorting import non_dominated_sorting
 from .mutate import simple, de_best_1_bin, de_rand_1_bin, de_mutation_type, mutation_parameters
 
