@@ -96,6 +96,7 @@ class SODE(Optimizer):
         # Crossover and Mutate the doe individuals to generate the next individuals used in the population
         # Sort the population into [fill in here]
         # self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1,params=params,F=F)
+        self.load_history_file()
         individuals = sorted(individuals, key=operator.attrgetter('objectives'))
         individuals = individuals[:self.pop_size]
         if pop_start == -1: 

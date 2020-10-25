@@ -91,7 +91,7 @@ class Optimizer:
         # Cache storage
         self.pandas_cache = {} # Appends individuals to pandas dataframe each dictionar contains the population number
         self.single_folder_eval = single_folder_eval
-        self.__load_history_file()
+        
 
 
     @property
@@ -365,7 +365,7 @@ class Optimizer:
             for line in p.stdout:
                 self.logger.debug('POP {0} Indivudual: {1} Message: {2}'.format(pop,ind_name,line.decode("utf-8").replace('\n', ' ').replace('\r', '')).strip())
         
-    def __load_history_file(self):
+    def load_history_file(self):
         '''
             (Protected)
             Reads the history file if exists 
@@ -373,22 +373,23 @@ class Optimizer:
         self.__history_filename = os.path.join(self.optimization_folder,"history.csv")
         if (os.path.exists(self.__history_filename)):
             df_temp = pd.read_csv(self.__history_filename)
-            if (self.history == None):
-                self.history = df_temp
-            else:                           # Check for matching columns
-                eval_param_names =  [p.name for p in self.eval_parameters]
-                objective_names = [o.name for o in self.objectives]
-                perf_param_names = [o.name for o in self.performance_parameters]
-                
-                eval_param_names.extend(objective_names)
-                eval_param_names.extend(perf_param_names)
-                eval_param_names.extend(['pop_diversity','pop_distance'])
+            # Check for matching columns
+            headers = ['Unnamed: 0','Population','Best Individual']
+            eval_param_names =  [p.name for p in self.eval_parameters]
+            objective_names = [o.name for o in self.objectives]
+            perf_param_names = [o.name for o in self.performance_parameters]
+            
+            headers.extend(eval_param_names)
+            headers.extend(objective_names)
+            headers.extend(perf_param_names)
+            headers.extend(['pop_diversity','pop_avg_distance'])
+            
 
-                if eval_param_names == df_temp.columns:
-                    self.history = df_temp
-                else:   # if the number of parameters change then start from a new file 
-                    self.history = None
-                    os.remove(self.__history_filename)
+            if len(headers) == len(list(df_temp.columns)) and headers == list(df_temp.columns):
+                self.history = df_temp
+            else:   # if the number of parameters change then start from a new file 
+                self.history = None
+                os.remove(self.__history_filename)
 
     def append_history_file(self, pop:int, best_ind:Individual,diversity:float,distance:float):
         '''
@@ -404,7 +405,8 @@ class Optimizer:
         perf_param_names = [o.name for o in best_ind.get_performance_parameters_list()]
         
         header = ['Population', 'Best Individual']
-        data = [pop, '{:3d}_{1}'.format(best_ind.population,best_ind.name)]
+        pop_dir = self.__check_population_folder__(best_ind.population).replace('Calculation/','')
+        data = [pop, '{:s}_{:s}'.format(pop_dir,best_ind.name)]
         
         def write_arrays(names,vals):
             for name,val in zip(names,vals):
@@ -415,14 +417,13 @@ class Optimizer:
         write_arrays(objective_names,objectives)
         write_arrays(perf_param_names,perf_param)
         
-        header.extend(['pop_diversity','pop_distance'])
+        header.extend(['pop_diversity','pop_avg_distance'])
         data.extend([diversity,distance])
         if (not os.path.exists(self.__history_filename)):                        
-            self.history = pd.DataFrame(data=data,columns=header)
+            self.history = pd.DataFrame(dict(zip(header, data)),index=[0])
             self.history.to_csv(self.__history_filename)
-        else:
-            data = {h: d for h,d in zip(header,data)}
-            self.history.append(data)
+        else:            
+            self.history.append(dict(zip(header, data)),ignore_index=True)
             self.history.to_csv(self.__history_filename)
 
 
