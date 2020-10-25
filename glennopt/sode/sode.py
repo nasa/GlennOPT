@@ -6,6 +6,7 @@ import operator
 import subprocess, copy, math
 import sys
 from typing import List
+from enum import Enum
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,6 +15,10 @@ from ..helpers import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutat
 from ..base import Parameter,Individual, Optimizer
 from random import seed, gauss, random, randint
 from tqdm import trange
+
+class selection_type(Enum):
+    best_design = 1
+    pop_dist = 2
 
 class SODE(Optimizer):
     def __init__(self,eval_script:str = "evaluation.py", eval_folder:str = "Evaluation",pop_size:int=32, optimization_folder:str=None):
@@ -76,7 +81,7 @@ class SODE(Optimizer):
         individuals = self.read_population(population_number=-1)
         self.append_restart_file(individuals) # Create the restart file
 
-    def optimize_from_population(self,pop_start:int,n_generations:int):
+    def optimize_from_population(self,pop_start:int,n_generations:int,sel_type:selection_type=selection_type.best_design):
         """
             Reads the values of a population, this can be a DOE or a previous evaluation
             Starts the optimization 
@@ -108,14 +113,18 @@ class SODE(Optimizer):
             newIndividuals = self.__crossover_mutate__(individuals)
             self.evaluate_population(newIndividuals,pop) 
             newIndividuals = self.read_population(pop)
-            # Calculate population distance
-            pop_diversity = diversity(newIndividuals)
-            pop_dist = distance(individuals,newIndividuals)
-            # Calculate diversity 
-            individuals = self.select_individuals(individuals,newIndividuals)
-            sorted_inds = sorted(individuals, key=operator.attrgetter('objectives'))
-            self.append_restart_file(sorted_inds)
-            self.append_history_file(pop,sorted_inds[0],pop_diversity,pop_dist)
+            
+            pop_diversity = diversity(newIndividuals)       # Calculate diversity 
+            pop_dist = distance(individuals,newIndividuals) # Calculate population distance
+            if sel_type == selection_type.best_design:
+                individuals.extend(newIndividuals)
+                individuals = sorted(individuals, key=operator.attrgetter('objectives'))
+                individuals = individuals[:self.pop_size]
+            else:                
+                individuals = self.select_individuals(individuals,newIndividuals)
+                individuals = sorted(individuals, key=operator.attrgetter('objectives'))
+            self.append_restart_file(individuals)
+            self.append_history_file(pop,individuals[0],pop_diversity,pop_dist)
             
 
     def __crossover_mutate__(self,individuals:List[Individual]):

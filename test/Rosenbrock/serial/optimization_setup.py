@@ -4,7 +4,7 @@
 import sys,os
 sys.path.insert(0,'../../../')
 from glennopt.base import Parameter
-from glennopt.sode import SODE
+from glennopt.sode import SODE, selection_type
 from glennopt.helpers import de_mutation_type, mutation_parameters
 
 # Generate the DOE
@@ -32,7 +32,7 @@ sode.mutation_params.mutation_type = de_mutation_type.de_dmp
 sode.mutation_params.F = 0.8
 sode.mutation_params.C = 0.7
 sode.start_doe(doe_size=64)
-sode.optimize_from_population(pop_start=-1,n_generations=40)
+sode.optimize_from_population(pop_start=-1,n_generations=40, sel_type=selection_type.best_design)
 
 
 

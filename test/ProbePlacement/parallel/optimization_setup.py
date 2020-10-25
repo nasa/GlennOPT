@@ -3,9 +3,9 @@
 """
 import sys,os
 sys.path.insert(0,'../../../')
-from glennopt.helpers import Parameter, parallel_settings
-from glennopt.sode import SODE
-from glennopt.nsga3 import de_mutation_type, mutation_parameters
+from glennopt.base import Parameter
+from glennopt.helpers import parallel_settings, de_mutation_type, mutation_parameters
+from glennopt.sode import SODE, selection_type
 import numpy as np
 
 eval_parameters = list()
@@ -27,7 +27,7 @@ constraints = (tLo,tHi)
 
 # Generate the DOE
 current_dir = os.getcwd()
-pop_size = 24
+pop_size = 64
 sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 sode.add_eval_parameters(eval_params = eval_parameters)
@@ -51,5 +51,5 @@ sode.parallel_settings = parallelSettings
 sode.mutation_params.mutation_type = de_mutation_type.de_dmp
 sode.mutation_params.F = 0.6
 sode.mutation_params.C = 0.5
-sode.start_doe(doe_size=64)
-sode.optimize_from_population(pop_start=-1,n_generations=100)
+sode.start_doe(doe_size=128)
+sode.optimize_from_population(pop_start=-1,n_generations=100,sel_type=selection_type.pop_dist)
