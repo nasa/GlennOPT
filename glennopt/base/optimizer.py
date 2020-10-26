@@ -5,6 +5,7 @@ Optimizer - A base abstract class where all optimizers will inherit from. This c
 """
     Python Modules
 """
+from os import name
 import sys
 import os, glob, copy, signal, platform, ctypes
 from typing import TypeVar,List
@@ -13,15 +14,16 @@ import time
 import math
 import pprint
 import logging
-
+import pandas as pd
 """
     External Modules
 """
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
-from glennopt.base_classes import Individual
-from glennopt.helpers import Parameter, copy_helper, parallel_settings, convert_to_ndarray
+from .individual import Individual
+from .parameter import Parameter
+from ..helpers import copy_helper, parallel_settings, convert_to_ndarray
 import psutil
 
 class Optimizer: 
@@ -89,6 +91,7 @@ class Optimizer:
         # Cache storage
         self.pandas_cache = {} # Appends individuals to pandas dataframe each dictionar contains the population number
         self.single_folder_eval = single_folder_eval
+        
 
 
     @property
@@ -299,6 +302,7 @@ class Optimizer:
             else: # TODO execute individual without creating a bunch of directories. Maybe create execution directories and delete them
                 output = subprocess.check_output(['python', self.evaluation_script])
                 # Append output to results, need to check first how the output is structured
+        time.sleep(0.1)
     
     def __check_process_running__(self,p):
         if p is not None:
@@ -354,15 +358,78 @@ class Optimizer:
     
     def __write_proc_log__(self,p,pop,ind_name):
         '''
+            (Private)
             Write the log for each process 
         '''   
         if p is not None:     
             for line in p.stdout:
                 self.logger.debug('POP {0} Indivudual: {1} Message: {2}'.format(pop,ind_name,line.decode("utf-8").replace('\n', ' ').replace('\r', '')).strip())
         
-    
+    def load_history_file(self):
+        '''
+            (Protected)
+            Reads the history file if exists 
+        '''
+        self.__history_filename = os.path.join(self.optimization_folder,"history.csv")
+        if (os.path.exists(self.__history_filename)):
+            df_temp = pd.read_csv(self.__history_filename)
+            # Check for matching columns
+            headers = ['Unnamed: 0','Population','Best Individual']
+            eval_param_names =  [p.name for p in self.eval_parameters]
+            objective_names = [o.name for o in self.objectives]
+            perf_param_names = [o.name for o in self.performance_parameters]
+            
+            headers.extend(eval_param_names)
+            headers.extend(objective_names)
+            headers.extend(perf_param_names)
+            headers.extend(['pop_diversity','pop_avg_distance'])
+            
+
+            if len(headers) == len(list(df_temp.columns)) and headers == list(df_temp.columns):
+                self.history = df_temp
+            else:   # if the number of parameters change then start from a new file 
+                self.history = None
+                os.remove(self.__history_filename)
+
+    def append_history_file(self, pop:int, best_ind:Individual,diversity:float,distance:float):
+        '''
+            Writes a history.csv file containing the best design(s) this function is called by the inheriting class
+        '''
+        eval_params = best_ind.eval_parameters
+        eval_param_names =  [p.name for p in best_ind.get_eval_parameter_list()]
+        
+        objectives = best_ind.objectives
+        objective_names = [o.name for o in best_ind.get_objectives_list()]
+        
+        perf_param = best_ind.performance_parameters
+        perf_param_names = [o.name for o in best_ind.get_performance_parameters_list()]
+        
+        header = ['Population', 'Best Individual']
+        pop_dir = self.__check_population_folder__(best_ind.population).replace('Calculation/','')
+        data = [pop, '{:s}_{:s}'.format(pop_dir,best_ind.name)]
+        
+        def write_arrays(names,vals):
+            for name,val in zip(names,vals):
+                header.append(name)
+                data.append(val)
+
+        write_arrays(eval_param_names,eval_params)
+        write_arrays(objective_names,objectives)
+        write_arrays(perf_param_names,perf_param)
+        
+        header.extend(['pop_diversity','pop_avg_distance'])
+        data.extend([diversity,distance])
+        if (not os.path.exists(self.__history_filename)):                        
+            self.history = pd.DataFrame(dict(zip(header, data)),index=[0])
+            self.history.to_csv(self.__history_filename)
+        else:            
+            self.history = self.history.append(dict(zip(header, data)),ignore_index=True)
+            self.history.to_csv(self.__history_filename)
+
+
     def append_restart_file(self, individuals:List[Individual]):
         """
+            (public)
             Appends self.population_track to a restart file, these are the individuals matter and can be restarted from. Instead of restarting from a population, lets restart from the best individuals 
 
             Inputs:
@@ -497,8 +564,9 @@ class Optimizer:
         ''' 
             Create a restart file containing all individuals of all populations
         '''
-        individuals = self.read_calculation_folder()
-        self.append_restart_file(individuals)
+        pop_individuals = self.read_calculation_folder()
+        for individuals in pop_individuals:
+            self.append_restart_file(individuals)
 
     def plot_2D(self,obj1_name:str,obj2_name:str,xlim:list=None,ylim:list=None):
         """

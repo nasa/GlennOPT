@@ -10,10 +10,9 @@ import numpy as np
 import glob
 from itertools import chain
 
-from ..base_classes import Optimizer, Individual
-from ..helpers import Parameter
 from .non_dominated_sorting import non_dominated_sorting
-from .mutate import simple, de_best_1_bin, de_rand_1_bin, de_mutation_type, mutation_parameters
+from ..base import Parameter, Individual, Optimizer
+from ..helpers import simple, de_best_1_bin, de_rand_1_bin, de_dmp, de_mutation_type, mutation_parameters
 
 individual_list = List[Individual]
 
@@ -320,6 +319,9 @@ class NSGA3(Optimizer):
             newIndividuals = de_rand_1_bin(individuals=individuals,objectives=self.objectives,
                 eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,
                 F=self.mutation_params.F,C=self.mutation_params.C)
+        elif self.mutation_params.mutation_type == de_mutation_type.de_dmp:
+            newIndividuals = de_dmp(individuals=individuals,
+                objectives=self.objectives, eval_parameters=self.eval_parameters, performance_parameters=self.performance_parameters)
         elif self.mutation_params.mutation_type == de_mutation_type.simple:
             nCrossover =  int(self.pop_size/2)
             nMutation = self.pop_size-nCrossover

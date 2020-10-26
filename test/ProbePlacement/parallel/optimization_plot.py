@@ -33,6 +33,7 @@ objectives = []
 objectives.append(Parameter(name='objective1'))
 sode.add_objectives(objectives=objectives)
 
+sode.create_restart()
 # Get the best individual in each population
 best_individuals,best_compromise = sode.get_pop_best()
 # Track the best objective as population advances 

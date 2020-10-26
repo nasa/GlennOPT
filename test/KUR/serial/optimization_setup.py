@@ -3,8 +3,9 @@
 """
 import sys,os
 sys.path.insert(0,'../../../')
-from glennopt.helpers import Parameter
-from glennopt.nsga3 import NSGA3,mutation_parameters, de_mutation_type
+from glennopt.base import Parameter
+from glennopt.helpers import mutation_parameters, de_mutation_type
+from glennopt.nsga3 import NSGA3
 
 # Generate the DOE
 pop_size=32
@@ -29,7 +30,7 @@ performance_parameters.append(Parameter(name='p2'))
 performance_parameters.append(Parameter(name='p3'))
 ns.add_performance_parameters(performance_params = performance_parameters)
 
-ns.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
+ns.mutation_params.mutation_type = de_mutation_type.de_dmp
 ns.mutation_params.F = 0.8
 ns.mutation_params.C = 0.7
 ns.start_doe(doe_size=64)

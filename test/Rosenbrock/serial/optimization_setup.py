@@ -3,13 +3,13 @@
 """
 import sys,os
 sys.path.insert(0,'../../../')
-from glennopt.helpers import Parameter
-from glennopt.sode import SODE
-from glennopt.nsga3 import de_mutation_type, mutation_parameters
+from glennopt.base import Parameter
+from glennopt.sode import SODE, selection_type
+from glennopt.helpers import de_mutation_type, mutation_parameters
 
 # Generate the DOE
 current_dir = os.getcwd()
-pop_size = 20
+pop_size = 32
 sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 eval_parameters = []
@@ -28,13 +28,11 @@ performance_parameters.append(Parameter(name='p2'))
 sode.add_performance_parameters(performance_params = performance_parameters)
 
 # params = mutation_parameters
-sode.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
-sode.mutation_params.min_parents = 2
-sode.mutation_params.max_parents = 5
+sode.mutation_params.mutation_type = de_mutation_type.de_dmp
 sode.mutation_params.F = 0.8
 sode.mutation_params.C = 0.7
 sode.start_doe(doe_size=64)
-sode.optimize_from_population(pop_start=-1,n_generations=40)
+sode.optimize_from_population(pop_start=-1,n_generations=40, sel_type=selection_type.best_design)
 
 
 

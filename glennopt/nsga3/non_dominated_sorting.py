@@ -3,7 +3,7 @@ import numpy as np
 from collections import defaultdict
 from numpy import linalg as LA
 from typing import TypeVar,List
-from ..base_classes import Individual
+from ..base import Individual
 
 def non_dominated_sorting(individuals:List[Individual],k:int,first_front_only=False):
     '''
