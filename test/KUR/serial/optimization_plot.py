@@ -29,3 +29,5 @@ performance_parameters.append(Parameter(name='p3'))
 ns.read_calculation_folder()
 ns.plot_2D('objective1','objective2')
 
+objectives, keys, best_fronts = ns.get_best()
+best_individuals, best_fronts = ns.get_pop_best()

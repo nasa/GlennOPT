@@ -322,7 +322,7 @@ class NSGA3(Optimizer):
         elif self.mutation_params.mutation_type == de_mutation_type.de_dmp:
             newIndividuals = de_dmp(individuals=individuals,
                 objectives=self.objectives, eval_parameters=self.eval_parameters, performance_parameters=self.performance_parameters)
-        elif self.mutation_params.mutation_type == de_mutation_type.simple:
+        else:               # self.mutation_params.mutation_type == de_mutation_type.simple
             nCrossover =  int(self.pop_size/2)
             nMutation = self.pop_size-nCrossover
             newIndividuals = simple(individuals=individuals,nCrossover=nCrossover,nMutation=nMutation,objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters,mu=self.mutation_params.mu,sigma=self.mutation_params.sigma)
