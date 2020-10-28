@@ -9,16 +9,21 @@ from tqdm import trange
 
 class Base:
     def __init__(self):
-       pass
+       self.num_parameter = 0
+       self.num_objectives = 0
+       self.num_perf_parameter = 0
 
     def add_parameter(self,name:str = None, min_value:float = None ,max_value:float = None,value_if_failed:float = 100000, constr_less_than:float = None, constr_greater_than:float = None)->None:
         self.eval_parameters.append(Parameter(name, min_value,max_value,value_if_failed, constr_less_than, constr_greater_than))
+        self.num_parameter = len(self.eval_parameters)
 
     def add_objectives(self,name:str = None, min_value:float = None ,max_value:float = None,value_if_failed:float = 100000, constr_less_than:float = None, constr_greater_than:float = None)->None:
         self.objectives.append(Parameter(name, min_value,max_value,value_if_failed, constr_less_than, constr_greater_than))
+        self.num_objectives = len(self.objectives)
 
     def add_perf_parameter(self,name:str = None, min_value:float = None ,max_value:float = None,value_if_failed:float = 100000, constr_less_than:float = None, constr_greater_than:float = None)->None:
         self.perf_parameters.append(Parameter(name, min_value,max_value,value_if_failed, constr_less_than, constr_greater_than))
+        self.num_perf_parameter = len(self.perf_parameters)
 
     
         
@@ -54,15 +59,20 @@ class Default(Base):
     
 
 class CCD(Base):
-    def __init__ (self,number_of_parameters:int=2,center_points:tuple=(4,4),alpha:str="o",face:str="ccc"):
-        
-        self.num = number_of_parameters
+    def __init__ (self,center_points:tuple=(4,4),alpha:str="o",face:str="ccc"):
+        '''
+            Central Composite Design
+
+            Inputs
+                center points (4,4) 4 - factorial block (4 = square) These are the edges. the other 4 is the + sign. You can change this.
+                alpha = "o" orthogonal or "r" for rotatable
+                face = circumscribed "ccc" default, faced"ccf", inscribed "cci"                
+        '''
         self.center= center_points
         self.alpha = alpha
         self.face = face 
-        self.eval_parameters=[]
-        self.objectives=[]
-        self.perf_parameters=[]
+        self.eval_parameters=list()
+
         
 
 
@@ -71,12 +81,21 @@ class CCD(Base):
         return (cal*coded_variable)+(min_val)
 
     def create_design(self):
-        df = pd.DataFrame(data=doe.ccdesign(n=self.num,center=self.center, alpha=self.alpha, face=self.face), columns=[f'{self.eval_parameters[i].name}_coded'for i in range(self.num)])
-        for i in range(self.num):
+        df = pd.DataFrame(data=doe.ccdesign(n=self.num_parameter,center=self.center, alpha=self.alpha, face=self.face), columns=[f'{self.eval_parameters[i].name}_coded'for i in range(self.num_parameter)])
+        for i in range(self.num_parameter):
             df[self.eval_parameters[i].name]= df[f'{self.eval_parameters[i].name}_coded'].apply(lambda x:self.coded_calculation(self.eval_parameters[i].min_value,self.eval_parameters[i].max_value,x))
         return df
     
-
+class factorial(Base):
+    def __init__(self,factorialType='ff2n'):
+        '''
+            Factorial based design of experiments
+            
+            Inputs
+                factorialType - 2 level full factorial method 'fullfact' 
+        '''
+        self.eval_parameters=list()
+        
 
  
             
