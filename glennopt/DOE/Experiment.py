@@ -1,8 +1,7 @@
 import pyDOE2 as doe
 import pandas as pd
 import copy
-from glennopt.helpers import Parameter
-from ..base_classes import Individual
+from ..base import Individual, Parameter
 import numpy as np
 from tqdm import trange
 
