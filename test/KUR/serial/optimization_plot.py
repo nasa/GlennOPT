@@ -87,6 +87,7 @@ for ind_list in best_fronts:
 
 ax.set_xlabel('Objective 1')
 ax.set_ylabel('Objective 2')
+ax.set_title('Non-dimensional sorting: Best Front for each population')
 ax.legend(legend_labels)
 fig.canvas.draw()
 fig.canvas.flush_events()
