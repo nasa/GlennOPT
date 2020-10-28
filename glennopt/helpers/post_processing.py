@@ -51,7 +51,7 @@ def get_best(individuals,pop_size:int):
                 rolling_best = rolling_best[-pop_size:] # Keep only the pop_size
         
     pop_folders = keys
-    return convert_to_ndarray(objectives), pop_folders, best_fronts
+    return convert_to_ndarray(objectives), pop_folders, best_fronts  # First front
 
 def get_pop_best(individuals):
     '''
@@ -95,88 +95,26 @@ def get_pop_best(individuals):
     
     return best_individuals, best_fronts
 
-# *                         Plotting Codes
-def plot_pop_best(best_individuals:dict,objective_index:int=0):
-    """
-        Creates a plot of the best individual in each population vs the objective value. defaults to first objective
-        
-        USAGE:
-        import matplotlib.pyplot as plt
-        best_individuals, _ = get_pop_best(individuals)
-        ax = plot_pop_best(best_individuals,objective_index=0):
-        plt.show()
-        
-        INPUTS:
-            best_indivduals - List of indivduals 
-            objective_index - index of the objective interested in 
-        
-        RETURNS:
-            ax - matplot lib object
-    """
-    
-    nobjectives = len(best_individuals[0][0].objectives)
-    objective_data = list()
-    for pop,best_individual in best_individuals.items():
-        objective_data.append(best_individual[objective_index].objectives[objective_index])
-        best_individuals.append(best_individual[objective_index].name)
-    
-    _,ax = plt.subplots()
-    colors = cm.rainbow(np.linspace(0, 1, len(best_individuals.keys)))
-    ax.scatter(list(best_individuals.keys()), objective_data, color='blue',s=5)
-    ax.set_yscale('log')
-    ax.set_xticks(list(best_individuals.keys()))
-    ax.set_xlabel('Population')
-    ax.set_ylabel('Objective Value')
-    ax.set_title('Objective Index: ' + str(objective_index))
-    return ax
-    
+def plot_pareto(best_fronts,pop,objective1_index,objective2_index):
+    '''
 
-def plot_best(objectives,pop, objective_index:int=0):
-    '''
-        Creates a plot of the best objective vs population number. This is the rolling best design
-        
-        USAGE:
-        import matplotlib.pyplot as plt
-        objectives, _ , _ = get_best(individuals)
-        ax = plot_pop_best(best_indivduals,objective_index=0):
-        plt.show()
-        
-        INPUTS:
-            objectives - List of individuals with best objective values  
-            objective_index - index of the objective interested in 
-        
-        RETURNS:
-            ax - matplot lib object
-    '''
-     
-    _, ax = plt.subplots()    
-    ax.scatter(pop, objectives[:,objective_index],color='blue',s=10)
-    ax.set_yscale('log')
-    ax.set_xticks(pop)
-    ax.set_xlabel('Population')
-    ax.set_ylabel('Objective {0} Value'.format(objective_index))
-    return ax
-
-def plot_pareto(best_fronts,objective1,objective2):
-    '''
-        
     '''
     fig,ax = plt.subplots()
 
-    colors = cm.rainbow(np.linspace(0, 1, len(self.pandas_cache.keys())))        
+    colors = cm.rainbow(np.linspace(0, 1, len(best_fronts)))        
     indx = 0
     legend_labels = []
     # Scan the pandas file, grab objectives for each population
-    for key, df in self.pandas_cache.items():
+    for ind_list in best_fronts:
         obj1_data = []
         obj2_data = []
         c=colors[indx]
-        for index, row in df.iterrows():
-            obj1_data.append(row[obj1_name])
-            obj2_data.append(row[obj2_name])
+        for ind in ind_list:
+            obj1_data.append(ind.objectives[objective1_index])
+            obj2_data.append(ind.objectives[objective2_index])
         # Plot the gathered data
-        ax.scatter(obj1_data, obj2_data, color=c, s=5,alpha=0.5)
-        legend_labels.append(key)
+        ax.scatter(obj1_data, obj2_data, color=c, s=10,alpha=0.5)
+        legend_labels.append(pop[indx])
         indx+=1
 
     ax.set_xlabel(obj1_name)
