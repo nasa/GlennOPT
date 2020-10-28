@@ -4,7 +4,7 @@
 from random import shuffle,random
 import operator
 import subprocess, copy, math
-import sys
+import sys, os, shutil
 from typing import List
 from enum import Enum
 
@@ -75,7 +75,7 @@ class SODE(Optimizer):
                 for eval_param in parameters:
                     eval_param.value = np.random.uniform(eval_param.min_value,eval_param.max_value,1)[0]
                 doe_individuals.append(Individual(eval_parameters=parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
-        
+
         # * Begin the evaluation
         self.evaluate_population(individuals=doe_individuals,population_number=-1)
         # * Read the DOE
@@ -101,7 +101,6 @@ class SODE(Optimizer):
         
         # Crossover and Mutate the doe individuals to generate the next individuals used in the population
         # Sort the population into [fill in here]
-        # self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1,params=params,F=F)
         self.load_history_file()
         individuals = sorted(individuals, key=operator.attrgetter('objectives'))
         individuals = individuals[:self.pop_size]
@@ -127,7 +126,12 @@ class SODE(Optimizer):
             self.append_restart_file(individuals)
             self.append_history_file(pop,individuals[0],pop_diversity,pop_dist)
             
-
+            if self.single_folder_eval:
+                # Delete the population folder
+                population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(pop_start))
+                if os.path.isdir(population_folder):
+                    shutil.rmtree(population_folder)
+            pop_start+=1 # increment the population
     def __crossover_mutate__(self,individuals:List[Individual]):
         '''
             Applies Crossover and Mutate
