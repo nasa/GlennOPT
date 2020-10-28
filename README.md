@@ -43,6 +43,7 @@ Integrate into OpenMDAO for a complete optimization package (needs to be debated
 # Contributors 
 |                   | Position      | Dates            | Responsibility                      |   |
 |-------------------|---------------|------------------|-------------------------------------|---|
+| Justin Rush       | LERCIP Intern | Fall 2020        | CCD DOE                             |   |
 | Nadeem Kever      | LERCIP Intern | Summer-Fall 2020 | Single Objective DE                 |   |
 | Trey Harrison     | Researcher    | Fall 2020-       | Probe Optimization test case        |   |
 | Paht Juangphanich | Researcher    | Spring 2020-     | Architect                           |   |
