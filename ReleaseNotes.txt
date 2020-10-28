@@ -1,0 +1,10 @@
+v1.0.8
+- Added Central Composite Designs doe
+
+v1.0.7
+- A new mutation strategy called de_dmp (Difference mean based perturbation) has been implemented based on the paper (Gosh et al. 2017) and tested. This strategy reduces the chance of being stuck at a local minima for single objective optimizations. 
+- A history.csv file automatically prints when performing any optimization. This file contains the best individual – an evaluation using a series of parameters – it also contains the population diversity and distance which can help user determine convergence.
+- Stability improvements for both Linux and Windows by using psutil to help control executions.
+ -Updated the way documentation is written by using Google Colab to read in a jupyter notebook file. This makes things more interactive to the user than a simple pdf. 
+
+Gosh, A., Das, S., Mallipeddi, R., Das, A. K., & Dash, S. S. (2017). A Modified Differential Evolution with Distance-based Selection for Continuous Optimization in Presence of Noise. IEEE Access, 5, 26944–26964. https://doi.org/10.1109/ACCESS.2017.2773825

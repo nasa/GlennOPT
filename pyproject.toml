@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "GlennOPT"
-version = "1.0.7"
+version = "1.0.8"
 description = "Multi and single objective optimization tool for cfd/computer simulations."
 authors = ["Paht Juangphanich <paht.juangphanich@nasa.gov>"]
 
