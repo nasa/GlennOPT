@@ -10,7 +10,7 @@ import numpy as np
 import glob
 from itertools import chain
 
-from .non_dominated_sorting import non_dominated_sorting
+from ..helpers import non_dominated_sorting
 from ..base import Parameter, Individual, Optimizer
 from ..helpers import simple, de_best_1_bin, de_rand_1_bin, de_dmp, de_mutation_type, mutation_parameters
 
