@@ -62,24 +62,12 @@ class SODE(Optimizer):
             parameters[indx].value = y[indx]
         return parameters
 
-    def start_doe(self,eval_values):
+    def start_doe(self,list_of_individuals):
         """
             Starts a design of experiments. If the DOE has already started and there is an output file for an individual then the individual won't be evaluated 
         """
-        indx_list = [i for i in range(len(eval_values))]
-        shuffle(indx_list)
-
-        doe_individuals = []
-        for i in trange(len(indx_list)):
-            parameters = copy.deepcopy(self.eval_parameters)
-            parameters[0].value, parameters[1].value = eval_values[indx_list[i]][0],eval_values[indx_list[i]][1]
-
-            
-                
-            doe_individuals.append(Individual(eval_parameters=self.eval_parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
-        
         # * Begin the evaluation
-        self.evaluate_population(individuals=doe_individuals,population_number=-1)
+        self.evaluate_population(individuals=list_of_individuals,population_number=-1)
         # * Read the DOE
         individuals = self.read_population(population_number=-1)
         self.append_restart_file(individuals) # Create the restart file
