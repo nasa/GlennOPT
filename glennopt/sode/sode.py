@@ -64,16 +64,17 @@ class SODE(Optimizer):
             parameters[indx].value = y[indx]
         return parameters
 
-    def start_doe(self,doe_size:int=128):
+    def start_doe(self,doe_individuals:List[Individual]=None, doe_size:int=128):
         """
             Starts a design of experiments. If the DOE has already started and there is an output file for an individual then the individual won't be evaluated 
         """        
-        doe_individuals = []
-        for i in trange(doe_size):
-            parameters = copy.deepcopy(self.eval_parameters)
-            for eval_param in parameters:
-                eval_param.value = np.random.uniform(eval_param.min_value,eval_param.max_value,1)[0]
-            doe_individuals.append(Individual(eval_parameters=parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
+        if doe_individuals is None:
+            doe_individuals = []
+            for i in trange(doe_size):
+                parameters = copy.deepcopy(self.eval_parameters)
+                for eval_param in parameters:
+                    eval_param.value = np.random.uniform(eval_param.min_value,eval_param.max_value,1)[0]
+                doe_individuals.append(Individual(eval_parameters=parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
         
         # * Begin the evaluation
         self.evaluate_population(individuals=doe_individuals,population_number=-1)
