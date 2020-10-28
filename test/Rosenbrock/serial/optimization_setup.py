@@ -6,28 +6,37 @@ sys.path.insert(0,'../../../')
 from glennopt.helpers import Parameter
 from glennopt.sode import SODE
 from glennopt.nsga3 import de_mutation_type, mutation_parameters
-from glennopt.helpers import Experiment
+from glennopt.DOE import Experiment
 
 # Generate the DOE
 current_dir = os.getcwd()
 pop_size = 20
 sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
-doe = Experiment.CCD(number_of_parameters=2)
+doe = Experiment.Default(15)
+
 doe.add_parameter(name="x1",min_value=-3,max_value=3)
 doe.add_parameter(name="x2",min_value=-3,max_value=3)
 
-sode.add_eval_parameters(eval_params = doe.eval_parameters)
+sode.add_eval_parameters(eval_params=doe.eval_parameters)
 
-objectives = []
-objectives.append(Parameter(name='objective1'))
-sode.add_objectives(objectives=objectives)
+doe.add_objectives(name='objective1')
+sode.add_objectives(objectives=doe.objectives)
 
 # No performance Parameters
-performance_parameters = []
-performance_parameters.append(Parameter(name='p1'))
-performance_parameters.append(Parameter(name='p2'))
-sode.add_performance_parameters(performance_params = performance_parameters)
+doe.add_perf_parameter(name='p1')
+doe.add_perf_parameter(name='p2')
+
+sode.add_performance_parameters(performance_params=doe.perf_parameters)
+
+
+
+
+
+
+
+
+
 
 # params = mutation_parameters
 sode.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
@@ -35,7 +44,7 @@ sode.mutation_params.min_parents = 2
 sode.mutation_params.max_parents = 5
 sode.mutation_params.F = 0.8
 sode.mutation_params.C = 0.7
-sode.start_doe(doe.get_eval_value())
+sode.start_doe(doe.generate_doe())
 sode.optimize_from_population(pop_start=-1,n_generations=40)
 
 
