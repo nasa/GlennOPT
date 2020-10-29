@@ -52,6 +52,7 @@ class Default(Base):
         '''
             This defaults to creating a randomized set of design of experiments 
         '''
+        super(Default, self).__init__()
         self.num_evals = number_of_evals
         self.eval_parameters=[]
         self.objectives=[]
