@@ -6,14 +6,17 @@ sys.path.insert(0,'../../../')
 from glennopt.base import Parameter
 from glennopt.sode import SODE
 from glennopt.helpers import de_mutation_type, mutation_parameters
-from glennopt.doe import Default,CCD
+from glennopt.DOE import Default,CCD,FullFactorial,LatinHyperCube
 
 # Generate the DOE
 current_dir = os.getcwd()
 pop_size = 20
 sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
-doe = Default(15)
+# doe = Default(15) # Default
+# doe = CCD()
+# doe = FullFactorial(level=5)
+doe = LatinHyperCube(128)
 
 doe.add_parameter(name="x1",min_value=-3,max_value=3)
 doe.add_parameter(name="x2",min_value=-3,max_value=3)
