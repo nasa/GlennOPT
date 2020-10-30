@@ -9,10 +9,12 @@ from dataclasses import dataclass, field
 import numpy as np 
 import glob
 from itertools import chain
+from tqdm import trange
 
+from ..helpers import diversity, distance
 from ..helpers import non_dominated_sorting
 from ..base import Parameter, Individual, Optimizer
-from ..helpers import simple, de_best_1_bin, de_rand_1_bin, de_dmp, de_mutation_type, mutation_parameters
+from ..helpers import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn,de_dmp, get_eval_param_matrix, get_objective_matrix, set_eval_parameters
 
 individual_list = List[Individual]
 
@@ -27,13 +29,9 @@ class NSGA3(Optimizer):
 
             Inputs:
                 eval_script - Evaluation python script that will be called. Either Output.txt is read or an actual output is read. 
-
                 eval_folder - folder to be copied into each individual evaluation directory. If this is null, the population directory isn't created and neither are the individual directories
-
                 num_populations - number of populations to evaluate from the starting population
-
                 pop_size - number of individuals in a given population
-
                 optimization_folder - where optimization should start
         """
         self.pop_size = pop_size
@@ -61,18 +59,18 @@ class NSGA3(Optimizer):
         self.__mutation_params = v
     # * 
     
-    def start_doe(self,doe_size:int=128):
+    def start_doe(self,doe_individuals:List[Individual]=None,doe_size:int=128):
         """
             Starts a design of experiments. If the DOE has already started and there is an output file for an individual then the individual won't be evaluated             
         """
-        doe_individuals = []
-        for i in range(doe_size):
-            parameters = copy.deepcopy(self.eval_parameters)
-            for eval_param in parameters:
-                eval_param.value = np.random.uniform(eval_param.min_value,eval_param.max_value,1)[0]
-            
-            doe_individuals.append(Individual(eval_parameters=parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
-        
+        if doe_individuals is None:
+            doe_individuals = []
+            for i in trange(doe_size):
+                parameters = copy.deepcopy(self.eval_parameters)
+                for eval_param in parameters:
+                    eval_param.value = np.random.uniform(eval_param.min_value,eval_param.max_value,1)[0]
+                doe_individuals.append(Individual(eval_parameters=parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
+     
         # * Begin the evaluation
         self.evaluate_population(individuals=doe_individuals,population_number=-1)
         # * Read the DOE
@@ -98,11 +96,15 @@ class NSGA3(Optimizer):
         """
         # * Read in all the results of the DOE, this should be done by a single thread
         # Check restart file, if not read the population
-        
+        self.load_history_file()
         individuals = self.read_restart_file()
-        
-        if (len(individuals)==0):
+
+        if (len(individuals)==0):                               
             individuals = self.read_calculation_folder()
+
+        if (len(individuals)<self.pop_size):
+            raise Exception("Number of individuals in the restart file is less than the population size."
+                + " lower the population size or increase the DOE count(if restarting from a DOE)")
 
         # Crossover and Mutate the doe individuals to generate the next individuals used in the population
         # Sort the population into [fill in here]
@@ -127,13 +129,20 @@ class NSGA3(Optimizer):
         # * Loop through all individuals
         for pop in range(pop_start,pop_start+n_generations):
             newIndividuals = self.__crossover_mutate__(individuals)
+
             # Evaluate
             self.evaluate_population(newIndividuals,pop_start)            
             newIndividuals = self.read_population(pop_start)
             # Sort and select
-            newIndividuals.extend(individuals) # add the previous population to the pool                        
+            pop_diversity = diversity(newIndividuals)       # Calculate diversity 
+            pop_dist = distance(individuals,newIndividuals) # Calculate population distance between past and future
+            newIndividuals.extend(individuals) # add the previous population to the pool                                    
             individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(newIndividuals,reference_points)            
-            self.append_restart_file(newIndividuals)
+            self.append_restart_file(individuals)        # Keep the last designs
+
+            
+            self.append_history_file(pop,individuals[0],pop_diversity,pop_dist)
+
             if self.single_folder_eval:
                 # Delete the population folder
                 population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(pop_start))

@@ -1,3 +1,9 @@
+v1.1.0
+DOEs added
+- Fixes to Central Composite Design 
+- Added LatinHyperCube
+- Added FullFactorial n-level 
+
 v1.0.8
 - Added Central Composite Designs doe
 
