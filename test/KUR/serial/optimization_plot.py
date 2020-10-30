@@ -40,27 +40,27 @@ import matplotlib.cm as cm
 import numpy as np
 # objectives, pop, best_fronts = get_best(individuals,pop_size=20)
 # objective_index = 0 
-# _, ax = plt.subplots()    
-# ax.scatter(pop, objectives[:,objective_index],color='blue',s=10)
-# ax.set_xlabel('Population')
-# ax.set_ylabel('Objective {0} Value'.format(objective_index))
-# plt.show()
+_, ax = plt.subplots()    
+ax.scatter(pop, objectives[:,objective_index],color='blue',s=10)
+ax.set_xlabel('Population')
+ax.set_ylabel('Objective {0} Value'.format(objective_index))
+plt.show()
 
-# #%% Plot Best individual at each population
-# best_individuals, best_fronts = get_pop_best(individuals)
+#%% Plot Best individual at each population
+best_individuals, best_fronts = get_pop_best(individuals)
 
-# nobjectives = len(best_individuals[0][0].objectives)
-# objective_data = list()
-# for pop,best_individual in best_individuals.items():
-#     objective_data.append(best_individual[objective_index].objectives[objective_index])
+nobjectives = len(best_individuals[0][0].objectives)
+objective_data = list()
+for pop,best_individual in best_individuals.items():
+    objective_data.append(best_individual[objective_index].objectives[objective_index])
 
-# _,ax = plt.subplots()
-# colors = cm.rainbow(np.linspace(0, 1, len(best_individuals.keys())))
-# ax.scatter(list(best_individuals.keys()), objective_data, color='blue',s=10)
-# ax.set_xlabel('Population')
-# ax.set_ylabel('Objective {0} Value'.format(objective_index))
-# ax.set_title('Best individual at each population')
-# plt.show()
+_,ax = plt.subplots()
+colors = cm.rainbow(np.linspace(0, 1, len(best_individuals.keys())))
+ax.scatter(list(best_individuals.keys()), objective_data, color='blue',s=10)
+ax.set_xlabel('Population')
+ax.set_ylabel('Objective {0} Value'.format(objective_index))
+ax.set_title('Best individual at each population')
+plt.show()
 
 
 #%% Plot the pareto front
