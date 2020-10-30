@@ -1,4 +1,3 @@
-import pyDOE2 as doe
 import pandas as pd
 import itertools
 import copy
