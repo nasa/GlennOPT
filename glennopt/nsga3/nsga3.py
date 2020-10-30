@@ -29,13 +29,9 @@ class NSGA3(Optimizer):
 
             Inputs:
                 eval_script - Evaluation python script that will be called. Either Output.txt is read or an actual output is read. 
-
                 eval_folder - folder to be copied into each individual evaluation directory. If this is null, the population directory isn't created and neither are the individual directories
-
                 num_populations - number of populations to evaluate from the starting population
-
                 pop_size - number of individuals in a given population
-
                 optimization_folder - where optimization should start
         """
         self.pop_size = pop_size
@@ -102,9 +98,13 @@ class NSGA3(Optimizer):
         # Check restart file, if not read the population
         self.load_history_file()
         individuals = self.read_restart_file()
-        
-        if (len(individuals)==0):
+
+        if (len(individuals)==0):                               
             individuals = self.read_calculation_folder()
+
+        if (len(individuals)<self.pop_size):
+            raise Exception("Number of individuals in the restart file is less than the population size."
+                + " lower the population size or increase the DOE count(if restarting from a DOE)")
 
         # Crossover and Mutate the doe individuals to generate the next individuals used in the population
         # Sort the population into [fill in here]

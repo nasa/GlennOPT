@@ -15,7 +15,7 @@ sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",p
 
 # doe = Default(15) # Default
 # doe = CCD()
-doe = FullFactorial(levels=5)
+doe = FullFactorial(levels=8)
 # doe = LatinHyperCube(128)
 
 doe.add_parameter(name="x1",min_value=-3,max_value=3)
@@ -32,8 +32,6 @@ sode.add_performance_parameters(performance_params=doe.perf_parameters)
 
 # params = mutation_parameters
 sode.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin
-sode.mutation_params.min_parents = 2
-sode.mutation_params.max_parents = 5
 sode.mutation_params.F = 0.8
 sode.mutation_params.C = 0.7
 sode.start_doe(doe.generate_doe())

@@ -98,7 +98,9 @@ class SODE(Optimizer):
 
         if (len(individuals)==0):
             individuals = self.read_population(population_number=pop_start)            
-        
+        if (len(individuals)<self.pop_size):
+            raise Exception("Number of individuals in the restart file is less than the population size."
+                + " lower the population size or increase the DOE count(if restarting from a DOE)")
         # Crossover and Mutate the doe individuals to generate the next individuals used in the population
         # Sort the population into [fill in here]
         self.load_history_file()

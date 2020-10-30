@@ -6,14 +6,17 @@ sys.path.insert(0,'../../../')
 from glennopt.base import Parameter
 from glennopt.helpers import mutation_parameters, de_mutation_type
 from glennopt.nsga3 import NSGA3
-from glennopt.doe import Default,CCD
+from glennopt.DOE import Default,CCD,FullFactorial,LatinHyperCube
 
 # Generate the DOE
 pop_size=32
 current_dir = os.getcwd()
 ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
-doe = CCD() 
+# doe = Default(15) # Default
+# doe = CCD()
+doe = FullFactorial(levels=8)
+# doe = LatinHyperCube(128)
 
 doe.add_parameter(name="x1",min_value=-5,max_value=5)
 doe.add_parameter(name="x2",min_value=-5,max_value=5)
@@ -35,3 +38,4 @@ ns.mutation_params.F = 0.8
 ns.mutation_params.C = 0.7
 ns.start_doe(doe.generate_doe())
 ns.optimize_from_population(pop_start=-1,n_generations=50)
+

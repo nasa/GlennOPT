@@ -94,3 +94,5 @@ fig.canvas.flush_events()
 plt.show()
 
 
+
+# %%
