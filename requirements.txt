@@ -1,0 +1,7 @@
+matplotlib >= "3.3.1"
+numpy
+pandas
+psutil
+pydoe
+diversipy
+doepy
