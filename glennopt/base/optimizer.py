@@ -44,7 +44,8 @@ class Optimizer:
                 single_folder_eval - saves space by deleting the population folder when completed. by default this is false
         """
         self.name = name        
-        
+        assert opt_folder is not None
+
         logging.basicConfig(filename=os.path.join(opt_folder,'log.dat'),  level=logging.DEBUG)
         self.logger = logging.getLogger()
 
@@ -535,6 +536,7 @@ class Optimizer:
         head = 'VARIABLES = ' + ','.join(variables) + '\n'
 
         # zones
+        data_str = ' '
         zones = []
         for key, df in self.pandas_cache.items():
             zone_str = 'ZONE T = \"{0}\"\n'.format(key+"_"+df.iloc[0]['name'])
@@ -602,8 +604,6 @@ class Optimizer:
         fig.canvas.flush_events()
         plt.show()
     
-    
-
     def read_calculation_folder(self):
         """
             Reads the entire calculation folder to a dataframe and returns all the individuals as an array
@@ -619,9 +619,45 @@ class Optimizer:
             raise Exception("Invalid directory found. Make sure directories are either DOE or POP001")
         
         individual_list = []
-        self.pandas_cache = {}
+        self.pandas_cache = dict()
         for pop_indx in list_subfolders:
             individuals = self.read_population(pop_indx)            
             self.to_pandas(copy.deepcopy(individuals),pop_indx)
             individual_list.append(copy.deepcopy(individuals))
         return individual_list
+
+    def to_dict(self):
+        '''
+            Export the settings used to create the optimizer to dict. Also exports the optimization results if performed
+
+            Return
+                dict object
+        '''
+        settings = dict()
+        settings['eval_folder'] = self.evaluation_folder
+        settings['opt_folder'] = self.optimization_folder
+        settings['single_folder_eval'] = self.single_folder_eval
+        settings['eval_parameters'] = [p.to_dict() for p in self.eval_parameters]
+        settings['objectives'] = [o.to_dict() for o in self.objectives]
+        settings['perf_parameters'] = [p.to_dict() for p in self.performance_parameters]
+
+        self.read_calculation_folder()
+        results = dict()
+        for k in self.pandas_cache.keys():
+            results[k] = self.pandas_cache[k].to_dict()
+        
+        settings['results'] = results
+        return settings
+    
+    def from_dict(self,settings:dict):
+        '''
+            Reads the dictionary file and creates the base object
+        '''
+        self.evaluation_folder = settings['eval_folder']
+        self.optimization_folder = settings['opt_folder']
+        self.single_folder_eval = settings['single_folder_eval']
+        
+        self.eval_parameters = [Parameter().from_dict(p) for p in settings['eval_parameters']]
+        self.objectives = [Parameter().from_dict(p) for p in settings['objectives']]
+        self.performance_parameters = [Parameter().from_dict(p) for p in settings['perf_parameters']]
+        self.read_calculation_folder()

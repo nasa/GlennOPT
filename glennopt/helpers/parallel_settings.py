@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from dataclasses_json import dataclass_json
 
 
+@dataclass_json
 @dataclass
 class parallel_settings:
     """

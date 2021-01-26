@@ -11,6 +11,7 @@ import numpy as np
 from typing import List
 from ..base import Parameter, Individual
 from ..helpers import convert_to_ndarray
+from dataclasses_json import dataclass_json
 
 class de_mutation_type(Enum):
     """
@@ -22,6 +23,7 @@ class de_mutation_type(Enum):
     de_rand_1_bin_spawn = 4
     de_dmp = 5
 
+@dataclass_json
 @dataclass
 class mutation_parameters:
     """
