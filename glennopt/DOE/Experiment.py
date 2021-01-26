@@ -5,7 +5,7 @@ from ..base import Individual, Parameter
 import numpy as np
 from tqdm import trange
 from doepy import build
-
+i
 
 class Base:
     def __init__(self):
@@ -44,7 +44,12 @@ class Base:
                 parameter[indx].value=eval_values[i][indx]
             individuals.append(Individual(eval_parameters=parameter,objectives=self.objectives,performance_parameters=self.perf_parameters))
         return individuals
-        
+
+    def read_json(filename):
+        pass
+
+    def write_json(filename):
+            
 
 class Default(Base):
     def __init__(self,number_of_evals):
