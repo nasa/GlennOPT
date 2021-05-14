@@ -1,3 +1,4 @@
+#%% Plot Best objective vs population
 import sys,os
 sys.path.insert(0,'../../../')
 from glennopt.base import Parameter
@@ -29,7 +30,7 @@ performance_parameters.append(Parameter(name='p3'))
 # ns.start_doe(doe_size=40)
 # ns.optimize_from_population(pop_start=-1,n_generations=10)
 individuals = ns.read_calculation_folder()
-# ns.plot_2D('objective1','objective2')
+ns.plot_2D('objective1','objective2')
 
 
 
@@ -38,8 +39,8 @@ individuals = ns.read_calculation_folder()
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
-# objectives, pop, best_fronts = get_best(individuals,pop_size=20)
-# objective_index = 0 
+objectives, pop, best_fronts = get_best(individuals,pop_size=20)
+objective_index = 0 
 _, ax = plt.subplots()    
 ax.scatter(pop, objectives[:,objective_index],color='blue',s=10)
 ax.set_xlabel('Population')

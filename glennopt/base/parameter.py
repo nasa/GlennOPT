@@ -19,8 +19,8 @@ class Parameter:
     '''
     parameter = dict()
     name: str
-    min_val:float
-    max_val:float
+    min_value:float = None
+    max_value:float = None
     value_if_failed:float = 10000
     constraint_greater_than:float = None
     constraint_less_than:float = None
