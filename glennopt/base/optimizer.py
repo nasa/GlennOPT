@@ -8,7 +8,7 @@ Optimizer - A base abstract class where all optimizers will inherit from. This c
 from os import name
 import sys
 import os, glob, copy, signal, platform, ctypes
-from typing import TypeVar,List
+from typing import TypeVar,List, Dict
 import subprocess
 import time
 import math

@@ -8,14 +8,20 @@ import math
 import copy
 import time
 import numpy as np
-from typing import List
+from typing import List, Tuple
 from ..base import Parameter, Individual
 from ..helpers import convert_to_ndarray
 from dataclasses_json import dataclass_json
-
+    
 class de_mutation_type(Enum):
-    """
-        differential evolution mutation type. users can select what kind of mutation type to use 
+    """Differential evolution mutation type. users can select what kind of mutation type to use 
+        
+    Args:
+        de_rand_1_bin: Differential evolution using mutation with rand crossover and mutation
+        de_best_1_bin: Differential evolution using mutation with crossover with best individual
+        simple: Differential evolution using mutation with cross over and mutation using best individual
+        de_rand_1_bin_spawn: Applies mutation and crossover using de_rand_1_bin to a list of individuals to spawn even more individual combinations
+        de_dmp: uses Difference Mean Based Perturbation style crossover and mutation 
     """
     de_rand_1_bin = 1
     de_best_1_bin = 2
@@ -23,18 +29,19 @@ class de_mutation_type(Enum):
     de_rand_1_bin_spawn = 4
     de_dmp = 5
 
+
+
 @dataclass_json
 @dataclass
 class mutation_parameters:
-    """
-        Data class for storing the mutation parameters used for NSGA and differential evolution problems 
+    """Data class for storing the mutation parameters used for NSGA and differential evolution problems 
 
-        Properties:
-            mutation_type:
-            sigma: 
-            mu: 
-            F:
-            C:
+    Args:
+        mutation_type (de_mutation_type): type of mutation to use
+        sigma (float): mutation step size 0.1
+        mu (float): mutation rate
+        F (float): Amplification Factor [0,2]
+        C (float): Crossover factor [0,1]
     """
     mutation_type: de_mutation_type = field(repr=True,default=de_mutation_type.de_rand_1_bin)
     sigma: float = field(repr=True,default=0.2)
@@ -43,7 +50,19 @@ class mutation_parameters:
     C: float = field(repr=True,default=0.8)
     nParents:int = field(repr=True,default=16) # this is useful for single objective where you want x parents to spawn all the children
     
-def get_eval_param_matrix(individuals:List[Individual]):    
+def get_eval_param_matrix(individuals:List[Individual]) -> Tuple[np.ndarray,float,float]:
+    """Gets the evaluation parameter as a matrix
+
+    Args:
+        individuals (List[Individual]): List of individuals 
+
+    Returns:
+        (Tuple): containing the following
+
+            *population* (np.ndarray): population evaluation parameters
+            *xmin* (np.ndarray): min evaluaton parameters for first individual
+            *xmax* (np.ndarray): max evaluaton parameters for first individual
+    """
     pop = np.zeros((len(individuals),len(individuals[0].eval_parameters)))
     xmin = individuals[0].eval_parameter_min
     xmax = individuals[0].eval_parameter_max
@@ -294,17 +313,21 @@ def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
 
     return newIndividuals
 
-
 def simple(individuals:List[Individual],nCrossover:int,nMutation:int,objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],mu:float,sigma:float):
-    """
-        Performs a simple mutation and crossover on the individuals
-        Inputs:
-            individuals - list of individuals
-            objectives - list of objectives List[Parameter]
-            eval_parameters
-            performance_parameters - list of parameters List[parameter]
-            mu - mutation rate 0.2
-            sigma - mutation step size 0.1
+    """Performs a simple mutation and crossover on the individuals
+
+    Args:
+        individuals (List[Individual]): list of individuals
+        nCrossover (int): number of individuals to use for crossover
+        nMutation (int): number of individuals to use for mutation
+        objectives (List[Parameter]): Objectives defined as a list of Parameters
+        eval_parameters (List[Parameter]): Evaluation parameters 
+        performance_parameters (List[Parameter]): Performance Parameters
+        mu (float): Mutation rate
+        sigma (float): Mutation step size
+
+    Returns:
+        [type]: [description]
     """
     nIndividuals = len(individuals)
     # Perform Crossover
@@ -336,16 +359,19 @@ def simple(individuals:List[Individual],nCrossover:int,nMutation:int,objectives:
     return crossover_individuals
 
 # Core functions 
-def mutate(x1:np.ndarray,xmin:np.ndarray,xmax:np.ndarray,mu:float=0.02,sigma:float=0.2):
-    '''
-        Mutate the evaluation parameters
-        Simple mutate
-        Inputs:
-            x1 - array of evaluation parameters
-            mu - percentage of population to mutate
-            sigma - mutation scale 
-    
-    '''
+def mutate(x1:np.ndarray,xmin:np.ndarray,xmax:np.ndarray,mu:float=0.02,sigma:float=0.2) -> np.ndarray:
+    """Mutate the evaluation parameters
+
+    Args:
+        x1 (np.ndarray): array of evaluation parameters
+        xmin (np.ndarray): array of minimum evaluation parameter values
+        xmax (np.ndarray): array of maximum evaluation parameter values
+        mu (float, optional): percentage of population to mutate. Defaults to 0.02.
+        sigma (float, optional): mutation step size. Defaults to 0.2.
+
+    Returns:
+        np.ndarray: array of mutated values
+    """
     nMu = math.ceil(mu*len(x1))
     j = np.random.randint(0,len(x1)-1,size=nMu)
     y = x1 
@@ -360,27 +386,36 @@ def mutate(x1:np.ndarray,xmin:np.ndarray,xmax:np.ndarray,mu:float=0.02,sigma:flo
                 y[indx]=xmax[indx]
     return y
 
-def crossover(x1:np.ndarray,x2:np.ndarray):
-    '''
-        Simple crossover
-        Inputs:
-            x1 - array of evaluation parameters
-            x2 - array of evaluation parameters
-    '''
+def crossover(x1:np.ndarray,x2:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """perform simple crossover on two arrays
+
+    Args:
+        x1 (np.ndarray): array of evaluation parameters from an individual
+        x2 (np.ndarray): array of evaluation parameters from a different individual
+
+    Returns:
+        (Tuple): containing the following
+
+            *y1* (np.ndarray): new set of evaluation parameters after crossover
+            *y2* (np.ndarray): new set of evaluation parameters after crossover
+    """
     alpha = np.random.rand(len(x1))
     y1=alpha*x1+(1.0-alpha)*x2
     y2=alpha*x2+(1.0-alpha)*x1
     return y1,y2
 
 # Helper functions
-def get_pairs(nIndividuals:int,nParents:int,parent_indx_seed=[]):
+def get_pairs(nIndividuals:int,nParents:int,parent_indx_seed=[]) -> List[int]:
+    """Gets a list of integers that are not in the parent_indx_seed array
+        
+    Args:
+        nIndividuals (int): number of individuals
+        nParents (int): number of parents. this controls the length of the returned list
+        parent_indx_seed (list, optional): pre-populate the parent index array. Defaults to [].
+
+    Returns:
+        List[int]: list of individual indeicies that can pair with 
     """
-        Get a list of all the pairing partners for a particular individual
-        Inputs:
-            nIndividuals - number of individuals
-            nParents - number of parents 
-            parent_indx_seed - pre-populate the parent index array
-    """    
     parent_indicies = list()
     for i in range(nParents):
         rand_indx = random.randint(0,nIndividuals-1)
@@ -401,18 +436,21 @@ def set_eval_parameters(eval_parameters:List[Parameter], x:np.ndarray):
         parameters[indx].value = x[indx]
     return parameters
 
-def de_rand_1_bin_spawn(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int,F:float=0.6, C:float=0.7):
+def de_rand_1_bin_spawn(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int,F:float=0.6, C:float=0.7) -> List[Individual]:
+    """Applies mutation and crossover using de_rand_1_bin to a list of individuals to spawn even more individual combinations
+
+    Args:
+        individuals (List[Individual]): list of individuals. Takes the best individual[0] (sorted lowest to highest)
+        objectives (List[Parameter]): list of objectives
+        eval_parameters (List[Parameter]): Evaluation parameters F(x) the x part 
+        performance_parameters (List[Parameter]): parameters you want to keep track of
+        num_children (int): Number of children to spawn
+        F (float, optional): Amplification Factor. Defaults to 0.6.
+        C (float, optional): Crossover Factor. Defaults to 0.7.
+
+    Returns:
+        [type]: [description]
     """
-        Applies mutation and crossover using de_rand_1_bin to a list of individuals to spawn even more individual combinations
-        Inputs:
-            individuals - list of individuals. Takes the best individual[0] (sorted lowest to highest)
-            objectives - list of objectives List[Parameter]
-            performance_parameters - list of parameters List[parameter]
-            F - Amplification Factor [0,2]
-            C - Crossover factor [0,1]
-        Citatons:
-           
-    """ 
     nIndividuals = len(individuals)
     pop,xmin,xmax = get_eval_param_matrix(individuals)
     nEvalParams = len(individuals[0].eval_parameters)
