@@ -567,7 +567,7 @@ class Optimizer:
             bReturnPandas (bool, optional): [description]. Defaults to False.
 
         Returns:
-            [type]: [description]
+            pd.DataFrame: dataframe object with all the optimization results 
         """
 
         def add_value_to_dict(dict_obj,key,val):
@@ -609,8 +609,7 @@ class Optimizer:
             self.pandas_cache['POP{0:03d}'.format(pop_number)] = pd.DataFrame(data)
 
     def to_tecplot(self):
-        """
-            Converts the dataframe to a tecplot file (.tec)
+        """Converts the dataframe to a tecplot file (.tec)
         """
         if len(self.pandas_cache)==0:
             return
@@ -651,17 +650,21 @@ class Optimizer:
                 f.write(zone)
     
     def create_restart(self):
-        ''' 
-            Create a restart file containing all individuals of all populations
-        '''
+        """Create a restart file containing all individuals of all populations
+        """
+    
         pop_individuals = self.read_calculation_folder()
         for individuals in pop_individuals:
             self.append_restart_file(individuals)
 
     def plot_2D(self,obj1_name:str,obj2_name:str,xlim:list=None,ylim:list=None):
-        """
-            Creates a 2D plot scatter plot of all the individuals for the two objectives specified
+        """Creates a 2D plot scatter plot of all the individuals for the two objectives specified
 
+        Args:
+            obj1_name (str): name of the x-axis
+            obj2_name (str): name of the y-axis
+            xlim (list, optional): xbounds example [-1,2]. Defaults to None.
+            ylim (list, optional): ybounds example [-5,5]. Defaults to None.
         """
         fig,ax = plt.subplots()
 
@@ -691,15 +694,18 @@ class Optimizer:
         fig.canvas.draw()
         fig.canvas.flush_events()
         plt.show()
-    
-    def read_calculation_folder(self):
-        """
-            Reads the entire calculation folder to a dataframe and returns all the individuals as an array
+ 
+    def read_calculation_folder(self) -> List[Individual]:
+        """Reads the entire calculation folder to a dataframe and returns all the individuals as an array
             this can be useful for restarting a population
 
-            returns:
-                individual_list - list of all individuals for all populations (could be used as a restart)
+        Raises:
+            Exception: [description]
+
+        Returns:
+            List[Individual]: list of all individuals for all populations (could be used as a restart)
         """
+        
         pop_path = os.path.join(self.optimization_folder,'Calculation')
         try:
             list_subfolders = [int(f.name.replace('POP','').replace('DOE','-1')) for f in os.scandir(pop_path) if f.is_dir()]
@@ -714,13 +720,13 @@ class Optimizer:
             individual_list.append(copy.deepcopy(individuals))
         return individual_list
 
-    def to_dict(self):
-        '''
-            Export the settings used to create the optimizer to dict. Also exports the optimization results if performed
 
-            Return
-                dict object
-        '''
+    def to_dict(self):
+        """Export the settings used to create the optimizer to dict. Also exports the optimization results if performed
+
+        Returns:
+            dict: list of all the settings, could be used for creating an optimization object
+        """
         settings = dict()
         settings['eval_folder'] = self.evaluation_folder
         settings['opt_folder'] = self.optimization_folder
@@ -738,9 +744,11 @@ class Optimizer:
         return settings
     
     def from_dict(self,settings:dict):
-        '''
-            Reads the dictionary file and creates the base object
-        '''
+        """Reads the dictionary file and creates the base object
+
+        Args:
+            settings (dict): dictionary created by to_dict()
+        """
         self.evaluation_folder = settings['eval_folder']
         self.optimization_folder = settings['opt_folder']
         self.single_folder_eval = settings['single_folder_eval']
