@@ -91,19 +91,26 @@ def shuffle_population(pop,nIndividuals,nparents):
     return pop_shuffled
 
 def de_best_1_bin(best:Individual,individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],F:float=0.6, C:float=0.7):
-    """
-        Applies mutation and crossover using de_1_rand_bin to a list of individuals 
-        Inputs:
-            individuals - list of individuals. Takes the best individual[0] (sorted lowest to highest)
-            objectives - list of objectives List[Parameter]
-            performance_parameters - list of parameters List[parameter]
-            F - Amplification Factor [0,2]
-            C - Crossover factor [0,1]
-        Citatons:
+    """Applies mutation and crossover using de_1_rand_bin to a list of individuals 
+        This type of mutation and crossover strategy is good for single objective but it could lead to local minimums 
+
+    Citatons:
             https://gist.github.com/martinus/7434625df79d820cd4d9
             Storn, R., & Price, K. (1997). Differential Evolution -- A Simple and Efficient Heuristic for global Optimization over Continuous Spaces. Journal of Global Optimization, 11(4), 341–359. https://doi.org/10.1023/A:1008202821328 
             Ao, Y., & Chi, H. (2009). Multi-parent Mutation in Differential Evolution for Multi-objective Optimization. 2009 Fifth International Conference on Natural Computation, 4, 618–622. https://doi.org/10.1109/ICNC.2009.149
-    """ 
+
+    Args:
+        best (Individual): Best individual 
+        individuals (List[Individual]): list of all individuals 
+        objectives (List[Parameter]): list of objectives of those individuals 
+        eval_parameters (List[Parameter]): list of evaluation parameters 
+        performance_parameters (List[Parameter]): list of performance parameters 
+        F (float, optional): Amplification Factor [0,2]. Defaults to 0.6.
+        C (float, optional): Crossover factor [0,1]. Defaults to 0.7.
+
+    Returns:
+        List[Individual]: New list of individuals all mutated and crossovered 
+    """
     nIndividuals = len(individuals)
     pop,xmin,xmax = get_eval_param_matrix(individuals)
     
@@ -136,21 +143,28 @@ def de_best_1_bin(best:Individual,individuals:List[Individual],objectives:List[P
     return newIndividuals
 
 def de_dmp_bak(best:Individual,individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],num_children:int,C:float=0.5):
-    '''
-    Difference Mean Based Perturbation - less greedy than DE/best/1 = less chance of getting stuck at local minima, prefers exploration. 
-    Individuals:
-        best - (Single objective) best individual for single objective. (Multi-objective) a random individual from the best front
-        individuals - list of individuals 50% best performing. Takes the best individual[0] (sorted lowest to highest)
-        objectives - list of objectives List[Parameter]
-        eval_parameters - List[glennopt.helpers.Paramameters]
-        performance_parameters - List[glennopt.helpers.Paramameters]
+    """Difference Mean Based Perturbation - less greedy than DE/best/1 = less chance of getting stuck at local minima, prefers exploration. 
+        This version is archived, it uses the best individuals to generate the next generation.
+
         F - Amplification Factor randomly switched from 0.5 to 2 randomly
         C - Crossover factor sampled uniform at random from 0.3 to 1
         b - Crossover blending rate randomly chosen from 0.1, 0.5(median), 0.9
 
     Citatons:
         Gosh, A., Das, S., Mallipeddi, R., Das, A. K., & Dash, S. S. (2017). A Modified Differential Evolution with Distance-based Selection for Continuous Optimization in Presence of Noise. IEEE Access, 5, 26944–26964. https://doi.org/10.1109/ACCESS.2017.2773825
-    '''
+
+    Args:
+        best (Individual): best individuals 
+        individuals (List[Individual]): individuals 
+        objectives (List[Parameter]): list of objectives 
+        eval_parameters (List[Parameter]): list of evaluation parameters 
+        performance_parameters (List[Parameter]): list of performance parameters 
+        num_children (int): number of children to generate
+        C (float, optional): Crossover factor sampled uniform at random from 0.3 to 1. Defaults to 0.5.
+
+    Returns:
+        List[Individual]: New list of individuals all mutated and crossovered 
+    """
     # * Preprocessing Step: Do this first before generating the deisgns 
     Np = len(individuals)   # This is actually Np/2
     pop,xmin,xmax = get_eval_param_matrix(individuals)
@@ -203,22 +217,24 @@ def de_dmp_bak(best:Individual,individuals:List[Individual],objectives:List[Para
         
     return newIndividuals[0:num_children]
 
-
 def de_dmp(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter]):
-    '''
-    Difference Mean Based Perturbation - less greedy than DE/best/1 = less chance of getting stuck at local minima, prefers exploration. 
-    Individuals:
-        individuals - list of all individuals, sorted in terms of best performing
-        objectives - list of objectives List[Parameter]
-        eval_parameters - List[glennopt.helpers.Paramameters]
-        performance_parameters - List[glennopt.helpers.Paramameters]
+    """Difference Mean Based Perturbation - less greedy than DE/best/1 = less chance of getting stuck at local minima, prefers exploration. 
         F - Amplification Factor randomly switched from 0.5 to 2 randomly
         C - Crossover factor sampled uniform at random from 0.3 to 1
         b - Crossover blending rate randomly chosen from 0.1, 0.5(median), 0.9
 
     Citatons:
         Gosh, A., Das, S., Mallipeddi, R., Das, A. K., & Dash, S. S. (2017). A Modified Differential Evolution with Distance-based Selection for Continuous Optimization in Presence of Noise. IEEE Access, 5, 26944–26964. https://doi.org/10.1109/ACCESS.2017.2773825
-    '''
+
+    Args:
+        individuals (List[Individual]): list of all individuals, sorted in terms of best performing
+        objectives (List[Parameter]): list of objectives
+        eval_parameters (List[Parameter]): list of evaluation parameters 
+        performance_parameters (List[Parameter]): list of performance parameters 
+
+    Returns:
+        List[Individual]: New list of individuals all mutated and crossovered 
+    """
     # * Preprocessing Step: Do this first before generating the deisgns 
     Np = len(individuals)                       # This is actually Np/2
     pop,xmin,xmax = get_eval_param_matrix(individuals)
@@ -267,20 +283,28 @@ def de_dmp(individuals:List[Individual],objectives:List[Parameter],eval_paramete
     return newIndividuals
 
 
-def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int=3,max_parents:int=3,F:float=0.6, C:float=0.7):
-    """
-        Applies mutation and crossover using de_rand_1_bin to a list of individuals 
-        Inputs:
-            individuals - list of individuals. Takes the best individual[0] (sorted lowest to highest)
-            objectives - list of objectives List[Parameter]
-            performance_parameters - list of parameters List[parameter]
-            F - Amplification Factor [0,2]
-            C - Crossover factor [0,1]
-        Citatons:
+def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_parameters:List[Parameter],performance_parameters:List[Parameter],min_parents:int=3,max_parents:int=3,F:float=0.6, C:float=0.7) -> List[Individual]:
+    """ Applies mutation and crossover using de_rand_1_bin to a list of individuals 
+    
+    Citatons:
             https://gist.github.com/martinus/7434625df79d820cd4d9
             Storn, R., & Price, K. (1997). Differential Evolution -- A Simple and Efficient Heuristic for global Optimization over Continuous Spaces. Journal of Global Optimization, 11(4), 341–359. https://doi.org/10.1023/A:1008202821328 
             Ao, Y., & Chi, H. (2009). Multi-parent Mutation in Differential Evolution for Multi-objective Optimization. 2009 Fifth International Conference on Natural Computation, 4, 618–622. https://doi.org/10.1109/ICNC.2009.149
-    """ 
+            
+    Args:
+        individuals (List[Individual]): list of individuals. Takes the best individual[0] (sorted lowest to highest)
+        objectives (List[Parameter]): list of objectives
+        eval_parameters (List[Parameter]): list of evaluation parameters parameters
+        performance_parameters (List[Parameter]): list of performance parameters
+        min_parents (int, optional): Minimum number of parents. Defaults to 3.
+        max_parents (int, optional): Maximum number of parents. Defaults to 3.
+        F (float, optional): Amplification Factor. Range [0,2]. Defaults to 0.6.
+        C (float, optional): Crossover factor. Range [0,1]. Defaults to 0.7.
+
+    Returns:
+        List[Individual]: New list of individuals all mutated and crossovered 
+    """
+
     nIndividuals = len(individuals)
     pop,xmin,xmax = get_eval_param_matrix(individuals)
         

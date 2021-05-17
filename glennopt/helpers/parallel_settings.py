@@ -6,21 +6,19 @@ from dataclasses_json import dataclass_json
 @dataclass_json
 @dataclass
 class parallel_settings:
-    """
-        These settings control how the optimizer will execute. Example
-        
-        config = parallel_settings()
-        ns = NSGA3()
-        ns.parallel_settings = config
-
-        Parameters:
-            concurrent_executions - number of simultaneous executions the optimizer will launch
-            
-            cores_per_execution - number of cores for each execution. Specifies how to divide up the hostnames in the machine file
-
-            execution_timeout - amount of minutes until the process is stopped
-            
-            machine_filename - this contains a list of hostnames 1 for each core
+    """These settings control how the optimizer will execute. 
+    Example: 
+        .. code-block: python
+            config = parallel_settings()
+            ns = NSGA3()
+            ns.parallel_settings = config
+    
+    Args:
+        concurrent_executions (int): Number of concurrent executions per machine 
+        cores_per_execution (int): number of cores per exectuion. Defaults to 1.
+        execution_timeout (int): execution timeout in minutes. Defaults to 10 minutes 
+        machine_filename (str): path to the machine file. Defaults to 'machinefile.txt'
+        database_filename (str): path to the database. Defaults to 'database.csv'
     """
     concurrent_executions: int = field(repr=True,default=1)
     cores_per_execution: int = field(repr=True,default=1)
