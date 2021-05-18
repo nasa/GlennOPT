@@ -32,7 +32,15 @@ def diversity(individuals:List[Individual]) -> float:
     return pop_diversity
 
 def distance(individuals:List[Individual], newIndividuals:List[Individual]):
+    """Calculates the distance between individuals
 
+    Args:
+        individuals (List[Individual]): past list of individuals 
+        newIndividuals (List[Individual]): updated list of individuals 
+
+    Returns:
+        float: distance
+    """
     pop, _ , _ = get_eval_param_matrix(individuals)
     newPop, _ , _ = get_eval_param_matrix(newIndividuals)
     dist = np.sum(np.absolute(pop - newPop),axis=1)   # Compute distance
