@@ -2,7 +2,7 @@ matplotlib >= "3.3.1"
 numpy
 pandas
 psutil
-pydoe
+doepy
 diversipy
 doepy
 dataclasses-json
