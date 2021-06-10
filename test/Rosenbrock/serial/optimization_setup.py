@@ -15,8 +15,8 @@ sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",p
 
 # doe = Default(15) # Default
 # doe = CCD()
-doe = FullFactorial(levels=8)
-# doe = LatinHyperCube(128)
+# doe = FullFactorial(levels=8)
+doe = LatinHyperCube(128)
 
 doe.add_parameter(name="x1",min_value=-3,max_value=3)
 doe.add_parameter(name="x2",min_value=-3,max_value=3)

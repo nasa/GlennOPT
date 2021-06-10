@@ -8,7 +8,7 @@ Optimizer - A base abstract class where all optimizers will inherit from. This c
 from os import name
 import sys
 import os, glob, copy, signal, platform, ctypes
-from typing import TypeVar,List, Dict
+from typing import TypeVar,List, Dict, Tuple
 import subprocess
 import time
 import math
@@ -406,7 +406,7 @@ class Optimizer:
             
     
     
-    def __evaluate_individual__(self,individual:Individual,individual_directory:str,cores_per_execution:list=[]) -> tuple[int,subprocess.Popen]:
+    def __evaluate_individual__(self,individual:Individual,individual_directory:str,cores_per_execution:list=[]) -> Tuple[int,subprocess.Popen]:
         """Evaluates the individual by copying the evaluation folder into the individual's directory
 
         Args:
