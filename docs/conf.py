@@ -11,7 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-os.system(pip install glennopt)
+os.system("pip install glennopt")
 import sys
 import glennopt
 import sphinx_rtd_theme
