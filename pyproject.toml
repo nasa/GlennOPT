@@ -14,6 +14,7 @@ pydoe = "*"
 diversipy = "*"
 doepy = "*" 
 dataclasses_json = "*"
+tqdm = "*"
 
 [tool.poetry.dev-dependencies]
 
