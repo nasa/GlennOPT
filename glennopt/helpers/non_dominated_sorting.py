@@ -6,18 +6,29 @@ from typing import TypeVar,List
 from ..base import Individual
 
 def non_dominated_sorting(individuals:List[Individual],k:int,first_front_only=False):
-    '''
-        Loops through the list of individuals and checks which one
-        Inputs:
-            fitnesses - array of objectives
-            k - number of individuals to select 
-            first_front_only - gets only the best individuals
-    '''
-    
+    """Loops through the list of individuals and sorts through them. 
+
+    Citation: 
+        Yuan, Y., Xu, H., & Wang, B. (2014). An Improved NSGA-III Procedure for Evolutionary Many-objective Optimization. Genetic and Evolutionary Computation Conference (GECCO 2014), 661–668. https://doi.org/10.1145/2576768.2598342
+
+    Args:
+        individuals (List[Individual]): all individuals of a population 
+        k (int): number of individuals to select 
+        first_front_only (bool, optional): gets only the best individuals. Defaults to False.
+
+    Returns:
+        List[Individual]: List containing fronts so List of lists of individuals. 
+    """
     def dominates(x:np.ndarray,y:np.ndarray) -> bool:
-        '''
-            Returns true if all or any the objectives of x are less than y
-        '''
+        """Returns true if all or any the objectives of x are less than y
+
+        Args:
+            x (np.ndarray): a set of individual x's objective values 
+            y (np.ndarray): a set of individual y's objective values 
+
+        Returns:
+            bool: True if individual x dominates individual y 
+        """        
         b = np.all(x <= y) & np.any(x<y)
         return b
 

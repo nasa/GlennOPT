@@ -5,14 +5,18 @@ import math
 from .mutate import get_eval_param_matrix, get_objective_matrix, set_eval_parameters
 import random
 
-def diversity(individuals:List[Individual]):
-    '''
-        Computes the diversity of a population. Higher diversity value the better.
+def diversity(individuals:List[Individual]) -> float:
+    """Computes the diversity of a population. Higher diversity value the better.
 
-        Inputs:
-            individuals - number of individuals 
+    Citations: 
         J. Hu, J. Zeng, and Y. Tan, ‘‘A diversity-guided particle swarm optimizer for dynamic environments,’’ in Bio-Inspired Computational Intelligence and Applications. Berlin, Germany: Springer, 2007, pp. 239–247
-    '''
+
+    Args:
+        individuals (List[Individual]): List of individuals of a population 
+
+    Returns:
+        float: diversity value 
+    """
     Np = len(individuals)
     D = len(individuals[0].eval_parameters)
     x_avg = 1/len(individuals) * np.sum(np.array([ind.eval_parameters for ind in individuals]),axis=0)
@@ -28,7 +32,15 @@ def diversity(individuals:List[Individual]):
     return pop_diversity
 
 def distance(individuals:List[Individual], newIndividuals:List[Individual]):
+    """Calculates the distance between individuals
 
+    Args:
+        individuals (List[Individual]): past list of individuals 
+        newIndividuals (List[Individual]): updated list of individuals 
+
+    Returns:
+        float: distance
+    """
     pop, _ , _ = get_eval_param_matrix(individuals)
     newPop, _ , _ = get_eval_param_matrix(newIndividuals)
     dist = np.sum(np.absolute(pop - newPop),axis=1)   # Compute distance
