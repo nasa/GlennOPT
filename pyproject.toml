@@ -13,6 +13,7 @@ psutil = "*"
 pydoe = "*"
 diversipy = "*"
 doepy = "*" 
+dataclasses_json = "*"
 
 [tool.poetry.dev-dependencies]
 

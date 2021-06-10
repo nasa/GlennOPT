@@ -8,7 +8,7 @@ Optimizer - A base abstract class where all optimizers will inherit from. This c
 from os import name
 import sys
 import os, glob, copy, signal, platform, ctypes
-from typing import TypeVar,List
+from typing import TypeVar,List, Dict, Tuple
 import subprocess
 import time
 import math
@@ -31,20 +31,28 @@ class Optimizer:
         Base class for starting an optimization
     """
     def __init__(self,name:str,eval_script:str, eval_folder:str = None,opt_folder:str=None, eval_parameters:List[Parameter]=[], objectives:List[Parameter] = [], performance_parameters:List[Parameter] = [], single_folder_eval=False):
-        """
-            initializes the optimizer base class
-            Inputs:
-                name - name of the optimizer
-                eval_folder - If specified, copy the evaluation folder for each execution
-                eval_script - This is the location of the evaluation script
-                opt_folder  - Working directory where you want to start the optimization (calculatio folder will be created here)
-                eval_parameters - This is the list of x1-xn that feeds into your execution code
-                objectives - how many objectives do you want to keep track of and the value for when they fail
-                performance_parameters - number of parameters 
-                single_folder_eval - saves space by deleting the population folder when completed. by default this is false
+        """Initializes the optimizer. This is typically inherited by a particular type of optimizer like NSGA (multi-objective differential evolution) or SODE (single objective differential evolution). Any new optimization strategy should inherit from this class.
+        This class handles most of the heavy work of evaluation and reading the results.
+
+        Args:
+            name (str): name of the optimizer
+            eval_script (str): This is the location of the evaluation script. Optimizer will call this script and read output.txt containing the values of the objectives and any performance parameters, see examples. 
+            eval_folder (str, optional): If specified, the evaluation folder will be copied for each execution. Defaults to None.
+            opt_folder (str, optional): Working directory where you want to start the optimization (calculatio folder will be created here). Defaults to None.
+            eval_parameters (List[Parameter], optional): This is the list of x1-xn that feeds into your execution code. Defaults to [].
+            objectives (List[Parameter], optional): The objectives you want to keep track of and the value for when they fail. Defaults to [].
+            performance_parameters (List[Parameter], optional): Number of parameters. Defaults to [].
+            single_folder_eval (bool, optional): Saves space by deleting the population folder when completed. by default this is false. Defaults to False.
+
+        Raises:
+            Exception: Invalid relative path could not be found for eval script
+            Exception: Invalid relative path could not be found for eval folder
+            Exception: Invalid absolute path could not be found for eval script
+            Exception: Invalid absolute path could not be found for eval folder
         """
         self.name = name        
-        
+        assert opt_folder is not None
+
         logging.basicConfig(filename=os.path.join(opt_folder,'log.dat'),  level=logging.DEBUG)
         self.logger = logging.getLogger()
 
@@ -92,40 +100,66 @@ class Optimizer:
         self.pandas_cache = {} # Appends individuals to pandas dataframe each dictionar contains the population number
         self.single_folder_eval = single_folder_eval
         
-
-
     @property
-    def use_calculation_folder(self):
-        """
-            Allows the optimizer to define calculation folders for each call.
+    def use_calculation_folder(self) -> bool:
+        """Allows the optimizer to define calculation folders for each call.
+
+        Returns:
+            bool: True = use calcuation folder  
         """
         return self.__use_calculation_folder
 
     @use_calculation_folder.setter
-    def use_calculation_folder(self,b):
-        """
-            Allows the optimizer to define calculation folders for each call.
+    def use_calculation_folder(self,b:bool=True):
+        """ Allows the optimizer to define calculation folders for each call.
+
+        Args:
+            b (bool): True = use calcuation folder. Defaults to True
         """
         self.__use_calculation_folder=b
-       
+
     def change_working_dir(self,new_dir:str):
-        """
-            Changes the current working directory            
+        """Changes the current working directory
+
+        Args:
+            new_dir (str): path to new directory 
         """
         self.optimization_folder = new_dir
     
-    def get_current_directory(self):
-        """
-            Returns the current directory
+    def get_current_directory(self) -> str:
+        """returns the current working directory
+
+        Returns:
+            str: Path to current directory
         """
         return self.optimization_folder
     
     @property
     def parallel_settings(self):
+        """Returns the parallel settings dataclass 
+
+        Returns:
+            parallel_settings: parallel settings class object
+        """
         return self.__parallel_settings
 
     @parallel_settings.setter
     def parallel_settings(self,settings:parallel_settings):
+        """Sets the parallel settings
+            This also reads the master machine file if exists and splits up the cores per execution.
+            Machine file is basically the computer name followed by an index. See an example below:
+                paht-ryzen0
+                paht-ryzen1
+                paht-ryzen2
+                paht-ryzen3
+                steve-intel0
+                steve-intel1
+                steve-intel2
+                steve-intel3
+                
+        Args:
+            settings (parallel_settings): dataclass representing the parallel settings to use
+        """
         self.__parallel_settings = settings
         # Check for machine file
         machinefile = os.path.join(self.optimization_folder,settings.machine_filename)
@@ -141,20 +175,25 @@ class Optimizer:
                     
 
     def __create_input_file__(self,individual:Individual):
+        """Creates an input file 'inputs.txt' which the evaluation script reads
+
+        Args:
+            individual (Individual): Individual's evaluation parameters are read x[1-N] are printed to an evaluation script
         """
-            Creates an input file 'inputs.txt' which the evaluation script reads
-            Individual's evaluation parameters are read x[1-N] are printed to an evaluation script
-        """        
         with open(self.input_file,'w') as f:
             eval_params = individual.get_eval_parameter_list()
             for p in range(len(eval_params)):
                 f.write('{0} = {1}\n'.format(eval_params[p].name,eval_params[p].value))
-    
+       
+    def __read_output_file__(self, individual:Individual) -> Individual:
+        """Reads the output file i.e. output.txt line by line and parses it for objectives and parameters
 
-    def __read_output_file__(self, individual:Individual):
+        Args:
+            individual (Individual): Individual object that is read and parameters are set 
+
+        Returns:
+            Individual: [description]
         """
-            Reads the output file i.e. output.txt line by line and parses it for objectives and parameters
-        """        
         # Read the output file
         if (os.path.exists(self.output_file)):
             with open(self.output_file,'r') as f:
@@ -171,10 +210,15 @@ class Optimizer:
                 individual.set_performance_parameter(name=param.name,val=param.value_if_failed)
         return individual
     
-    def __read_input_file__(self, individual:Individual):
+    def __read_input_file__(self, individual:Individual) -> Individual:
+        """Reads the input file i.e. input.dat line by line and parses it for evaluation parameters
+
+        Args:
+            individual (Individual): Individual object that will be set
+
+        Returns:
+            Individual: returns an individual with updated values 
         """
-            Reads the input file i.e. input.dat line by line and parses it for evaluation parameters
-        """        
         # Read the input file
         with open(self.input_file,'r') as f:
             for line in f:
@@ -183,27 +227,36 @@ class Optimizer:
                 val = float(split_val[1].strip())
                 individual.set_eval_parameter(name=key,val=val)
         return individual
-        
-    def __check_population_folder__(self,population_number:int=0):
+    
+    def __check_population_folder__(self,population_number:int=0) -> str:
+        """Formats the population folder
+
+        Args:
+            population_number (int, optional): Population Number for example 20. Defaults to 0.
+
+        Returns:
+            str: relative path to the population folder 
         """
-            Formats the population folder
-        """        
+
         if (population_number<0): #  Check current directory for calculation folder
             population_folder = "Calculation/DOE"
         else:
             population_folder = "Calculation/POP{:03d}".format(population_number)
         return population_folder
 
-    
-    def read_population(self,population_number:int=0):
-        """
-            Reads the output file in the population/DOE folder
-            inputs:
-                population number - which population we are evaluating
 
-            returns:
-                individuals - list of individuals within the population
-        """  
+    def read_population(self,population_number:int=0) -> List[Individual]:
+        """Reads the output file in the population/DOE folder
+
+        Args:
+            population_number (int, optional): Which population we are evaluating. Defaults to 0.
+
+        Raises:
+            Exception: Restart population was not found
+
+        Returns:
+            List[Individual]: list of individuals within the population
+        """
         population_folder = self.__check_population_folder__(population_number)
         pop_path = os.path.join(self.optimization_folder,population_folder)
         if (not os.path.exists(pop_path)):
@@ -229,9 +282,16 @@ class Optimizer:
         return individuals
 
     def __select_cores_per_execution__(self,pid_list:list):
-        '''
-            returns the index of cores_per_execution that is not being used 
-        '''
+        """Returns the index of cores_per_execution that is not being used 
+            Used to find out which process id has been freed 
+
+        Args:
+            pid_list (list): list of process ids from pOpen
+
+        Returns:
+            int: index of process id that is no longer being used. 
+        """
+
         if len(pid_list)==0:
             return 0
         c_range = range(len(self.cores_per_evalulation))
@@ -241,9 +301,13 @@ class Optimizer:
             return available_indicies[0]             
 
     def evaluate_population(self,individuals:List[Individual],population_number:int=0):
+        """Evaluates a population of individuals, checks to see if the population exists in the directory. If it already exists, do nothing, read the results, evaluate if there is no output file
+
+        Args:
+            individuals (List[Individual]): List of individuals to evaluate 
+            population_number (int, optional): population corresponding to the set of individuals. Defaults to 0.
         """
-            Evaluates a population of individuals, checks to see if the population exists in the directory. If it already exists, do nothing, read the results, evaluate if there is no output file
-        """
+        
         population_folder = self.__check_population_folder__(population_number)
 
         pop_path = os.path.join(self.optimization_folder,population_folder)
@@ -304,20 +368,29 @@ class Optimizer:
                 # Append output to results, need to check first how the output is structured
         time.sleep(0.1)
     
-    def __check_process_running__(self,p):
+    def __check_process_running__(self,p:subprocess.Popen) -> bool:
+        """Checks if a process id is running. This checks by using the poll method.
+
+        Args:
+            p (subprocess.Popen): Popen class 
+
+        Returns:
+            bool: true if process id is still running 
+        """
         if p is not None:
             poll = p.poll()
             if poll == None:
                 return True
         return False
 
-    def __check_PID_running__(self,pid):
-        """
-            Checks if a pid is still running (UNIX works, windows we'll see)
-            Inputs:
-                pid - process id
-            returns:
-                True if running, False if not
+    def __check_PID_running__(self,pid:int) -> bool:
+        """Checks if process id is running. this checks by trying to kill the process. if there's an error then it's running
+
+        Args:
+            pid (int): integer corresponding to the process id 
+
+        Returns:
+            bool: true if process is still running
         """
         if (platform.system() == 'Linux'):
             try:
@@ -333,10 +406,19 @@ class Optimizer:
             
     
     
-    def __evaluate_individual__(self,individual:Individual,individual_directory:str,cores_per_execution:list=[]):
-        """
-            Evaluates the individual by copying the evaluation folder into the individual's directory
-            Returns the process id of the execution      
+    def __evaluate_individual__(self,individual:Individual,individual_directory:str,cores_per_execution:list=[]) -> Tuple[int,subprocess.Popen]:
+        """Evaluates the individual by copying the evaluation folder into the individual's directory
+
+        Args:
+            individual (Individual): [description]
+            individual_directory (str): [description]
+            cores_per_execution (list, optional): [description]. Defaults to [].
+
+        Returns:
+            (tuple): tuple containing:
+
+                **pid** (int): process id
+                **process** (subprocess.Popen): logging message string 
         """
         # Check for output.txt
         if (not os.path.exists(os.path.join(individual_directory,self.output_file))): # This prevents an evaluation if there is already an output
@@ -355,21 +437,22 @@ class Optimizer:
             os.chdir(cur_dir)
             return p.pid, p
         return -1,None
-    
-    def __write_proc_log__(self,p,pop,ind_name):
-        '''
-            (Private)
-            Write the log for each process 
-        '''   
+
+    def __write_proc_log__(self,p:subprocess.Popen,pop:int,ind_name:str):
+        """Write the log for each process 
+
+        Args:
+            p (subprocess.Popen): the Popen object 
+            pop (int): population as a ninteger 
+            ind_name (str): name of the individual 
+        """
         if p is not None:     
             for line in p.stdout:
                 self.logger.debug('POP {0} Indivudual: {1} Message: {2}'.format(pop,ind_name,line.decode("utf-8").replace('\n', ' ').replace('\r', '')).strip())
         
     def load_history_file(self):
-        '''
-            (Protected)
-            Reads the history file if exists 
-        '''
+        """Reads the history file if exists 
+        """
         self.__history_filename = os.path.join(self.optimization_folder,"history.csv")
         if (os.path.exists(self.__history_filename)):
             df_temp = pd.read_csv(self.__history_filename)
@@ -392,9 +475,14 @@ class Optimizer:
                 os.remove(self.__history_filename)
 
     def append_history_file(self, pop:int, best_ind:Individual,diversity:float,distance:float):
-        '''
-            Writes a history.csv file containing the best design(s) this function is called by the inheriting class
-        '''
+        """Writes a history.csv file containing the best design(s) this function is called by the inheriting class
+
+        Args:
+            pop (int): Population index
+            best_ind (Individual): best performing individual 
+            diversity (float): diversity of the population 
+            distance (float): average distance between individuals of the population
+        """
         eval_params = best_ind.eval_parameters
         eval_param_names =  [p.name for p in best_ind.get_eval_parameter_list()]
         
@@ -426,30 +514,25 @@ class Optimizer:
             self.history = self.history.append(dict(zip(header, data)),ignore_index=True)
             self.history.to_csv(self.__history_filename)
 
-
     def append_restart_file(self, individuals:List[Individual]):
-        """
-            (public)
-            Appends self.population_track to a restart file, these are the individuals matter and can be restarted from. Instead of restarting from a population, lets restart from the best individuals 
+        """Appends self.population_track to a restart file, these are the individuals matter and can be restarted from. Instead of restarting from a population, lets restart from the best individuals 
 
-            Inputs:
-                individuals - list of individuals, this can be any size. these individuals will be added to the restart file
-        """        
+        Args:
+            individuals (List[Individual]): list of individuals, this can be any size. these individuals will be added to the restart file
+        """
         df = self.to_pandas(individuals=individuals,bReturnPandas=True)
         df.to_csv(os.path.join(self.optimization_folder,'restart_file.csv'))
 
+   
+    def read_restart_file(self) -> List[Individual]:
+        """Appends self.population_track to a restart file, these are the individuals matter and can be restarted from. Instead of restarting from a population, lets restart from the best individuals 
 
-    def read_restart_file(self):
+        Raises:
+            Exception: Error about restart file not being the same. this can happen if you add evaluation parameters or performance parameters. Make sure number of columns match the number of parameters. You can add null or dummy values. 
+
+        Returns:
+            List[Individual]: individual list or empty list
         """
-            Appends self.population_track to a restart file, these are the individuals matter and can be restarted from. Instead of restarting from a population, lets restart from the best individuals 
-
-            Inputs:
-                None
-            Returns:
-                individual list or empty list
-        """
-
-        import pandas as pd
 
         restart_file = os.path.join(self.optimization_folder,'restart_file.csv')
         if os.path.exists(restart_file):
@@ -476,10 +559,16 @@ class Optimizer:
         return []
 
     def to_pandas(self,individuals:List[Parameter],pop_number:int=0,bReturnPandas:bool = False):
+        """Exports the results to a pandas file 
+
+        Args:
+            individuals (List[Parameter]): [description]
+            pop_number (int, optional): [description]. Defaults to 0.
+            bReturnPandas (bool, optional): [description]. Defaults to False.
+
+        Returns:
+            pd.DataFrame: dataframe object with all the optimization results 
         """
-            Creates a new dataframe with the results of a population. Call this in a loop for each population
-        """
-        import pandas as pd
 
         def add_value_to_dict(dict_obj,key,val):
             indx = 1
@@ -520,8 +609,7 @@ class Optimizer:
             self.pandas_cache['POP{0:03d}'.format(pop_number)] = pd.DataFrame(data)
 
     def to_tecplot(self):
-        """
-            Converts the dataframe to a tecplot file (.tec)
+        """Converts the dataframe to a tecplot file (.tec)
         """
         if len(self.pandas_cache)==0:
             return
@@ -535,6 +623,7 @@ class Optimizer:
         head = 'VARIABLES = ' + ','.join(variables) + '\n'
 
         # zones
+        data_str = ' '
         zones = []
         for key, df in self.pandas_cache.items():
             zone_str = 'ZONE T = \"{0}\"\n'.format(key+"_"+df.iloc[0]['name'])
@@ -561,17 +650,21 @@ class Optimizer:
                 f.write(zone)
     
     def create_restart(self):
-        ''' 
-            Create a restart file containing all individuals of all populations
-        '''
+        """Create a restart file containing all individuals of all populations
+        """
+    
         pop_individuals = self.read_calculation_folder()
         for individuals in pop_individuals:
             self.append_restart_file(individuals)
 
     def plot_2D(self,obj1_name:str,obj2_name:str,xlim:list=None,ylim:list=None):
-        """
-            Creates a 2D plot scatter plot of all the individuals for the two objectives specified
+        """Creates a 2D plot scatter plot of all the individuals for the two objectives specified
 
+        Args:
+            obj1_name (str): name of the x-axis
+            obj2_name (str): name of the y-axis
+            xlim (list, optional): xbounds example [-1,2]. Defaults to None.
+            ylim (list, optional): ybounds example [-5,5]. Defaults to None.
         """
         fig,ax = plt.subplots()
 
@@ -601,17 +694,18 @@ class Optimizer:
         fig.canvas.draw()
         fig.canvas.flush_events()
         plt.show()
-    
-    
-
-    def read_calculation_folder(self):
-        """
-            Reads the entire calculation folder to a dataframe and returns all the individuals as an array
+ 
+    def read_calculation_folder(self) -> List[Individual]:
+        """Reads the entire calculation folder to a dataframe and returns all the individuals as an array
             this can be useful for restarting a population
 
-            returns:
-                individual_list - list of all individuals for all populations (could be used as a restart)
+        Raises:
+            Exception: [description]
+
+        Returns:
+            List[Individual]: list of all individuals for all populations (could be used as a restart)
         """
+        
         pop_path = os.path.join(self.optimization_folder,'Calculation')
         try:
             list_subfolders = [int(f.name.replace('POP','').replace('DOE','-1')) for f in os.scandir(pop_path) if f.is_dir()]
@@ -619,9 +713,47 @@ class Optimizer:
             raise Exception("Invalid directory found. Make sure directories are either DOE or POP001")
         
         individual_list = []
-        self.pandas_cache = {}
+        self.pandas_cache = dict()
         for pop_indx in list_subfolders:
             individuals = self.read_population(pop_indx)            
             self.to_pandas(copy.deepcopy(individuals),pop_indx)
             individual_list.append(copy.deepcopy(individuals))
         return individual_list
+
+
+    def to_dict(self):
+        """Export the settings used to create the optimizer to dict. Also exports the optimization results if performed
+
+        Returns:
+            dict: list of all the settings, could be used for creating an optimization object
+        """
+        settings = dict()
+        settings['eval_folder'] = self.evaluation_folder
+        settings['opt_folder'] = self.optimization_folder
+        settings['single_folder_eval'] = self.single_folder_eval
+        settings['eval_parameters'] = [p.to_dict() for p in self.eval_parameters]
+        settings['objectives'] = [o.to_dict() for o in self.objectives]
+        settings['perf_parameters'] = [p.to_dict() for p in self.performance_parameters]
+
+        self.read_calculation_folder()
+        results = dict()
+        for k in self.pandas_cache.keys():
+            results[k] = self.pandas_cache[k].to_dict()
+        
+        settings['results'] = results
+        return settings
+    
+    def from_dict(self,settings:dict):
+        """Reads the dictionary file and creates the base object
+
+        Args:
+            settings (dict): dictionary created by to_dict()
+        """
+        self.evaluation_folder = settings['eval_folder']
+        self.optimization_folder = settings['opt_folder']
+        self.single_folder_eval = settings['single_folder_eval']
+        
+        self.eval_parameters = [Parameter().from_dict(p) for p in settings['eval_parameters']]
+        self.objectives = [Parameter().from_dict(p) for p in settings['objectives']]
+        self.performance_parameters = [Parameter().from_dict(p) for p in settings['perf_parameters']]
+        self.read_calculation_folder()
