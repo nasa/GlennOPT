@@ -10,6 +10,8 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+!pip install glennopt
+
 import os
 import sys
 import glennopt
@@ -23,8 +25,8 @@ copyright = '2021, Paht Juangphanich'
 author = 'Paht Juangphanich <paht.juangphanich@nasa.gov>'
 
 # The full version, including alpha/beta/rc tags
-version = '1.1.0' # plot3d.__version__
-release = '1.1.0' # plot3d.__version__
+version = '1.1.2' # glennopt.__version__
+release = '1.1.2' # glennopt.__version__
 
 
 # -- General configuration ---------------------------------------------------
