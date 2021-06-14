@@ -15,7 +15,6 @@ os.system("pip install glennopt")
 import sys
 import glennopt
 import sphinx_rtd_theme
-import plot3d
 
 # -- Project information -----------------------------------------------------
 
@@ -24,8 +23,8 @@ copyright = '2021, Paht Juangphanich'
 author = 'Paht Juangphanich <paht.juangphanich@nasa.gov>'
 
 # The full version, including alpha/beta/rc tags
-version = '1.1.2' # glennopt.__version__
-release = '1.1.2' # glennopt.__version__
+version = '1.1.3' # glennopt.__version__
+release = '1.1.3' # glennopt.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -85,7 +84,7 @@ html_theme_options = {
 }
 
 html_static_path = ['_static']
-rst_context = {'plot3d': plot3d}
+rst_context = {'glennopt': glennopt}
 
 
 def setup(app):
