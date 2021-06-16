@@ -14,8 +14,9 @@ GlennOPT Documentation
    :caption: Notes
 
    notes/installation
-   notes/plot3d
-   notes/connectivity
+   notes/single-objective
+   notes/multi-objective
+   notes/serial-parallel
 
 .. toctree::
    :glob:
@@ -23,14 +24,8 @@ GlennOPT Documentation
    :caption: Package Reference
 
    modules/base
-   modules/doe
-   modules/face
-   modules/read
-   modules/wr
-   modules/read
-   modules/write
-   
-
+   modules/nsga3
+   modules/sode
 
 Indices and tables
 ==================
@@ -56,4 +51,24 @@ Say your objectives include these two functions :math:`f_1(x) and :math:f_2(x)` 
 When evaluating using GlennOPT, you specify how many individuals per population and how many populations to run for. Think of it as keeping track of people - you have a population of the group and the number of generations which you are recording data for. The individual represents a single person and all the properties and objectives. 
 
 Now that you have a rough background, please check out the tutorials and documentation on single and multi-objective.
+
+Optimization Folder Structure
+-----------------------------------------
+
+It is reccomended to keep the following folder structure when performing the optimization. The calculation folder will be created automatically by glennopt. However you need to put
+
+::
+
+   Calculation (Created automatically)
+      -DOE 
+         -IND000
+            -Evaluation.py (copied from Data folder)
+            -input.dat (contains your evaluation parameters that goes into your optimization function)
+      -POP000
+      ...
+      -POP010
+   Data
+      -Evaluation.py (Called by the optimizer, this can be your optimization function)
+   optimization_setup.py (starts the optimization)
+
 

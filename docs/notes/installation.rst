@@ -1,5 +1,5 @@
 Installation
-============
+===============
 
 .. note::
     We do not recommend installation as root user on your system's default installation. It's best to either use miniconda or anaconda or some virtual environment for python 

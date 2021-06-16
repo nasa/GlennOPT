@@ -1,6 +1,6 @@
-Non-dominated sorting genetic algorithm (NSGA-III)
+GlennOPT Helpers
 ====================================================
 
-.. automodule:: glennopt.nsga3
+.. automodule:: glennopt.helpers
     :members:
     :special-members:
