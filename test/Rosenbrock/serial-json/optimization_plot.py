@@ -2,7 +2,7 @@ import sys,os
 sys.path.insert(0,'../../../')
 from glennopt.base import Parameter
 from glennopt.helpers import mutation_parameters, de_mutation_type
-from glennopt.sode import SODE
+from glennopt.optimizers import SODE
 from glennopt.helpers import get_best,get_pop_best
 from glennopt.DOE import Default,CCD,FullFactorial,LatinHyperCube
 

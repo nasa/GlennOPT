@@ -1,10 +1,10 @@
 #%% Plot Best objective vs population
 import sys,os
-sys.path.insert(0,'../../../')
+# sys.path.insert(0,'../../../')
 from glennopt.base import Parameter
 from glennopt.helpers import mutation_parameters, de_mutation_type
 from glennopt.helpers import get_best,get_pop_best
-from glennopt.nsga3 import NSGA3
+from glennopt.optimizers import NSGA3
 
 
 # Generate the DOE
@@ -27,8 +27,8 @@ performance_parameters = []
 performance_parameters.append(Parameter(name='p1'))
 performance_parameters.append(Parameter(name='p2'))
 performance_parameters.append(Parameter(name='p3'))
-# ns.start_doe(doe_size=40)
-# ns.optimize_from_population(pop_start=-1,n_generations=10)
+ns.start_doe(doe_size=40)
+ns.optimize_from_population(pop_start=-1,n_generations=10)
 individuals = ns.read_calculation_folder()
 ns.plot_2D('objective1','objective2')
 

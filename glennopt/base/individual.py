@@ -153,6 +153,7 @@ class Individual:
     def set_objective(self,name:str,val:float):
         """Assigns a value to a parameter for an individual
             typically called by the optimizer objectives[2] = 450
+            
         Args:
             name (str): Name of the objective. Example: "Objective 1"
             val (float): value to set the objective to

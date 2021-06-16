@@ -26,6 +26,7 @@ GlennOPT Documentation
    modules/base
    modules/nsga3
    modules/sode
+   modules/helpers
 
 Indices and tables
 ==================

@@ -8,18 +8,25 @@ from ..base import Individual
 from .convert_to_ndarray import convert_to_ndarray
 from .non_dominated_sorting import non_dominated_sorting
 
-def get_best(individuals,pop_size:int):
-    '''
-        Gets the best individual vs Pop
+def get_best(individuals:List[Individual],pop_size:int):
+    """Gets the best individual vs Pop
         Some populations won't generate a better design but the best design will always be carried to the next population for crossover + mutation     
-        # !Important: Call this function with inputs from 
-        #!  individuals = ns.read_calculation_folder()
+        # !Important: Call this function with inputs from ``individuals = ns.read_calculation_folder()``
 
-        Returns:
-            objectives - numpy array of best objective values for each population. For multi-objective problems use best fronts for better representation of design space
-            pop_folders - this is a list of populations 
-            best_fronts - List of individuals contained in best fronts, empty list if single objective
-    '''
+    Args:
+        individuals (List[Individual]): [description]
+        pop_size (int): [description]
+
+    Returns:
+        (tuple): tuple containing:
+
+            **objectives** (List[Parameter]): numpy array of best objective values for each population. For multi-objective problems use best fronts for better representation of design space
+
+            **pop_folders** (List[int]): this is a list of populations 
+
+            **best_fronts** (List[List[Individual]]): List of individuals contained in best fronts, empty list if single objective
+    """
+
     best_individuals,best_fronts = get_pop_best(individuals)
 
     objectives = list()
@@ -53,7 +60,7 @@ def get_best(individuals,pop_size:int):
     pop_folders = keys
     return convert_to_ndarray(objectives), pop_folders, best_fronts  # First front
 
-def get_pop_best(individuals):
+def get_pop_best(individuals:List[Individual]):
     '''
         Gets the best individuals from each population (not rolling best)
         typically you would use opt.read_calculation_folder() where opt is an object representing your nsga3 or sode class.

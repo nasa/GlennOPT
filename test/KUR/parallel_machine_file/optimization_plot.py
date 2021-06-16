@@ -1,7 +1,7 @@
 import sys,os
 sys.path.insert(0,'../../../')
 from glennopt.helpers import Parameter
-from glennopt.nsga3 import NSGA3
+from glennopt.optimizers import NSGA3
 
 # Generate the DOE
 current_dir = os.getcwd()

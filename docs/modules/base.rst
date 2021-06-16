@@ -1,6 +1,23 @@
-Glennopt base classes
+GlennOPT base classes
 =======================
 
-.. automodule:: glennopt.base
+Individual Class
+-----------------------------------------
+
+.. automodule:: glennopt.base.individual
+    :members:
+    :special-members:
+
+Optimizer Base Class
+-----------------------------------------
+
+.. automodule:: glennopt.base.optimizer
+    :members:
+    :special-members:
+
+Parameter Class
+-----------------------------------------
+
+.. automodule:: glennopt.base.parameter
     :members:
     :special-members:

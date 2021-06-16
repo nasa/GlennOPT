@@ -5,8 +5,8 @@ import sys,os
 sys.path.insert(0,'../../../')
 from glennopt.base import Parameter
 from glennopt.helpers import parallel_settings, mutation_parameters, de_mutation_type
-from glennopt.nsga3 import NSGA3
-
+from glennopt.optimizers import NSGA3
+from glennopt.DOE import FullFactorial, CCD, LatinHyperCube, Default
 # Generate the DOE
 pop_size=32
 current_dir = os.getcwd()

@@ -1,8 +1,9 @@
 
 import sys,os
-sys.path.insert(0,'../../../')
-from glennopt.helpers import Parameter, parallel_settings
-from glennopt.nsga3 import NSGA3, mutation_parameters,de_mutation_type
+# sys.path.insert(0,'../../../')
+from glennopt.base import Parameter
+from glennopt.helpers import parallel_settings, mutation_parameters,de_mutation_type
+from glennopt.optimizers import NSGA3 
 
 
 # Generate the DOE
@@ -25,8 +26,7 @@ performance_parameters = []
 performance_parameters.append(Parameter(name='p1'))
 performance_parameters.append(Parameter(name='p2'))
 performance_parameters.append(Parameter(name='p3'))
-# ns.start_doe(doe_size=40)
-# ns.optimize_from_population(pop_start=-1,n_generations=10)
+
 ns.read_calculation_folder()
 ns.plot_2D('objective1','objective2')
 
