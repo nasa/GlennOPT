@@ -58,10 +58,13 @@ class NSGA3(Optimizer):
     def mutation_params(self,v):
         self.__mutation_params = v
     # * 
-    
+
     def start_doe(self,doe_individuals:List[Individual]=None,doe_size:int=128):
-        """
-            Starts a design of experiments. If the DOE has already started and there is an output file for an individual then the individual won't be evaluated             
+        """Starts a design of experiments. This generates the parameters for the individuals to be evaluated and executes each case. If the DOE has already started and there is an output file for an individual then the individual won't be evaluated    
+
+        Args:
+            doe_individuals (List[Individual], optional): List of individuals. Defaults to None.
+            doe_size (int, optional): [description]. Defaults to 128.
         """
         if doe_individuals is None:
             doe_individuals = []

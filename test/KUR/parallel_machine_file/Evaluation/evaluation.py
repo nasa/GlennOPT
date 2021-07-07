@@ -21,6 +21,9 @@ if __name__ == '__main__':
     # Call Rosebrock test function 
     import kur as kur
     import time
+    from random import randrange
+
     y = kur.KUR(x[0],x[1],x[2])
+    time.sleep(randrange(2,20))
     print_output(y)
     
