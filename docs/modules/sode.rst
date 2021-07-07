@@ -1,6 +1,6 @@
 Single Objective Differential Evolution (SODE)
 ================================================
 
-.. automodule:: glennopt.sode.sode
+.. automodule:: glennopt.optimizers.sode
     :members:
     :special-members:

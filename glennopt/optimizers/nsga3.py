@@ -20,42 +20,69 @@ individual_list = List[Individual]
 
 class NSGA3(Optimizer):
     def __init__(self,eval_script:str = "evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval=False):
-        super().__init__(name="nsga3",eval_script=eval_script,eval_folder=eval_folder, opt_folder=optimization_folder,single_folder_eval=single_folder_eval)
         """
             NSGA-3 multi-dimensional optimizer. This version has been tweaked to include restart capabilities. It can also keep track of additional parameters that can be considered part of the constraints.
 
             Each evaluation can occur in a separate folder (simulations) or without folders (analytical)
             https://www.egr.msu.edu/~kdeb/papers/k2012009.pdf
 
-            Inputs:
-                eval_script - Evaluation python script that will be called. Either Output.txt is read or an actual output is read. 
-                eval_folder - folder to be copied into each individual evaluation directory. If this is null, the population directory isn't created and neither are the individual directories
-                num_populations - number of populations to evaluate from the starting population
-                pop_size - number of individuals in a given population
-                optimization_folder - where optimization should start
+        Args:
+            eval_script (str, optional): Evaluation python script that will be called. Either Output.txt is read or an actual output is read. Defaults to "evaluation.py".
+            eval_folder (str, optional): folder to be copied into each individual evaluation directory. If this is null, the population directory isn't created and neither are the individual directories. Defaults to "Evaluation".
+            pop_size (int, optional): number of populations to evaluate from the starting population. Defaults to 128.
+            optimization_folder (str, optional): number of individuals in a given population. Defaults to None.
+            single_folder_eval (bool, optional): where optimization should start. Defaults to False.
         """
+        super().__init__(name="nsga3",eval_script=eval_script,eval_folder=eval_folder, opt_folder=optimization_folder,single_folder_eval=single_folder_eval)
+        
         self.pop_size = pop_size
         self.individuals = None        
         self.__mutation_params = mutation_parameters()
         
-    
-    # * Part of initialization    
+        
     def add_eval_parameters(self,eval_params:List[Parameter]):
+        """Add evaluation parameters. This is part of the initialization    
+
+        Args:
+            eval_params (List[Parameter]): Add in a list of evaluation parameters 
+
+        """
         self.eval_parameters = eval_params # Sets base class variable
 
     def add_objectives(self,objectives:List[Parameter]):
+        """Add the objectives 
+
+        Args:
+            objectives (List[Parameter]): [description]
+        """
         self.objectives = objectives # Sets base class variable
 
     def add_performance_parameters(self,performance_params:List[Parameter] = None):
+        """Add performance parameters 
+
+        Args:
+            performance_params (List[Parameter], optional): [description]. Defaults to None.
+        """
         self.performance_parameters = performance_params # Sets base class variable
-    # *       
+      
     
     # * Mutation Properties
     @property
     def mutation_params(self):
+        """Get Mutation parameters
+
+        Returns:
+            mutation_parameters: parameter class describes the mutation
+        """
         return self.__mutation_params
+
     @mutation_params.setter
-    def mutation_params(self,v):
+    def mutation_params(self,v:mutation_parameters):
+        """Setter for mutation parameters 
+
+        Args:
+            v (mutation_parameters): class describing the mutation parameter s
+        """
         self.__mutation_params = v
     # * 
 
@@ -89,8 +116,7 @@ class NSGA3(Optimizer):
        
 
     def optimize_from_population(self,pop_start:int,n_generations:int):
-        """
-            Reads the values of a population, this can be a DOE or a previous evaluation
+        """Reads the values of a population, this can be a DOE or a previous evaluation
             Starts the optimization 
 
             Inputs:
@@ -117,8 +143,7 @@ class NSGA3(Optimizer):
 
 
     def __optimize__(self,individuals:individual_list,n_generations:int,pop_start:int, reference_points:np.ndarray):
-        """ 
-            NSGA-III main loop
+        """ NSGA-III main loop
             Note: This function will read given starting population's results in, perform necessary crossover and mutation to generate enough individuals for the next iteration (self.pop_size)
 
             Inputs:
@@ -154,16 +179,29 @@ class NSGA3(Optimizer):
             pop_start+=1 # increment the population
         # * End Loop through all individuals
     
-    def sort_and_select_population(self,individuals:individual_list, reference_points:np.ndarray):
-        '''
-            Takes a list of individuals, finds the fronts and the best designs
-            Inputs: 
-                individuals:         
+    def sort_and_select_population(self,individuals:List[Individual], reference_points:np.ndarray):
+        """Takes a list of individuals, finds the fronts and the best designs
             
             Code is a combination from deap and yarpiz
             https://github.com/DEAP
             https://yarpiz.com/456/ypea126-nsga3
-        '''
+
+        Args:
+            individuals (List[Individual]): List of individuals from a DOE or POP or anything really
+            reference_points (np.ndarray): reference points along the pareto front.  
+
+        Raises:
+            Exception: something bad has happened
+
+        Returns:
+            (tuple): containing
+
+                **chosen** (List[List[int]]): individuals along front in order of best to worst front 
+                **best_point** (int): index of best individual 
+                **worst_point** (int): index of worst individual 
+                **extreme_points** (List[int]):  indexies of the extreme point 
+        """
+        
         if (self.pop_size>len(individuals)):
             raise Exception("population size needs to be <= the number of individuals")
         
@@ -198,7 +236,18 @@ class NSGA3(Optimizer):
 
     
     def __find_extreme_points__(self,fitnesses, best_point, extreme_points=None):
-        'Finds the individuals with extreme values for each objective function.'
+        """Finds the individuals with extreme values for each objective function. These definitions need to be updated. I used to know all this. 
+
+        Args:
+            fitnesses ([ndarray]): how close individuals are to best point.1
+            best_point ([ndarray]): array containing the best points
+            extreme_points ([ndarray], optional): Points on the extreme of either objective 1 or objective 2. Defaults to None.
+
+        Returns:
+            ndarray: fitness of individuals. Description needs update
+
+        """
+        
         # Keep track of last generation extreme points
         if extreme_points is not None:
             fitnesses = np.concatenate((fitnesses, extreme_points), axis=0)
@@ -216,8 +265,17 @@ class NSGA3(Optimizer):
         return fitnesses[min_asf_idx, :]
 
     def __find_intercepts__(self,extreme_points, best_point, current_worst, front_worst):
-        """Find intercepts between the hyperplane and each axis with
-        the ideal point as origin."""
+        """Find intercepts between the hyperplane and each axis with the ideal point as origin.
+
+        Args:
+            extreme_points ([type]): [description]
+            best_point ([type]): [description]
+            current_worst ([type]): [description]
+            front_worst ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
         # Construct hyperplane sum(f_i^n) = 1
         b = np.ones(extreme_points.shape[1])
         A = extreme_points - best_point
@@ -235,9 +293,19 @@ class NSGA3(Optimizer):
 
         return intercepts
 
+
     def __associate_to_niche__(self,fitnesses, reference_points, best_point, intercepts):
-        """Associates individuals to reference points and calculates niche number.
-        Corresponds to Algorithm 3 of Deb & Jain (2014)."""
+        """Associates individuals to reference points and calculates niche number. Corresponds to Algorithm 3 of Deb & Jain (2014).
+
+        Args:
+            fitnesses ([type]): [description]
+            reference_points ([type]): [description]
+            best_point ([type]): [description]
+            intercepts ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
         # Normalize by ideal point and intercepts
         fn = (fitnesses - best_point) / (intercepts - best_point)
 
@@ -255,6 +323,18 @@ class NSGA3(Optimizer):
         return niches, distances
 
     def __niching__(self,individuals, k, niches, distances, niche_counts):
+        """[summary]
+
+        Args:
+            individuals ([type]): [description]
+            k ([type]): [description]
+            niches ([type]): [description]
+            distances ([type]): [description]
+            niche_counts ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
         selected = []
         available = np.ones(len(individuals), dtype=np.bool)
         while len(selected) < k:
@@ -289,15 +369,14 @@ class NSGA3(Optimizer):
                 selected.append(individuals[sel_index])
         return selected
 
+
     def uniform_reference_points(self,nobj, p=4, scaling=None):
-        """
-            Generate reference points uniformly on the hyperplane intersecting
-            each axis at 1. The scaling factor is used to combine multiple layers of
-            reference points.
-            
-            Inputs:
-                nobj - number of objectives
-                p = number of references per objective
+        """Generate reference points uniformly on the hyperplane intersecting each axis at 1. The scaling factor is used to combine multiple layers of reference points.
+
+        Args:
+            nobj (int): number of objectives
+            p (int, optional): number of references per objective. Defaults to 4.
+            scaling ([type], optional): [description]. Defaults to None.
         """
         def gen_refs_recursive(ref, nobj, left, total, depth):
             points = []
@@ -318,9 +397,15 @@ class NSGA3(Optimizer):
         return ref_points
 
     def __crossover_mutate__(self,individuals:List[Individual]):
-        '''
-            Applies Crossover and Mutate
-        '''
+        """[summary]
+
+        Args:
+            individuals (List[Individual]): [description]
+
+        Returns:
+            [type]: [description]
+        """
+
         nIndividuals = len(individuals)
         num_params = len(individuals[0].eval_parameters)        
         if self.mutation_params.mutation_type == de_mutation_type.de_best_1_bin:
