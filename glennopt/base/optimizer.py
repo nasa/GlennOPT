@@ -623,25 +623,35 @@ class Optimizer:
         head = 'VARIABLES = ' + ','.join(variables) + '\n'
 
         # zones
-        data_str = ' '
+        
         zones = []
+        i = 0
         for key, df in self.pandas_cache.items():
-            zone_str = 'ZONE T = \"{0}\"\n'.format(key+"_"+df.iloc[0]['name'])
-            for index, row in self.df.iterrows():
+            zone_str = 'ZONE T = \"{0}\"\n'.format(key+"_"+df.iloc[0]['individual'])
+            data_str = ' '
+            for index, row in self.pandas_cache[key].iterrows():
                 data = []
-                for col in self.df.columns:
-                    if (col != 'name'):
-                        data.append(row[col])
-                data_str = ' '.join(data) + '\n'
-
-            zones.append(zone_str)
-            zones.append(data_str)
+                for col in self.pandas_cache[key].columns:
+                    if col=='population':
+                        if row[col] == "DOE":
+                            data.append(str(-1))
+                        else:
+                            data.append(str(row[col].replace('POP','')))
+                    elif col=="individual":
+                        data.append(str(row[col].replace('IND','')))
+                    else:
+                        if type(row[col])== float:
+                            data.append("{:.6E}".format(row[col]))
+                        else:
+                            data.append(row[col])
+                zones.append(zone_str)
+                zones.append(' '.join(data) + '\n')
         
         # write to .tec file
-        if (not os.path.exists(os.path.join(self.optimization_folder,'Database'))):
-            os.makedirs(os.path.join(self.optimization_folder,'Database'))
+        if (not os.path.exists(os.path.join(self.optimization_folder,''))):
+            os.makedirs(os.path.join(self.optimization_folder,''))
 
-        db_filename = os.path.join(self.optimization_folder,'Database','database.tec')
+        db_filename = os.path.join(self.optimization_folder,'','database.tec')
         with open(db_filename,'w') as f:
             # write headers
             f.write(head)

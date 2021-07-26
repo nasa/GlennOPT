@@ -148,3 +148,4 @@ test_functions/KUR/parallel/restart_file.csv
 *.csv
 *.dat
 *.png
+*.tec
