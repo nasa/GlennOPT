@@ -42,7 +42,7 @@ doe.add_perf_parameter(name='RMS_Error')
 # Set up the optimizer
 current_dir = os.getcwd()
 pop_size = 96
-sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
+sode = SODE(eval_command = "python evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 # Include load the objectives, performance parameters, evaluation parameters into sode
 sode.add_eval_parameters(doe.eval_parameters)

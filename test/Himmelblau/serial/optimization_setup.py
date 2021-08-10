@@ -3,8 +3,8 @@
 """
 import sys,os
 
-sys.path.insert(0,'../../../../')
-from glennopt.helpers import Parameter
+sys.path.insert(0,'../../../')
+from glennopt.base import Parameter
 
 from glennopt.optimizers import SODE
 from glennopt.helpers import de_mutation_type, mutation_parameters
@@ -12,7 +12,7 @@ from glennopt.helpers import de_mutation_type, mutation_parameters
 # Generate the DOE
 current_dir = os.getcwd()
 pop_size = 16
-sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
+sode = SODE(eval_script = "python evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 eval_parameters = []
 eval_parameters.append(Parameter(name="x1",min_value=-5,max_value=5))

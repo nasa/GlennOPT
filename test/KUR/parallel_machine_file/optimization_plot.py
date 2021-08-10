@@ -5,7 +5,7 @@ from glennopt.optimizers import NSGA3
 
 # Generate the DOE
 current_dir = os.getcwd()
-ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=32,optimization_folder=current_dir)
+ns = NSGA3(eval_command = "python evaluation.py", eval_folder="Evaluation",pop_size=32,optimization_folder=current_dir)
 
 eval_parameters = []
 eval_parameters.append(Parameter(name="x1",min_value=-10,max_value=10))

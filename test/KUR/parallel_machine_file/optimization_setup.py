@@ -12,7 +12,7 @@ from glennopt.DOE import FullFactorial, CCD, LatinHyperCube, Default
 # Generate the DOE
 current_dir = os.getcwd()
 pop_size = 32
-ns = NSGA3(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
+ns = NSGA3(eval_command = "python evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 doe = LatinHyperCube(128)
 

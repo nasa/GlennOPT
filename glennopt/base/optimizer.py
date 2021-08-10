@@ -30,13 +30,13 @@ class Optimizer:
     """
         Base class for starting an optimization
     """
-    def __init__(self,name:str,eval_script:str, eval_folder:str = None,opt_folder:str=None, eval_parameters:List[Parameter]=[], objectives:List[Parameter] = [], performance_parameters:List[Parameter] = [], single_folder_eval=False):
+    def __init__(self,name:str,eval_command:str, eval_folder:str = None,opt_folder:str=None, eval_parameters:List[Parameter]=[], objectives:List[Parameter] = [], performance_parameters:List[Parameter] = [], single_folder_eval=False):
         """Initializes the optimizer. This is typically inherited by a particular type of optimizer like NSGA (multi-objective differential evolution) or SODE (single objective differential evolution). Any new optimization strategy should inherit from this class.
         This class handles most of the heavy work of evaluation and reading the results.
 
         Args:
             name (str): name of the optimizer
-            eval_script (str): This is the location of the evaluation script. Optimizer will call this script and read output.txt containing the values of the objectives and any performance parameters, see examples. 
+            eval_command (str): This is the location of the evaluation script. Optimizer will call this script and read output.txt containing the values of the objectives and any performance parameters, see examples. 
             eval_folder (str, optional): If specified, the evaluation folder will be copied for each execution. Defaults to None.
             opt_folder (str, optional): Working directory where you want to start the optimization (calculatio folder will be created here). Defaults to None.
             eval_parameters (List[Parameter], optional): This is the list of x1-xn that feeds into your execution code. Defaults to [].
@@ -56,25 +56,17 @@ class Optimizer:
         logging.basicConfig(filename=os.path.join(opt_folder,'log.dat'),  level=logging.DEBUG)
         self.logger = logging.getLogger()
 
-        if (not os.path.isabs(eval_script)):
-            eval_script = os.path.join(os.getcwd(),eval_script)
-            if (not os.path.isfile(eval_script)):
-                raise Exception('Invalid relative path could not be found for eval script {0}'.format(eval_script))
-
         if (not os.path.isabs(eval_folder)):
             eval_folder = os.path.join(os.getcwd(),eval_folder)
             if (not os.path.isdir(eval_folder)):
                 raise Exception('Invalid relative path could not be found for eval folder {0}'.format(eval_folder))
-
-        if (not os.path.isfile(eval_script)):
-            raise Exception('Invalid absolute path could not be found for eval script {0}'.format(eval_script))
 
         if (not os.path.isdir(eval_folder)):
             raise Exception('Invalid absolute path could not be found for eval folder {0}'.format(eval_folder))
 
 
         self.evaluation_folder = eval_folder
-        self.evaluation_script = eval_script
+        self.evaluation_command = eval_command
 
         if (opt_folder):
             self.optimization_folder = opt_folder
@@ -82,7 +74,7 @@ class Optimizer:
             self.optimization_folder = os.getcwd()        
         
         if (not os.path.isabs(self.optimization_folder)):
-            self.optimization_folder = os.path.join(os.getcwd(),eval_script)
+            self.optimization_folder = os.getcwd()
 
 
         self.population_track = []
@@ -364,7 +356,7 @@ class Optimizer:
                         del pid_list[index]  
                     
             else: # TODO execute individual without creating a bunch of directories. Maybe create execution directories and delete them
-                output = subprocess.check_output(['python', self.evaluation_script])
+                output = subprocess.check_output([self.evaluation_command])
                 # Append output to results, need to check first how the output is structured
         time.sleep(0.1)
     
@@ -433,7 +425,7 @@ class Optimizer:
                     f.write('\n'.join(cores_per_execution))
                     
             # Evaluate
-            p = subprocess.Popen(['python', self.evaluation_script],stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # Note: evaluation_script has to read the local machine file. This is not my problem            
+            p = subprocess.Popen(self.evaluation_command.split(' '),stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # Note: evaluation_command has to read the local machine file. This is not my problem            
             os.chdir(cur_dir)
             return p.pid, p
         return -1,None

@@ -21,8 +21,8 @@ class selection_type(Enum):
     pop_dist = 2
 
 class SODE(Optimizer):
-    def __init__(self,eval_script:str = "evaluation.py", eval_folder:str = "Evaluation",pop_size:int=32, optimization_folder:str=None):
-        super().__init__(name="SODE",eval_script=eval_script,eval_folder=eval_folder, opt_folder=optimization_folder)
+    def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation",pop_size:int=32, optimization_folder:str=None):
+        super().__init__(name="SODE",eval_command=eval_command,eval_folder=eval_folder, opt_folder=optimization_folder)
         '''        
             Inputs:
                 eval_script - Evaluation python script that will be called. Either Output.txt is read or an actual output is read. 

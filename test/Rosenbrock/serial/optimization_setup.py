@@ -11,7 +11,7 @@ from glennopt.DOE import Default,CCD,FullFactorial,LatinHyperCube
 # Generate the DOE
 current_dir = os.getcwd()
 pop_size = 20
-sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
+sode = SODE(eval_command = "python evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 # doe = Default(15) # Default
 # doe = CCD()

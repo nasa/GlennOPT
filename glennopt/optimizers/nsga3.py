@@ -19,7 +19,7 @@ from ..helpers import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutat
 individual_list = List[Individual]
 
 class NSGA3(Optimizer):
-    def __init__(self,eval_script:str = "evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval=False):
+    def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval=False):
         """
             NSGA-3 multi-dimensional optimizer. This version has been tweaked to include restart capabilities. It can also keep track of additional parameters that can be considered part of the constraints.
 
@@ -27,13 +27,13 @@ class NSGA3(Optimizer):
             https://www.egr.msu.edu/~kdeb/papers/k2012009.pdf
 
         Args:
-            eval_script (str, optional): Evaluation python script that will be called. Either Output.txt is read or an actual output is read. Defaults to "evaluation.py".
+            eval_command (str, optional): Command that will be called to generate outout.txt. Defaults to "python evaluation.py".
             eval_folder (str, optional): folder to be copied into each individual evaluation directory. If this is null, the population directory isn't created and neither are the individual directories. Defaults to "Evaluation".
             pop_size (int, optional): number of populations to evaluate from the starting population. Defaults to 128.
             optimization_folder (str, optional): number of individuals in a given population. Defaults to None.
             single_folder_eval (bool, optional): where optimization should start. Defaults to False.
         """
-        super().__init__(name="nsga3",eval_script=eval_script,eval_folder=eval_folder, opt_folder=optimization_folder,single_folder_eval=single_folder_eval)
+        super().__init__(name="nsga3",eval_command=eval_command,eval_folder=eval_folder, opt_folder=optimization_folder,single_folder_eval=single_folder_eval)
         
         self.pop_size = pop_size
         self.individuals = None        

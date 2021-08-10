@@ -9,7 +9,7 @@ import numpy as np
 # Generate the DOE
 current_dir = os.getcwd()
 pop_size = 16
-sode = SODE(eval_script = "Evaluation/evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
+sode = SODE(eval_command = "python evaluation.py", eval_folder="Evaluation",pop_size=pop_size,optimization_folder=current_dir)
 
 eval_parameters = list()
 # Define evaluation parameters 
