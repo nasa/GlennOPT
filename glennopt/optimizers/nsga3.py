@@ -27,7 +27,7 @@ class NSGA3(Optimizer):
             https://www.egr.msu.edu/~kdeb/papers/k2012009.pdf
 
         Args:
-            eval_command (str, optional): Command that will be called to generate outout.txt. Defaults to "python evaluation.py".
+            eval_command (str, optional): Command that will be executed in the evaluation folder. Defaults to "python evaluation.py".
             eval_folder (str, optional): folder to be copied into each individual evaluation directory. If this is null, the population directory isn't created and neither are the individual directories. Defaults to "Evaluation".
             pop_size (int, optional): number of populations to evaluate from the starting population. Defaults to 128.
             optimization_folder (str, optional): number of individuals in a given population. Defaults to None.
