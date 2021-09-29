@@ -37,4 +37,6 @@ Future Features
 | Trey Harrison     | Researcher    | Fall 2020-       | Probe Optimization test case        |   |
 | Paht Juangphanich | Researcher    | Spring 2020-     | Architect                           |   |
 
+# Funding
+The development of this library was supported by NASA AATT (Advance Air Transport Technology). The development is supported by NASA Glenn LTE Branch however anyone is welcome to contribute by submitting a pull request. 
 
