@@ -1,0 +1,3 @@
+objective1 = 41.846515
+PearsonR = 0.988763
+RMS_Error = 0.278757

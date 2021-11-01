@@ -1,0 +1,717 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Index &mdash; GlennOPT 1.1.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> GlennOPT
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notes/installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="notes/installation.html#installation-via-pip">Installation via Pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notes/installation.html#installation-via-source">Installation via Source</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="notes/single-objective.html">Single Objective Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notes/multi-objective.html">Multi-objective Optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="notes/multi-objective.html#using-nsga3-multi-objective">Using NSGA3 - Multi-objective</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notes/multi-objective.html#mutation-strategies">Mutation strategies</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="notes/serial-parallel.html">Serial and Parallel Modes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Package Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules/base.html">GlennOPT base classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/base.html#module-glennopt.base.individual">Individual Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/base.html#module-glennopt.base.optimizer">Optimizer Base Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/base.html#module-glennopt.base.parameter">Parameter Class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules/nsga3.html">Non-dominated sorting genetic algorithm (NSGA-III)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/sode.html">Single Objective Differential Evolution (SODE)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/helpers.html">GlennOPT Helpers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/helpers.html#module-glennopt.helpers.convert_to_ndarray">Converting to Numpy Array</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/helpers.html#module-glennopt.helpers.copy">Copy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/helpers.html#module-glennopt.helpers.mutate">Mutations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/helpers.html#module-glennopt.helpers.non_dominated_sorting">Non Dominated Sorting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/helpers.html#module-glennopt.helpers.parallel_settings">Parallel Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/helpers.html#module-glennopt.helpers.population_distance">Population Distance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/helpers.html#module-glennopt.helpers.post_processing">Post Processing</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GlennOPT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Index</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#_"><strong>_</strong></a>
+ | <a href="#A"><strong>A</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ 
+</div>
+<h2 id="_">_</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.__associate_to_niche__">__associate_to_niche__() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.__check_PID_running__">__check_PID_running__() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.__check_population_folder__">__check_population_folder__() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.__check_process_running__">__check_process_running__() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.__create_input_file__">__create_input_file__() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.__crossover_mutate__">__crossover_mutate__() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+
+      <ul>
+        <li><a href="modules/sode.html#glennopt.optimizers.sode.SODE.__crossover_mutate__">(glennopt.optimizers.sode.SODE method)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/helpers.html#glennopt.helpers.copy.__dir__">__dir__() (in module glennopt.helpers.copy)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.__evaluate_individual__">__evaluate_individual__() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.__find_extreme_points__">__find_extreme_points__() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+</li>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.__find_intercepts__">__find_intercepts__() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.copy.__format__">__format__() (in module glennopt.helpers.copy)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.__hash__">__hash__() (glennopt.base.individual.Individual method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/helpers.html#glennopt.helpers.copy.__init_subclass__">__init_subclass__() (in module glennopt.helpers.copy)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.copy.__new__">__new__() (in module glennopt.helpers.copy)</a>
+</li>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.__niching__">__niching__() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+</li>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.__optimize__">__optimize__() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.__read_input_file__">__read_input_file__() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.__read_output_file__">__read_output_file__() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.copy.__reduce__">__reduce__() (in module glennopt.helpers.copy)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.copy.__reduce_ex__">__reduce_ex__() (in module glennopt.helpers.copy)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.__select_cores_per_execution__">__select_cores_per_execution__() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/sode.html#glennopt.optimizers.sode.SODE.__set_eval_parameters__">__set_eval_parameters__() (glennopt.optimizers.sode.SODE method)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.copy.__sizeof__">__sizeof__() (in module glennopt.helpers.copy)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.__str__">__str__() (glennopt.base.individual.Individual method)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.copy.__subclasshook__">__subclasshook__() (in module glennopt.helpers.copy)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.__write_proc_log__">__write_proc_log__() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.add_eval_parameters">add_eval_parameters() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+</li>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.add_objectives">add_objectives() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.add_performance_parameters">add_performance_parameters() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.append_history_file">append_history_file() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.append_restart_file">append_restart_file() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.change_working_dir">change_working_dir() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.convert_to_ndarray.convert_to_ndarray">convert_to_ndarray() (in module glennopt.helpers.convert_to_ndarray)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.create_restart">create_restart() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.crossover">crossover() (in module glennopt.helpers.mutate)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.de_best_1_bin">de_best_1_bin() (in module glennopt.helpers.mutate)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.de_dmp">de_dmp() (in module glennopt.helpers.mutate)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.de_dmp_bak">de_dmp_bak() (in module glennopt.helpers.mutate)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.de_mutation_type">de_mutation_type (class in glennopt.helpers.mutate)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.de_rand_1_bin">de_rand_1_bin() (in module glennopt.helpers.mutate)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.de_rand_1_bin_spawn">de_rand_1_bin_spawn() (in module glennopt.helpers.mutate)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.population_distance.distance">distance() (in module glennopt.helpers.population_distance)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.population_distance.diversity">diversity() (in module glennopt.helpers.population_distance)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.eval_parameter_max">eval_parameter_max (glennopt.base.individual.Individual property)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.eval_parameter_min">eval_parameter_min (glennopt.base.individual.Individual property)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.eval_parameters">eval_parameters (glennopt.base.individual.Individual property)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.evaluate_population">evaluate_population() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.from_dict">from_dict() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/helpers.html#glennopt.helpers.post_processing.get_best">get_best() (in module glennopt.helpers.post_processing)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.get_current_directory">get_current_directory() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.get_eval_param_matrix">get_eval_param_matrix() (in module glennopt.helpers.mutate)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.get_eval_parameter">get_eval_parameter() (glennopt.base.individual.Individual method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.get_eval_parameter_list">get_eval_parameter_list() (glennopt.base.individual.Individual method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.get_objective">get_objective() (glennopt.base.individual.Individual method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.get_objectives_list">get_objectives_list() (glennopt.base.individual.Individual method)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.get_pairs">get_pairs() (in module glennopt.helpers.mutate)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.get_performance_parameter">get_performance_parameter() (glennopt.base.individual.Individual method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.get_performance_parameters_list">get_performance_parameters_list() (glennopt.base.individual.Individual method)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.post_processing.get_pop_best">get_pop_best() (in module glennopt.helpers.post_processing)</a>
+</li>
+      <li>
+    glennopt.base.individual
+
+      <ul>
+        <li><a href="modules/base.html#module-glennopt.base.individual">module</a>
+</li>
+      </ul></li>
+      <li>
+    glennopt.base.optimizer
+
+      <ul>
+        <li><a href="modules/base.html#module-glennopt.base.optimizer">module</a>
+</li>
+      </ul></li>
+      <li>
+    glennopt.base.parameter
+
+      <ul>
+        <li><a href="modules/base.html#module-glennopt.base.parameter">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    glennopt.helpers.convert_to_ndarray
+
+      <ul>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.convert_to_ndarray">module</a>
+</li>
+      </ul></li>
+      <li>
+    glennopt.helpers.copy
+
+      <ul>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.copy">module</a>
+</li>
+      </ul></li>
+      <li>
+    glennopt.helpers.mutate
+
+      <ul>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.mutate">module</a>
+</li>
+      </ul></li>
+      <li>
+    glennopt.helpers.non_dominated_sorting
+
+      <ul>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.non_dominated_sorting">module</a>
+</li>
+      </ul></li>
+      <li>
+    glennopt.helpers.parallel_settings
+
+      <ul>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.parallel_settings">module</a>
+</li>
+      </ul></li>
+      <li>
+    glennopt.helpers.population_distance
+
+      <ul>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.population_distance">module</a>
+</li>
+      </ul></li>
+      <li>
+    glennopt.helpers.post_processing
+
+      <ul>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.post_processing">module</a>
+</li>
+      </ul></li>
+      <li>
+    glennopt.optimizers.nsga3
+
+      <ul>
+        <li><a href="modules/nsga3.html#module-glennopt.optimizers.nsga3">module</a>
+</li>
+      </ul></li>
+      <li>
+    glennopt.optimizers.sode
+
+      <ul>
+        <li><a href="modules/sode.html#module-glennopt.optimizers.sode">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual">Individual (class in glennopt.base.individual)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.load_history_file">load_history_file() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    module
+
+      <ul>
+        <li><a href="modules/base.html#module-glennopt.base.individual">glennopt.base.individual</a>
+</li>
+        <li><a href="modules/base.html#module-glennopt.base.optimizer">glennopt.base.optimizer</a>
+</li>
+        <li><a href="modules/base.html#module-glennopt.base.parameter">glennopt.base.parameter</a>
+</li>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.convert_to_ndarray">glennopt.helpers.convert_to_ndarray</a>
+</li>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.copy">glennopt.helpers.copy</a>
+</li>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.mutate">glennopt.helpers.mutate</a>
+</li>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.non_dominated_sorting">glennopt.helpers.non_dominated_sorting</a>
+</li>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.parallel_settings">glennopt.helpers.parallel_settings</a>
+</li>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.population_distance">glennopt.helpers.population_distance</a>
+</li>
+        <li><a href="modules/helpers.html#module-glennopt.helpers.post_processing">glennopt.helpers.post_processing</a>
+</li>
+        <li><a href="modules/nsga3.html#module-glennopt.optimizers.nsga3">glennopt.optimizers.nsga3</a>
+</li>
+        <li><a href="modules/sode.html#module-glennopt.optimizers.sode">glennopt.optimizers.sode</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.mutate">mutate() (in module glennopt.helpers.mutate)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.mutation_parameters">mutation_parameters (class in glennopt.helpers.mutate)</a>
+</li>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.mutation_params">mutation_params (glennopt.optimizers.nsga3.NSGA3 property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.name">name (glennopt.base.individual.Individual property)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/helpers.html#glennopt.helpers.non_dominated_sorting.non_dominated_sorting">non_dominated_sorting() (in module glennopt.helpers.non_dominated_sorting)</a>
+</li>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3">NSGA3 (class in glennopt.optimizers.nsga3)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.objectives">objectives (glennopt.base.individual.Individual property)</a>
+</li>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.optimize_from_population">optimize_from_population() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+
+      <ul>
+        <li><a href="modules/sode.html#glennopt.optimizers.sode.SODE.optimize_from_population">(glennopt.optimizers.sode.SODE method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer">Optimizer (class in glennopt.base.optimizer)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/helpers.html#glennopt.helpers.parallel_settings.parallel_settings">parallel_settings (class in glennopt.helpers.parallel_settings)</a>
+
+      <ul>
+        <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.parallel_settings">(glennopt.base.optimizer.Optimizer property)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/base.html#glennopt.base.parameter.Parameter">Parameter (class in glennopt.base.parameter)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.performance_parameters">performance_parameters (glennopt.base.individual.Individual property)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.plot_2D">plot_2D() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.post_processing.plot_pareto">plot_pareto() (in module glennopt.helpers.post_processing)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.population">population (glennopt.base.individual.Individual property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.random">random() (in module glennopt.optimizers.nsga3)</a>
+
+      <ul>
+        <li><a href="modules/sode.html#glennopt.optimizers.sode.random">(in module glennopt.optimizers.sode)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.read_calculation_folder">read_calculation_folder() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.read_population">read_population() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.read_restart_file">read_restart_file() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/sode.html#glennopt.optimizers.sode.SODE.select_individuals">select_individuals() (glennopt.optimizers.sode.SODE method)</a>
+</li>
+      <li><a href="modules/sode.html#glennopt.optimizers.sode.selection_type">selection_type (class in glennopt.optimizers.sode)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.set_eval_parameter">set_eval_parameter() (glennopt.base.individual.Individual method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.set_eval_parameter_at_indx">set_eval_parameter_at_indx() (glennopt.base.individual.Individual method)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.set_eval_parameters">set_eval_parameters() (in module glennopt.helpers.mutate)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.set_objective">set_objective() (glennopt.base.individual.Individual method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.set_performance_parameter">set_performance_parameter() (glennopt.base.individual.Individual method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.individual.Individual.set_performance_parameter_at_indx">set_performance_parameter_at_indx() (glennopt.base.individual.Individual method)</a>
+</li>
+      <li><a href="modules/helpers.html#glennopt.helpers.mutate.simple">simple() (in module glennopt.helpers.mutate)</a>
+</li>
+      <li><a href="modules/sode.html#glennopt.optimizers.sode.SODE">SODE (class in glennopt.optimizers.sode)</a>
+</li>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.sort_and_select_population">sort_and_select_population() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+</li>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.start_doe">start_doe() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+
+      <ul>
+        <li><a href="modules/sode.html#glennopt.optimizers.sode.SODE.start_doe">(glennopt.optimizers.sode.SODE method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.to_dict">to_dict() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.to_pandas">to_pandas() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.to_tecplot">to_tecplot() (glennopt.base.optimizer.Optimizer method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3.uniform_reference_points">uniform_reference_points() (glennopt.optimizers.nsga3.NSGA3 method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/base.html#glennopt.base.optimizer.Optimizer.use_calculation_folder">use_calculation_folder (glennopt.base.optimizer.Optimizer property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Paht Juangphanich.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

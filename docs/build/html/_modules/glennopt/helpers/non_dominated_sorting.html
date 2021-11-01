@@ -1,0 +1,316 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>glennopt.helpers.non_dominated_sorting &mdash; GlennOPT 1.1.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> GlennOPT
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes/installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../notes/installation.html#installation-via-pip">Installation via Pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../notes/installation.html#installation-via-source">Installation via Source</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes/single-objective.html">Single Objective Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes/multi-objective.html">Multi-objective Optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../notes/multi-objective.html#using-nsga3-multi-objective">Using NSGA3 - Multi-objective</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../notes/multi-objective.html#mutation-strategies">Mutation strategies</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes/serial-parallel.html">Serial and Parallel Modes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Package Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/base.html">GlennOPT base classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/base.html#module-glennopt.base.individual">Individual Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/base.html#module-glennopt.base.optimizer">Optimizer Base Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/base.html#module-glennopt.base.parameter">Parameter Class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/nsga3.html">Non-dominated sorting genetic algorithm (NSGA-III)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/sode.html">Single Objective Differential Evolution (SODE)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/helpers.html">GlennOPT Helpers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/helpers.html#module-glennopt.helpers.convert_to_ndarray">Converting to Numpy Array</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/helpers.html#module-glennopt.helpers.copy">Copy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/helpers.html#module-glennopt.helpers.mutate">Mutations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/helpers.html#module-glennopt.helpers.non_dominated_sorting">Non Dominated Sorting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/helpers.html#module-glennopt.helpers.parallel_settings">Parallel Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/helpers.html#module-glennopt.helpers.population_distance">Population Distance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/helpers.html#module-glennopt.helpers.post_processing">Post Processing</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GlennOPT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>glennopt.helpers.non_dominated_sorting</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for glennopt.helpers.non_dominated_sorting</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">LA</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TypeVar</span><span class="p">,</span><span class="n">List</span>
+<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">Individual</span>
+
+<div class="viewcode-block" id="non_dominated_sorting"><a class="viewcode-back" href="../../../modules/helpers.html#glennopt.helpers.non_dominated_sorting.non_dominated_sorting">[docs]</a><span class="k">def</span> <span class="nf">non_dominated_sorting</span><span class="p">(</span><span class="n">individuals</span><span class="p">:</span><span class="n">List</span><span class="p">[</span><span class="n">Individual</span><span class="p">],</span><span class="n">k</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span><span class="n">first_front_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Loops through the list of individuals and sorts through them. </span>
+
+<span class="sd">    Citation: </span>
+<span class="sd">        Yuan, Y., Xu, H., &amp; Wang, B. (2014). An Improved NSGA-III Procedure for Evolutionary Many-objective Optimization. Genetic and Evolutionary Computation Conference (GECCO 2014), 661–668. https://doi.org/10.1145/2576768.2598342</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        individuals (List[Individual]): all individuals of a population </span>
+<span class="sd">        k (int): number of individuals to select </span>
+<span class="sd">        first_front_only (bool, optional): gets only the best individuals. Defaults to False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List[Individual]: List containing fronts so List of lists of individuals. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">dominates</span><span class="p">(</span><span class="n">x</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span><span class="n">y</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns true if all or any the objectives of x are less than y</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x (np.ndarray): a set of individual x&#39;s objective values </span>
+<span class="sd">            y (np.ndarray): a set of individual y&#39;s objective values </span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if individual x dominates individual y </span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="n">y</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">x</span><span class="o">&lt;</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">b</span>
+
+    <span class="n">map_fit_ind</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">individuals</span><span class="p">:</span>
+        <span class="n">map_fit_ind</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
+    <span class="n">fits</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">map_fit_ind</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="n">current_front</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">next_front</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dominating_fits</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">dominated_fits</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="c1"># Rank first Pareto front</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">fit_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fits</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">fit_j</span> <span class="ow">in</span> <span class="n">fits</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="k">if</span> <span class="n">dominates</span><span class="p">(</span><span class="n">fit_i</span><span class="o">.</span><span class="n">objectives</span><span class="p">,</span><span class="n">fit_j</span><span class="o">.</span><span class="n">objectives</span><span class="p">):</span>
+                <span class="n">dominating_fits</span><span class="p">[</span><span class="n">fit_j</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">dominated_fits</span><span class="p">[</span><span class="n">fit_i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fit_j</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">dominates</span><span class="p">(</span><span class="n">fit_j</span><span class="o">.</span><span class="n">objectives</span><span class="p">,</span><span class="n">fit_i</span><span class="o">.</span><span class="n">objectives</span><span class="p">):</span>
+                <span class="n">dominating_fits</span><span class="p">[</span><span class="n">fit_i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">dominated_fits</span><span class="p">[</span><span class="n">fit_j</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fit_i</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dominating_fits</span><span class="p">[</span><span class="n">fit_i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">current_front</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fit_i</span><span class="p">)</span>
+
+    <span class="n">fronts</span> <span class="o">=</span> <span class="p">[[]]</span>
+    <span class="k">for</span> <span class="n">fit</span> <span class="ow">in</span> <span class="n">current_front</span><span class="p">:</span>
+        <span class="n">fronts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">map_fit_ind</span><span class="p">[</span><span class="n">fit</span><span class="p">])</span>
+    <span class="n">pareto_sorted</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fronts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># Rank the next front until all individuals are sorted or</span>
+    <span class="c1"># the given number of individual are sorted.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">first_front_only</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">individuals</span><span class="p">),</span> <span class="n">k</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">pareto_sorted</span> <span class="o">&lt;</span> <span class="n">N</span><span class="p">:</span>
+            <span class="n">fronts</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+            <span class="k">for</span> <span class="n">fit_p</span> <span class="ow">in</span> <span class="n">current_front</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">fit_d</span> <span class="ow">in</span> <span class="n">dominated_fits</span><span class="p">[</span><span class="n">fit_p</span><span class="p">]:</span>
+                    <span class="n">dominating_fits</span><span class="p">[</span><span class="n">fit_d</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">dominating_fits</span><span class="p">[</span><span class="n">fit_d</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">next_front</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fit_d</span><span class="p">)</span>
+                        <span class="n">pareto_sorted</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">map_fit_ind</span><span class="p">[</span><span class="n">fit_d</span><span class="p">])</span>
+                        <span class="n">fronts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">map_fit_ind</span><span class="p">[</span><span class="n">fit_d</span><span class="p">])</span>
+            <span class="n">current_front</span> <span class="o">=</span> <span class="n">next_front</span>
+            <span class="n">next_front</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">return</span> <span class="n">fronts</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Paht Juangphanich.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
