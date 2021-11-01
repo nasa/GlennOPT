@@ -57,7 +57,7 @@ napoleon_use_keyword = True
 napoleon_custom_sections = None
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ['templates']
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -82,7 +82,7 @@ html_theme_options = {
     'navigation_depth': 2,
 }
 
-html_static_path = ['_static']
+html_static_path = ['static']
 rst_context = {'glennopt': glennopt}
 
 
