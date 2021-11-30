@@ -44,7 +44,7 @@ ns.mutation_params.F = 0.6
 ns.mutation_params.C = 0.7
 # Parallel settings
 
-ns.parallel_settings.concurrent_executions = 8
+ns.parallel_settings.concurrent_executions = 64
 ns.parallel_settings.cores_per_execution = 1
 ns.parallel_settings.execution_timeout = 1 # minutes
 # * These are not needed 
