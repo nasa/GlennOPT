@@ -161,9 +161,10 @@ class Optimizer:
                 temp = []
                 for i in range(len(x)):
                     temp.append(x[i])
-                    if (i+1) % self.__parallel_settings.cores_per_execution == 0:
-                        self.cores_per_evalulation.append(copy.deepcopy(temp))   # Splits up the machine file
-                        temp.clear()
+                    if self.__parallel_settings.cores_per_execution > 0:
+                        if (i+1) % self.__parallel_settings.cores_per_execution == 0:
+                            self.cores_per_evalulation.append(copy.deepcopy(temp))   # Splits up the machine file
+                            temp.clear()
                     
 
     def __create_input_file__(self,individual:Individual):
