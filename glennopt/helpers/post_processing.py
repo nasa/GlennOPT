@@ -11,7 +11,7 @@ from .non_dominated_sorting import non_dominated_sorting
 def get_best(individuals:List[Individual],pop_size:int):
     """Gets the best individual vs Pop. Some populations won't generate a better design but the best design will always be carried to the next population for crossover + mutation     
        
-       Important: Call this function with inputs from ``individuals = ns.read_calculation_folder()``
+    Important: Call this function with inputs from ``individuals = ns.read_calculation_folder()``
 
     Args:
         individuals (List[Individual]): [description]
