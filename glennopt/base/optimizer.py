@@ -154,7 +154,7 @@ class Optimizer:
         """
         self.__parallel_settings = settings
         # Check for machine file
-        machinefile = os.path.join(self.optimization_folder,settings.machine_filename)
+        machinefile = os.path.join(self.optimization_folder,settings.machine_filename)        
         if os.path.exists(machinefile):
             with open(machinefile, 'r') as f:
                 x = f.read().splitlines()
