@@ -30,7 +30,7 @@ class Optimizer:
     """
         Base class for starting an optimization
     """
-    def __init__(self,name:str,eval_command:str, eval_folder:str = None,opt_folder:str=None, eval_parameters:List[Parameter]=[], objectives:List[Parameter] = [], performance_parameters:List[Parameter] = [], single_folder_eval=False):
+    def __init__(self,name:str,eval_command:str, eval_folder:str = None,opt_folder:str=None, eval_parameters:List[Parameter]=[], objectives:List[Parameter] = [], performance_parameters:List[Parameter] = [], single_folder_eval=False, overwrite_input_file=False):
         """Initializes the optimizer. This is typically inherited by a particular type of optimizer like NSGA (multi-objective differential evolution) or SODE (single objective differential evolution). Any new optimization strategy should inherit from this class.
         This class handles most of the heavy work of evaluation and reading the results.
 
@@ -43,6 +43,7 @@ class Optimizer:
             objectives (List[Parameter], optional): The objectives you want to keep track of and the value for when they fail. Defaults to [].
             performance_parameters (List[Parameter], optional): Number of parameters. Defaults to [].
             single_folder_eval (bool, optional): Saves space by deleting the population folder when completed. by default this is false. Defaults to False.
+            overwrite_input_file(bool, optional): Specifies whether or not to overwrite the input file when restarting a simulation. Defaults to False.
 
         Raises:
             Exception: Invalid relative path could not be found for eval script
@@ -78,6 +79,7 @@ class Optimizer:
 
 
         self.population_track = []
+        self.overwrite_input_file = overwrite_input_file
         self.input_file = 'input.dat'
         self.output_file = 'output.txt'
         self.__use_calculation_folders = True
@@ -168,15 +170,21 @@ class Optimizer:
                     
 
     def __create_input_file__(self,individual:Individual):
-        """Creates an input file 'inputs.txt' which the evaluation script reads
+        """Creates an input file 'inputs.txt' which the evaluation script reads. Will only  create if inputs.txt does not already exist
 
         Args:
             individual (Individual): Individual's evaluation parameters are read x[1-N] are printed to an evaluation script
         """
-        with open(self.input_file,'w') as f:
-            eval_params = individual.get_eval_parameter_list()
-            for p in range(len(eval_params)):
-                f.write('{0} = {1}\n'.format(eval_params[p].name,eval_params[p].value))
+        def write_input():
+            with open(self.input_file,'w') as f:
+                eval_params = individual.get_eval_parameter_list()
+                for p in range(len(eval_params)):
+                    f.write('{0} = {1}\n'.format(eval_params[p].name,eval_params[p].value))
+
+        if os.path.exists(self.input_file) and self.overwrite_input_file:
+            write_input()
+        else:       # input file does not exists
+            write_input()
        
     def __read_output_file__(self, individual:Individual) -> Individual:
         """Reads the output file i.e. output.txt line by line and parses it for objectives and parameters
