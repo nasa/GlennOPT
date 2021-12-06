@@ -11,11 +11,11 @@ from .non_dominated_sorting import non_dominated_sorting
 def get_best(individuals:List[Individual],pop_size:int):
     """Gets the best individual vs Pop. Some populations won't generate a better design but the best design will always be carried to the next population for crossover + mutation     
        
-    Important: Call this function with inputs from ``individuals = ns.read_calculation_folder()``
+        Important: Call this function with inputs from ``individuals = ns.read_calculation_folder()``
 
     Args:
-        individuals (List[Individual]): [description]
-        pop_size (int): [description]
+        individuals (List[Individual]): Takes in a list of the individuals
+        pop_size (int): population size i.e. how many individuals
 
     Returns:
         (tuple): tuple containing:
@@ -64,17 +64,21 @@ def get_pop_best(individuals:List[Individual]):
     '''
         Gets the best individuals from each population (not rolling best)
         typically you would use opt.read_calculation_folder() where opt is an object representing your nsga3 or sode class.
-        # !Important: Call this function with inputs from 
-        #!  individuals = ns.read_calculation_folder()
+        
+        Note: Important: Call this function with inputs from `individuals = ns.read_calculation_folder()`
 
         Returns:
-            best_individuals - this is an array of individuals that are best at each objective
+            (tuple): tuple containing:
+
+            **best_individuals** (List[Dict[str,List[Individual]]]): this is an array of individuals that are best at each objective
                 [ 
                     POP001: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
                     POP002: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
                     POP003: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
                 ]
-            comp_individuals - this is an array of individuals that is the best compromise between all the objectives
+
+            **comp_individuals** (List[Individual]): this is an array of individuals that is the best compromise between all the objectives
+
     '''
     # Read calculation folder
     
