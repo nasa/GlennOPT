@@ -103,10 +103,8 @@ class Adjoint(Optimizer):
 
         # Evaluate Jacobian for all individuals along the pareto-front
         model.eval()
-        jacobians = list()
-        for ind in pareto_fronts[0]: # Take best individuals
-            x = torch.ones((1,n_inputs),dtype=torch.float32)    # This represents a gradient with itself https://colab.research.google.com/github/pytorch/tutorials/blob/gh-pages/_downloads/009cea8b0f40dfcb55e3280f73b06cc2/autograd_tutorial.ipynb#scrollTo=tjaTadQPgI-W
-            jacobians.append(torch.autograd.functional.jacobian(func=model,inputs=x, create_graph=True))
+        x = torch.ones((1,n_inputs),dtype=torch.float32)    # This represents a gradient with itself https://colab.research.google.com/github/pytorch/tutorials/blob/gh-pages/_downloads/009cea8b0f40dfcb55e3280f73b06cc2/autograd_tutorial.ipynb#scrollTo=tjaTadQPgI-W
+        jacobian = torch.autograd.functional.jacobian(func=model,inputs=x, create_graph=True)
 
     def optimize_from_population(self,pop_start:int,n_generations:int):
         """Reads the values of a population, this can be a DOE or a previous evaluation
