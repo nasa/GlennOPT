@@ -30,7 +30,7 @@ class NSGA3(Optimizer):
             eval_command (str, optional): Command that will be executed in the evaluation folder. Defaults to "python evaluation.py".
             eval_folder (str, optional): folder to be copied into each individual evaluation directory. If this is null, the population directory isn't created and neither are the individual directories. Defaults to "Evaluation".
             pop_size (int, optional): number of populations to evaluate from the starting population. Defaults to 128.
-            optimization_folder (str, optional): number of individuals in a given population. Defaults to None.
+            optimization_folder (str, optional): Folder where the optimization and doe work should be stored in. Defaults to None.
             single_folder_eval (bool, optional): where optimization should start. Defaults to False.
             overwrite_input_file(bool, optional): Specifies whether or not to overwrite the input file when restarting a simulation. Defaults to False.
 

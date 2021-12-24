@@ -89,6 +89,28 @@ class Individual:
             
         return y
     
+    def constraints(self) -> np.ndarray:
+        """Get the constraint matrix 
+
+        Returns:
+            np.ndarray: Return the constraint matrix 
+        """
+        perf_constraint = 0        
+        if (self.performance_parameters is not None):
+            for j in range(len(self.performance_parameters)):
+                if (self.__performance_parameters[j].constraint_less_than is not None):
+                    perf_constraint += (self.__performance_parameters[j].value - self.__performance_parameters[j].constraint_less_than)
+                if (self.__performance_parameters[j].constraint_greater_than is not None):
+                    perf_constraint += (self.__performance_parameters[j].constraint_greater_than - self.__performance_parameters[j].value)
+        obj_constraint = 0
+        for i in range(len(self.__objectives)):
+            if (self.__objectives[i].constraint_less_than is not None):
+                obj_constraint += (self.__objectives[i].constraint_less_than - self.__objectives[i].value)
+            if (self.__objectives[i].constraint_greater_than is not None):
+                obj_constraint += (self.__objectives[i].value - self.__objectives[i].constraint_greater_than)
+        constraint = max([0,perf_constraint,obj_constraint])
+        return constraint
+
     def __apply_dynamic_penalty(self,C:float,a:float) -> np.ndarray:
         """Applies dynamic penalty to the objectives 
 
@@ -99,23 +121,9 @@ class Individual:
         Returns:
             np.ndarray: objectives after the constraint has been applied 
         """
-        perf_constraint = 0
         y = np.zeros(len(self.__objectives))
-        if (self.performance_parameters is not None):
-            for j in range(len(self.performance_parameters)):
-                if (self.__performance_parameters[j].constraint_less_than is not None):
-                    perf_constraint += (self.__performance_parameters[j].value - self.__performance_parameters[j].constraint_less_than)
-                if (self.__performance_parameters[j].constraint_greater_than is not None):
-                    perf_constraint += (self.__performance_parameters[j].constraint_greater_than - self.__performance_parameters[j].value)
-        
-        obj_constraint = 0
-        for i in range(len(self.__objectives)):
-            if (self.__objectives[i].constraint_less_than is not None):
-                obj_constraint += (self.__objectives[i].constraint_less_than - self.__objectives[i].value)
-            if (self.__objectives[i].constraint_greater_than is not None):
-                obj_constraint += (self.__objectives[i].value - self.__objectives[i].constraint_greater_than)
-            
-        constraint = max([0,perf_constraint,obj_constraint])
+        constraint = self.constraints()
+
         population = max([1,self.population]) # this way we avoid nan values
         for i in range(len(self.__objectives)):
             y[i] = self.__objectives[i].value + 1.0/(2.0*np.power(C*population,a)) * np.power(constraint,2) # Dynamic Penalty with Equation(2)
