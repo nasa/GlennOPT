@@ -7,4 +7,4 @@ from .population_distance import distance, diversity
 from .non_dominated_sorting import non_dominated_sorting
 from .post_processing import get_best, get_pop_best
 from .jacobian import gradient, jacobian
-from .MultiLayerLinear import MultiLayerLinear
+from .MultiLayerLinear import MultiLayerLinear, SimpleLinearModel

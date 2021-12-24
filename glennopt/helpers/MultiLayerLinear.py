@@ -5,6 +5,31 @@ from torch.nn import Linear, Module, Dropout
 from typing import List
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+class SimpleLinearModel(Module):
+    def __init__(self,in_channels:int,out_channels:int):
+        """This class joins a bunch of linear layers together to predict the output size
+
+        Args:
+            in_channels (int): number of inputs channels
+            out_channels (int): number of output channels
+            h_sizes (List[int], optional): Any additional internal linear layers. Defaults to None.
+        """        
+        super(SimpleLinearModel, self).__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.lin1 = nn.Linear(in_channels,64)
+        self.lin2 = nn.Linear(64,128)
+        self.lin3 = nn.Linear(128,128)
+        self.lin4 = nn.Linear(128,out_channels)
+    
+    def forward(self,x):
+              
+        out1 = F.relu6(self.lin1(x))
+        out2 = F.relu6(self.lin2(out1))
+        out3 = F.relu6(self.lin3(out2))
+        out4 = self.lin4(out3)
+        return out4
+
 
 class MultiLayerLinear(Module):
     """
@@ -41,7 +66,7 @@ class MultiLayerLinear(Module):
         out = x
         for i in range(len(self.layers)-1):
             out = F.relu6(self.layers[i](out))        
-        return self.layers[-1](out) # dont activate the last laye
+        return self.layers[-1](out) # dont activate the last layer
 
     def __str__(self):
         n_layers = len(self.layers)

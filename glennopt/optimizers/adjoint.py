@@ -18,12 +18,11 @@ from ..helpers import MultiLayerLinear
 from ..helpers import diversity, distance
 from ..helpers import non_dominated_sorting
 from ..base import Parameter, Individual, Optimizer
-from ..helpers import jacobian
 
 individual_list = List[Individual]
 
 class Adjoint(Optimizer):
-    def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval:bool=False, overwrite_input_file:bool=False, linear_network:List[int]=[64,128,128,64],epochs:int=10, train_test_split:float=0.7):
+    def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval:bool=False, overwrite_input_file:bool=False, linear_network:List[int]=[64,128,128,64],epochs:int=20, train_test_split:float=0.7):
         """The objective of adjoint is to find the minimum of the jacobian of the evaluation parameters.
 
         Args:
@@ -70,7 +69,7 @@ class Adjoint(Optimizer):
         n_outputs = y.shape[1]
         model = MultiLayerLinear(n_inputs,n_outputs,h_sizes=self.linear_network)
 
-        optimizer = LBFGS(model.parameters(), history_size=10, max_iter=5)
+        optimizer = LBFGS(model.parameters(), lr=0.2,history_size=10, max_iter=5)
  
         criterion = nn.MSELoss()
            
@@ -88,7 +87,6 @@ class Adjoint(Optimizer):
                     return loss
                 optimizer.step(closure)
                 # calculate the loss again for monitoring
-                output = model(x)
                 loss = closure()
                 train_running_loss += loss.item()
 
@@ -102,9 +100,9 @@ class Adjoint(Optimizer):
         self.model = model
 
         # Evaluate Jacobian for all individuals along the pareto-front
-        model.eval()
-        x = torch.ones((1,n_inputs),dtype=torch.float32)    # This represents a gradient with itself https://colab.research.google.com/github/pytorch/tutorials/blob/gh-pages/_downloads/009cea8b0f40dfcb55e3280f73b06cc2/autograd_tutorial.ipynb#scrollTo=tjaTadQPgI-W
-        jacobian = torch.autograd.functional.jacobian(func=model,inputs=x, create_graph=True)
+        for i, (x, y) in enumerate(train_dataset):
+            x= x.requires_grad_(True)
+            print(torch.autograd.functional.jacobian(model,inputs=x, create_graph=True))
 
     def optimize_from_population(self,pop_start:int,n_generations:int):
         """Reads the values of a population, this can be a DOE or a previous evaluation
