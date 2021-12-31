@@ -12,7 +12,7 @@ from itertools import chain
 from tqdm import trange
 
 from ..helpers import diversity, distance
-from ..helpers import non_dominated_sorting
+from ..helpers import non_dominated_sorting, find_extreme_points, find_intercepts, associate_to_niche, niching, uniform_reference_points 
 from ..base import Parameter, Individual, Optimizer
 from ..helpers import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn,de_dmp, get_eval_param_matrix, get_objective_matrix, set_eval_parameters
 
@@ -139,7 +139,7 @@ class NSGA3(Optimizer):
 
         # Crossover and Mutate the doe individuals to generate the next individuals used in the population
         # Sort the population into [fill in here]
-        ref_points = self.uniform_reference_points(len(self.objectives), p=4, scaling=None)
+        ref_points = uniform_reference_points(len(self.objectives), p=4, scaling=None)
         individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(individuals=individuals,reference_points=ref_points)
         self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1, reference_points=ref_points)
 
@@ -215,10 +215,10 @@ class NSGA3(Optimizer):
         best_point = np.min(fitnesses,axis=0)
         worst_point = np.max(fitnesses,axis=0)
 
-        extreme_points = self.__find_extreme_points__(fitnesses,best_point)
+        extreme_points = find_extreme_points(fitnesses,best_point)
         front_worst = np.max(fitnesses[:sum(len(f) for f in pareto_fronts),:],axis=0)
-        intercepts = self.__find_intercepts__(extreme_points,best_point,worst_point,front_worst)
-        niches, dist = self.__associate_to_niche__(fitnesses, reference_points, best_point, intercepts)
+        intercepts = find_intercepts(extreme_points,best_point,worst_point,front_worst)
+        niches, dist = associate_to_niche(fitnesses, reference_points, best_point, intercepts)
         
         # Get counts per niche for individuals in all front but the last
         niche_counts = np.zeros(len(reference_points), dtype=int)
@@ -231,172 +231,13 @@ class NSGA3(Optimizer):
         # Use niching to select the remaining individuals
         sel_count = len(chosen)
         n = self.pop_size - sel_count
-        selected = self.__niching__(pareto_fronts[-1], n, niches[sel_count:], dist[sel_count:], niche_counts)
+        selected = niching(pareto_fronts[-1], n, niches[sel_count:], dist[sel_count:], niche_counts)
         chosen.extend(selected)
 
         return chosen, best_point, worst_point, extreme_points
 
     
-    def __find_extreme_points__(self,fitnesses, best_point, extreme_points=None):
-        """Finds the individuals with extreme values for each objective function. These definitions need to be updated. I used to know all this. 
-
-        Args:
-            fitnesses ([ndarray]): how close individuals are to best point.1
-            best_point ([ndarray]): array containing the best points
-            extreme_points ([ndarray], optional): Points on the extreme of either objective 1 or objective 2. Defaults to None.
-
-        Returns:
-            ndarray: fitness of individuals. Description needs update
-
-        """
-        
-        # Keep track of last generation extreme points
-        if extreme_points is not None:
-            fitnesses = np.concatenate((fitnesses, extreme_points), axis=0)
-
-        # Translate objectives
-        ft = fitnesses - best_point
-
-        # Find achievement scalarizing function (asf)
-        asf = np.eye(best_point.shape[0])
-        asf[asf == 0] = 1e6
-        asf = np.max(ft * asf[:, np.newaxis, :], axis=2)
-
-        # Extreme point are the fitnesses with minimal asf
-        min_asf_idx = np.argmin(asf, axis=1)
-        return fitnesses[min_asf_idx, :]
-
-    def __find_intercepts__(self,extreme_points, best_point, current_worst, front_worst):
-        """Find intercepts between the hyperplane and each axis with the ideal point as origin.
-
-        Args:
-            extreme_points ([type]): [description]
-            best_point ([type]): [description]
-            current_worst ([type]): [description]
-            front_worst ([type]): [description]
-
-        Returns:
-            [type]: [description]
-        """
-        # Construct hyperplane sum(f_i^n) = 1
-        b = np.ones(extreme_points.shape[1])
-        A = extreme_points - best_point
-        try:
-            x = np.linalg.solve(A, b)
-        except np.linalg.LinAlgError:
-            intercepts = current_worst
-        else:
-            intercepts = 1 / x
-
-            if (not np.allclose(np.dot(A, x), b) or
-                    np.any(intercepts <= 1e-6) or
-                    np.any((intercepts + best_point) > current_worst)):
-                intercepts = front_worst
-
-        return intercepts
-
-
-    def __associate_to_niche__(self,fitnesses, reference_points, best_point, intercepts):
-        """Associates individuals to reference points and calculates niche number. Corresponds to Algorithm 3 of Deb & Jain (2014).
-
-        Args:
-            fitnesses ([type]): [description]
-            reference_points ([type]): [description]
-            best_point ([type]): [description]
-            intercepts ([type]): [description]
-
-        Returns:
-            [type]: [description]
-        """
-        # Normalize by ideal point and intercepts
-        fn = (fitnesses - best_point) / (intercepts - best_point)
-
-        # Create distance matrix
-        fn = np.repeat(np.expand_dims(fn, axis=1), len(reference_points), axis=1)
-        norm = np.linalg.norm(reference_points, axis=1)
-
-        distances = np.sum(fn * reference_points, axis=2) / norm.reshape(1, -1)
-        distances = distances[:, :, np.newaxis] * reference_points[np.newaxis, :, :] / norm[np.newaxis, :, np.newaxis]
-        distances = np.linalg.norm(distances - fn, axis=2)
-
-        # Retrieve min distance niche index
-        niches = np.argmin(distances, axis=1)
-        distances = distances[range(niches.shape[0]), niches]
-        return niches, distances
-
-    def __niching__(self,individuals, k, niches, distances, niche_counts):
-        """[summary]
-
-        Args:
-            individuals ([type]): [description]
-            k ([type]): [description]
-            niches ([type]): [description]
-            distances ([type]): [description]
-            niche_counts ([type]): [description]
-
-        Returns:
-            [type]: [description]
-        """
-        selected = []
-        available = np.ones(len(individuals), dtype=np.bool)
-        while len(selected) < k:
-            # Maximum number of individuals (niches) to select in that round
-            n = k - len(selected)
-
-            # Find the available niches and the minimum niche count in them
-            available_niches = np.zeros(len(niche_counts), dtype=np.bool)
-            available_niches[np.unique(niches[available])] = True
-            min_count = np.min(niche_counts[available_niches])
-
-            # Select at most n niches with the minimum count
-            selected_niches = np.flatnonzero(np.logical_and(available_niches, niche_counts == min_count))
-            np.random.shuffle(selected_niches)
-            selected_niches = selected_niches[:n]
-
-            for niche in selected_niches:
-                # Select from available individuals in niche
-                niche_individuals = np.flatnonzero(np.logical_and(niches == niche, available))
-                np.random.shuffle(niche_individuals)
-
-                # If no individual in that niche, select the closest to reference
-                # Else select randomly
-                if niche_counts[niche] == 0:
-                    sel_index = niche_individuals[np.argmin(distances[niche_individuals])]
-                else:
-                    sel_index = niche_individuals[0]
-
-                # Update availability, counts and selection
-                available[sel_index] = False
-                niche_counts[niche] += 1
-                selected.append(individuals[sel_index])
-        return selected
-
-
-    def uniform_reference_points(self,nobj, p=4, scaling=None):
-        """Generate reference points uniformly on the hyperplane intersecting each axis at 1. The scaling factor is used to combine multiple layers of reference points.
-
-        Args:
-            nobj (int): number of objectives
-            p (int, optional): number of references per objective. Defaults to 4.
-            scaling ([type], optional): [description]. Defaults to None.
-        """
-        def gen_refs_recursive(ref, nobj, left, total, depth):
-            points = []
-            if depth == nobj - 1:
-                ref[depth] = left / total
-                points.append(ref)
-            else:
-                for i in range(left + 1):
-                    ref[depth] = i / total
-                    points.extend(gen_refs_recursive(ref.copy(), nobj, left - i, total, depth + 1))
-            return points
-
-        ref_points = np.array(gen_refs_recursive(np.zeros(nobj), nobj, p, p, 0))
-        if scaling is not None:
-            ref_points *= scaling
-            ref_points += (1 - scaling) / nobj
-
-        return ref_points
+    
 
     def __crossover_mutate__(self,individuals:List[Individual]):
         """[summary]

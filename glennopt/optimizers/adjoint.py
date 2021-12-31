@@ -7,7 +7,6 @@ from typing import List
 from scipy.optimize import minimize
 import numpy as np
 from sklearn import preprocessing
-from torch.autograd.functional import hessian 
 from tqdm import trange
 
 import torch
@@ -19,9 +18,9 @@ from sklearn.preprocessing import StandardScaler
 
 from ..helpers import MultiLayerLinear 
 from ..helpers import diversity, distance
-from ..helpers import non_dominated_sorting
+from ..helpers import non_dominated_sorting, find_extreme_points, find_intercepts, associate_to_niche, niching, uniform_reference_points 
 from ..base import Parameter, Individual, Optimizer
-
+from .nsga3 import find_intercepts, find_extreme_points
 individual_list = List[Individual]
 
 class Adjoint(Optimizer):
@@ -129,8 +128,9 @@ class Adjoint(Optimizer):
             
             print(f"Epoch: {epoch + 1:02}/{self.epochs} Train Loss: {train_running_loss:.5e} Test Loss: {test_loss:.5e}")
         return model
-        
-    def __objective_function__(self,model:nn.Module,reference_point:float,output_index:int):
+    
+    
+    # def __objective_function__(self,model:nn.Module,reference_point:float,output_index:int):
 
     def optimize_from_population(self,pop_start:int,n_generations:int):
         """Reads the values of a population, this can be a DOE or a previous evaluation
@@ -156,46 +156,60 @@ class Adjoint(Optimizer):
         # Sort the population into [fill in here]
         ref_points = self.uniform_reference_points(len(self.objectives), p=4, scaling=None)
         individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(individuals=individuals,reference_points=ref_points)
-        self.train(individuals)
-        self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1, reference_points=ref_points)
 
-
-
-    def __optimize__(self,individuals:individual_list,n_generations:int,pop_start:int, reference_points:np.ndarray):
-        """ NSGA-III main loop
-            Note: This function will read given starting population's results in, perform necessary crossover and mutation to generate enough individuals for the next iteration (self.pop_size)
-
-            Inputs:
-                individuals - list of individuals to evaluate
-                n_generations - number of generations to loop through
-                pop_start - starting population number
-        """
+        model = self.train(individuals)
         
-        nIndividuals = len(individuals)
-         
-        # * Loop through all individuals
-        for pop in range(pop_start,pop_start+n_generations):
-            newIndividuals = self.__crossover_mutate__(individuals)
+        # ! This will have to change Loop through all individuals 
+        # for pop in range(pop_start,pop_start+n_generations):
 
-            # Evaluate
-            self.evaluate_population(newIndividuals,pop_start)            
-            newIndividuals = self.read_population(pop_start)
-            # Sort and select
-            pop_diversity = diversity(newIndividuals)       # Calculate diversity 
-            pop_dist = distance(individuals,newIndividuals) # Calculate population distance between past and future
-            newIndividuals.extend(individuals) # add the previous population to the pool                                    
-            individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(newIndividuals,reference_points)            
-            self.append_restart_file(individuals)        # Keep the last designs
 
-            
-            self.append_history_file(pop,individuals[0],pop_diversity,pop_dist)
+        #     newIndividuals = self.__crossover_mutate__(individuals)
 
-            if self.single_folder_eval:
-                # Delete the population folder
-                population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(pop_start))
-                if os.path.isdir(population_folder):
-                    shutil.rmtree(population_folder)
-            pop_start+=1 # increment the population
+        #     # Evaluate
+        #     self.evaluate_population(newIndividuals,pop_start)            
+        #     newIndividuals = self.read_population(pop_start)
+        #     # Sort and select
+        #     pop_diversity = diversity(newIndividuals)       # Calculate diversity 
+        #     pop_dist = distance(individuals,newIndividuals) # Calculate population distance between past and future
+        #     newIndividuals.extend(individuals) # add the previous population to the pool                       
+
+
+
+    def __adoint_objective_fun__(self,model:nn.Module,reference_points:List[np.ndarray])
+        # Normalize individuals 
+        #! TODO: Minimize distance 
+        pareto_fronts = non_dominated_sorting(individuals,self.pop_size)
+        fitnesses = np.array([ind.objectives for f in pareto_fronts for ind in f])
+        fitnesses *= -1
+
+        best_point = np.min(fitnesses,axis=0)
+        worst_point = np.max(fitnesses,axis=0)
+
+        extreme_points = find_extreme_points(fitnesses,best_point)
+        front_worst = np.max(fitnesses[:sum(len(f) for f in pareto_fronts),:],axis=0)
+        intercepts = find_intercepts(extreme_points,best_point,worst_point,front_worst)
+
+        niches, dist = associate_to_niche(fitnesses, reference_points, best_point, intercepts)
+
+        fn = (fitnesses - best_point) / (intercepts - best_point)
+
+
+        
+
+        
+
+        # individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(newIndividuals,reference_points)            
+        # self.append_restart_file(individuals)        # Keep the last designs
+
+        
+        # self.append_history_file(pop,individuals[0],pop_diversity,pop_dist)
+
+        # if self.single_folder_eval:
+        #     # Delete the population folder
+        #     population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(pop_start))
+        #     if os.path.isdir(population_folder):
+        #         shutil.rmtree(population_folder)
+        # pop_start+=1 # increment the population
         # * End Loop through all individuals
     
     def add_eval_parameters(self,eval_params:List[Parameter]):
