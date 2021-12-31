@@ -2,17 +2,20 @@
     adjoint - gradient based optimization 
 """
 import os, shutil
-import subprocess, copy, math
-from random import seed, gauss,random,uniform,randint
+import copy
 from typing import List
-from dataclasses import dataclass, field
-import numpy as np 
+from scipy.optimize import minimize
+import numpy as np
+from sklearn import preprocessing
+from torch.autograd.functional import hessian 
+from tqdm import trange
 
 import torch
 import torch.nn as nn
 from torch.optim import LBFGS
 from torch.utils.data import Dataset
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 from ..helpers import MultiLayerLinear 
 from ..helpers import diversity, distance
@@ -43,36 +46,64 @@ class Adjoint(Optimizer):
         self.epochs = epochs
         self.train_test_split = train_test_split
 
-    def train(self):
-        """Trains the neural network to predict the output given an input 
+    def hessian(x:np.ndarray):
+        """
+            Calculate the hessian matrix with finite differences. This assumes the delta h is constant
+            Example taken from https://stackoverflow.com/a/31207520/1599606 
 
-        Uses:
-            Optimizer (LBFGS): https://johaupt.github.io/python/pytorch/neural%20network/optimization/pytorch_lbfgs.html 
+        Args:
+            x (np.ndarray): Numpy array representing the function values (f) evaluated at constant h 
+
+        Returns:
+            np.ndarray: Returns an array of shape (x.dim, x.ndim) + x.shape where the array[i, j, ...] corresponds to the second derivative x_ij
+        """
+        x_grad = np.gradient(x) 
+        hessian = np.empty((x.ndim, x.ndim) + x.shape, dtype=x.dtype) 
+        for k, grad_k in enumerate(x_grad):
+            # iterate over dimensions
+            # apply gradient again to every component of the first derivative.
+            tmp_grad = np.gradient(grad_k) 
+            for l, grad_kl in enumerate(tmp_grad):
+                hessian[k, l, :, :] = grad_kl
+        return hessian
+
+    def train(self,individuals:List[Individual]):
+        """Trains the neural network to predict the output given an input 
+    
+        Optimizer (LBFGS): 
+            https://johaupt.github.io/python/pytorch/neural%20network/optimization/pytorch_lbfgs.html 
+
+        Args:
+            individuals (List[Individual]): [description]
+
+        Returns:
+            [type]: [description]
         """
         # * Handling the Data
-        # individuals = self.read_calculation_folder()        
-        individuals = self.read_restart_file()
         pareto_fronts = non_dominated_sorting(individuals,len(individuals))
 
-        non_dominated_sorting
-        y = torch.as_tensor(np.array([ind.objectives for ind in individuals]),dtype=torch.float32)
-        x = torch.as_tensor(np.array([ind.eval_parameters for ind in individuals]),dtype=torch.float32)
-        x.requires_grad=True
+        # non_dominated_sorting
+        labels = torch.as_tensor(np.array([ind.objectives for ind in individuals]),dtype=torch.float32)
+        features = torch.as_tensor(np.array([ind.eval_parameters for ind in individuals]),dtype=torch.float32)
 
-        data = list(zip(x,y))
+        # Normalization 
+        scaler = preprocessing.StandardScaler()
+        scaler.fit(labels)
+        scaler.fit(features)
+
+        data = list(zip(features,labels))
         test_size = int(len(data)*(1-self.train_test_split))
         train_size = int(len(data) - test_size)
         train_dataset, test_dataset = train_test_split(data,test_size=test_size,train_size=train_size,shuffle=True)
 
         # * Defining the Model        
-        n_inputs = x.shape[1]
-        n_outputs = y.shape[1]
+        n_inputs = features.shape[1]
+        n_outputs = labels.shape[1]
+        
         model = MultiLayerLinear(n_inputs,n_outputs,h_sizes=self.linear_network)
-
         optimizer = LBFGS(model.parameters(), lr=0.2,history_size=10, max_iter=5)
- 
         criterion = nn.MSELoss()
-           
+        
         for epoch in range(self.epochs):
             train_running_loss = 0 
             model.train()
@@ -97,12 +128,9 @@ class Adjoint(Optimizer):
                 test_loss += criterion(y_pred, y).item()
             
             print(f"Epoch: {epoch + 1:02}/{self.epochs} Train Loss: {train_running_loss:.5e} Test Loss: {test_loss:.5e}")
-        self.model = model
-
-        # Evaluate Jacobian for all individuals along the pareto-front
-        for i, (x, y) in enumerate(train_dataset):
-            x= x.requires_grad_(True)
-            print(torch.autograd.functional.jacobian(model,inputs=x, create_graph=True))
+        return model
+        
+    def __objective_function__(self,model:nn.Module,reference_point:float,output_index:int):
 
     def optimize_from_population(self,pop_start:int,n_generations:int):
         """Reads the values of a population, this can be a DOE or a previous evaluation
@@ -116,7 +144,7 @@ class Adjoint(Optimizer):
         # Check restart file, if not read the population
         self.load_history_file()
         individuals = self.read_restart_file()
-
+        
         if (len(individuals)==0):                               
             individuals = self.read_calculation_folder()
 
@@ -128,7 +156,9 @@ class Adjoint(Optimizer):
         # Sort the population into [fill in here]
         ref_points = self.uniform_reference_points(len(self.objectives), p=4, scaling=None)
         individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(individuals=individuals,reference_points=ref_points)
+        self.train(individuals)
         self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1, reference_points=ref_points)
+
 
 
     def __optimize__(self,individuals:individual_list,n_generations:int,pop_start:int, reference_points:np.ndarray):
@@ -192,3 +222,30 @@ class Adjoint(Optimizer):
             performance_params (List[Parameter], optional): [description]. Defaults to None.
         """
         self.performance_parameters = performance_params # Sets base class variable
+    
+    def start_doe(self,doe_individuals:List[Individual]=None,doe_size:int=128):
+        """Starts a design of experiments. This generates the parameters for the individuals to be evaluated and executes each case. If the DOE has already started and there is an output file for an individual then the individual won't be evaluated    
+
+        Args:
+            doe_individuals (List[Individual], optional): List of individuals. Defaults to None.
+            doe_size (int, optional): [description]. Defaults to 128.
+        """
+        if doe_individuals is None:
+            doe_individuals = []
+            for i in trange(doe_size):
+                parameters = copy.deepcopy(self.eval_parameters)
+                for eval_param in parameters:
+                    eval_param.value = np.random.uniform(eval_param.min_value,eval_param.max_value,1)[0]
+                doe_individuals.append(Individual(eval_parameters=parameters,objectives=self.objectives, performance_parameters = self.performance_parameters))
+     
+        # * Begin the evaluation
+        self.evaluate_population(individuals=doe_individuals,population_number=-1)
+        # * Read the DOE
+        individuals = self.read_population(population_number=-1)
+        self.append_restart_file(individuals)
+        
+        if self.single_folder_eval: 
+            # Delete the population folder
+            population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(-1))
+            if os.path.isdir(population_folder):
+                shutil.rmtree(population_folder)
