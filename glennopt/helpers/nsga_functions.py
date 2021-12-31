@@ -125,7 +125,7 @@ def find_intercepts(extreme_points:List[np.ndarray], best_point:np.ndarray, curr
         front_worst (np.ndarray): worst individual on pareto front. 
 
     Returns:
-        [type]: [description]
+        np.ndarray: objective values that intercept the hyperplane axis. Example for 2 objectives [16.34, 6.69]
     """
     # Construct hyperplane sum(f_i^n) = 1
     b = np.ones(extreme_points.shape[1])    # np.ones is used to construct the axis    

@@ -175,23 +175,22 @@ class Adjoint(Optimizer):
 
 
 
-    def __adoint_objective_fun__(self,model:nn.Module,reference_points:List[np.ndarray])
-        # Normalize individuals 
-        #! TODO: Minimize distance 
-        pareto_fronts = non_dominated_sorting(individuals,self.pop_size)
-        fitnesses = np.array([ind.objectives for f in pareto_fronts for ind in f])
-        fitnesses *= -1
+    def __adoint_objective_fun__(self,x0:np.ndarray,model:nn.Module,reference_points:List[np.ndarray],intercepts:np.ndarray,dist_index:int):
+        """Objective function of adjoint using neural networks
+
+        Args:
+            x0 (np.ndarray): [description]
+            model (nn.Module): [description]
+            reference_points (List[np.ndarray]): [description]
+            intercepts (np.ndarray)
+        """
+        fitnesses = -1*x0
 
         best_point = np.min(fitnesses,axis=0)
         worst_point = np.max(fitnesses,axis=0)
+        _, dist = associate_to_niche(fitnesses, reference_points, best_point, intercepts)
 
-        extreme_points = find_extreme_points(fitnesses,best_point)
-        front_worst = np.max(fitnesses[:sum(len(f) for f in pareto_fronts),:],axis=0)
-        intercepts = find_intercepts(extreme_points,best_point,worst_point,front_worst)
-
-        niches, dist = associate_to_niche(fitnesses, reference_points, best_point, intercepts)
-
-        fn = (fitnesses - best_point) / (intercepts - best_point)
+        return dist[dist_index]
 
 
         

@@ -19,7 +19,7 @@ from ..helpers import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutat
 individual_list = List[Individual]
 
 class NSGA3(Optimizer):
-    def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval=False, overwrite_input_file=False):
+    def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval=False, overwrite_input_file=False, pareto_resolution:int=4):
         """
             NSGA-3 multi-dimensional optimizer. This version has been tweaked to include restart capabilities. It can also keep track of additional parameters that can be considered part of the constraints.
 
@@ -33,12 +33,14 @@ class NSGA3(Optimizer):
             optimization_folder (str, optional): Folder where the optimization and doe work should be stored in. Defaults to None.
             single_folder_eval (bool, optional): where optimization should start. Defaults to False.
             overwrite_input_file(bool, optional): Specifies whether or not to overwrite the input file when restarting a simulation. Defaults to False.
+            pareto_resolution (int, optional): This specifies the number of reference points on the pareto front, 4 is good for 2 objectives. This number should increase if more objectives are needed. 2^n objectives something like that would work. 
 
         """
         super().__init__(name="nsga3",eval_command=eval_command,eval_folder=eval_folder, opt_folder=optimization_folder,single_folder_eval=single_folder_eval,overwrite_input_file=overwrite_input_file)
         
         self.pop_size = pop_size
-        self.individuals = None        
+        self.individuals = None 
+        self.pareto_resolution = pareto_resolution       
         self.__mutation_params = mutation_parameters()
         
         
@@ -139,7 +141,7 @@ class NSGA3(Optimizer):
 
         # Crossover and Mutate the doe individuals to generate the next individuals used in the population
         # Sort the population into [fill in here]
-        ref_points = uniform_reference_points(len(self.objectives), p=4, scaling=None)
+        ref_points = uniform_reference_points(len(self.objectives), p=self.pareto_resolution, scaling=None)
         individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(individuals=individuals,reference_points=ref_points)
         self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1, reference_points=ref_points)
 
