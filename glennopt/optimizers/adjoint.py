@@ -70,17 +70,17 @@ def transform_data(individuals:List[Individual]) -> List[Individual]:
         for i in range(len(data_keys)):
             label_name = data_keys[i]
             scalers[label_name] = MinMaxScaler(feature_range=(0,1))
-            scalers[label_name].fit(data[:,i])
-            new_data[:,i] = scalers[label_name].transform(data[:,i])
+            scalers[label_name].fit(data[:,i].reshape(-1,1))
+            new_data[:,i] = scalers[label_name].transform(data[:,i].reshape(-1,1)).flatten()
         return scalers, new_data
     label_scalers, labels = get_scalers(labels, labels_str)
     feature_scalers, features = get_scalers(features, features_str)
     
-    for i in range(len(labels.shape[0])):
+    for i in range(labels.shape[0]):
         for j in range(len(labels_str)):
             individuals[i].set_objective(labels_str[j],labels[i,j])
 
-    for i in range(len(features.shape[0])):
+    for i in range(features.shape[0]):
         for j in range(len(features_str)):
             individuals[i].set_eval_parameter(features_str[j],features[i,j])
     return individuals, label_scalers, feature_scalers
@@ -106,11 +106,11 @@ def inverse_transform_data(label_scalers:Dict[str,MinMaxScaler], feature_scalers
     
     for i in range(len(labels_str)):
         label_str = labels_str[i]
-        labels[:,i] = label_scalers[label_str].inverse_transform(labels[:,i])
+        labels[:,i] = label_scalers[label_str].inverse_transform(labels[:,i].reshape(-1,1)).flatten()
     
     for i in range(len(features_str)):
         feature_str = features_str[i]
-        features[:,i] = feature_scalers[feature_str].inverse_transform(features[:,i])
+        features[:,i] = feature_scalers[feature_str].inverse_transform(features[:,i].reshape(-1,1)).flatten()
 
     for i in range(len(labels.shape[0])):
         for j in range(len(labels_str)):
@@ -179,35 +179,18 @@ class Adjoint(Optimizer):
             retrain (bool, Optional): Retrains the existing model on new data 
 
         """
-        # * Handling the Data
-        transform_data(individuals)
+        # * Normalizing the Data
+        individuals, label_scalers, feature_scalers = transform_data(individuals)
+        self.label_scalers = label_scalers
+        self.feature_scalers = feature_scalers
 
+        labels = torch.as_tensor(np.array([ind.objectives for ind in individuals]),dtype=torch.float32)
+        labels_str = [o.name for o in self.objectives]
 
         features = torch.as_tensor(np.array([ind.eval_parameters for ind in individuals]),dtype=torch.float32)
         features_str = [f.name for f in self.eval_parameters]
-
-        '''
-            Normalization 
-        '''
-        individuals = transform_data(individuals)
-        labels_scaler = dict() # Scale each label
-        for label, label_name in zip(labels, labels_str):
-            labels_scaler[label_name] = preprocessing.MinMaxScaler(feature_range=(0,1))    
-            labels_scaler[label_name].fit(label)
-            labels = labels_scaler[label_name].transform(labels)
-
-        features_scaler = dict()
-        for feature,feature_name in zip(features,features_str):
-            features_scaler[feature_name] = preprocessing.MinMaxScaler(feature_range=(0,1))
-            features_scaler[feature_name].fit(features)
-            features = features_scaler[feature_name].transform(features)
-
         
         # Transform
-        
-        
-
-
         data = list(zip(features,labels))
         test_size = int(len(data)*(1-self.train_test_split))
         train_size = int(len(data) - test_size)
