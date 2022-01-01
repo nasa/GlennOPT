@@ -313,3 +313,12 @@ class Individual:
             List[Parameter]: list of performance parameters 
         """
         return self.__performance_parameters
+
+    def IsFailed(self) -> bool:
+        """Checks the objectives to make sure the individual hasn't failed
+
+        Returns:
+            bool: True = failed, False = passed
+        """
+        objectives = [True for o in self.__objectives if o.value_if_failed == o.value]
+        return any(objectives)  # Returns true if any of the values are True

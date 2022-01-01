@@ -102,13 +102,26 @@ class Adjoint(Optimizer):
         # pareto_fronts = non_dominated_sorting(individuals,len(individuals))
 
         # non_dominated_sorting
+        individuals = [ind for ind in individuals if ind.IsFailed==False] # remove failed simulations
         labels = torch.as_tensor(np.array([ind.objectives for ind in individuals]),dtype=torch.float32)
         features = torch.as_tensor(np.array([ind.eval_parameters for ind in individuals]),dtype=torch.float32)
 
-        # Normalization 
-        scaler = preprocessing.StandardScaler()
-        scaler.fit(labels)
-        scaler.fit(features)
+        '''
+            Normalization 
+        '''
+        labels_scaler = list() # Scale each label
+        for label in labels:
+            labels_scaler = preprocessing.MinMaxScaler(feature_range=(0,1))
+        features_scaler = list()
+        for feature in features:
+            features_scaler = preprocessing.MinMaxScaler(feature_range=(0,1))
+        # Fit
+        labels_scaler.fit(labels)
+        features_scaler.fit(features)
+        # Transform
+        labels = labels_scaler.transform(labels)
+        features = features_scaler.transform(features)
+
 
         data = list(zip(features,labels))
         test_size = int(len(data)*(1-self.train_test_split))
