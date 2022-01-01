@@ -23,7 +23,7 @@ import matplotlib.cm as cm
 import numpy as np
 from .individual import Individual
 from .parameter import Parameter
-from ..helpers import copy_helper, parallel_settings, convert_to_ndarray
+from ..helpers import copy_helper, parallel_settings, convert_to_ndarray, check_if_duplicates
 import psutil
 
 class Optimizer: 
@@ -93,6 +93,15 @@ class Optimizer:
         # Cache storage
         self.pandas_cache = {} # Appends individuals to pandas dataframe each dictionar contains the population number
         self.single_folder_eval = single_folder_eval
+
+        
+        objective_names = [o.name for o in self.objectives]
+        eval_parameter_names = [o.name for o in self.eval_parameters]
+        performance_parameter_names = [o.name for o in self.performance_parameters]
+        assert check_if_duplicates(objective_names) == False, "Objective names have to be unique"
+        assert check_if_duplicates(eval_parameter_names) == False, "Evaluation Parameter names have to be unique"
+        assert check_if_duplicates(performance_parameter_names) == False, "Performance Parameter names have to be unique"
+
         
     @property
     def use_calculation_folder(self) -> bool:

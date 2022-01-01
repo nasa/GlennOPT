@@ -314,11 +314,12 @@ class Individual:
         """
         return self.__performance_parameters
 
+    @property
     def IsFailed(self) -> bool:
         """Checks the objectives to make sure the individual hasn't failed
 
         Returns:
             bool: True = failed, False = passed
         """
-        objectives = [True for o in self.__objectives if o.value_if_failed == o.value]
+        objectives = [True for o in self.get_objectives_list() if o.value_if_failed == o.value]
         return any(objectives)  # Returns true if any of the values are True

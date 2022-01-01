@@ -3,10 +3,10 @@
 """
 import os, shutil
 import copy
-from typing import List
+from typing import Dict, List
 from scipy.optimize import minimize
 import numpy as np
-from sklearn import preprocessing
+from sklearn.preprocessing import MinMaxScaler
 from tqdm import trange
 
 import torch
@@ -39,6 +39,87 @@ def adjoint_objective_func(x0:np.ndarray,model:nn.Module,reference_points:List[n
     _, dist = associate_to_niche(fitnesses, reference_points, best_point, intercepts)
     
     return dist[dist_index]
+
+
+
+def transform_data(individuals:List[Individual]) -> List[Individual]:
+    """Normalizes all the individuals and returns the label scaler for objectives and feature scalers for the evaluation parameters 
+
+    Args:
+        individuals (List[Individual]): Unnormalized list of individuals 
+
+    Returns:
+        (tuple): Tuple containing
+
+            **Individuals** (List[Individual]): Normalized list of individuals
+            **label_scalers** (Dict[MinMaxScaler]): scalers that can be used to untransform the objectives
+            **feature_scalers** (Dict[MinMaxScaler]): scalers that can be used to untransform the evaluation parameters
+
+    """
+    individuals = [ind for ind in individuals if ind.IsFailed==False] # remove failed simulations
+
+    labels = np.array([ind.objectives for ind in individuals])
+    labels_str = [o.name for o in individuals[0].get_objectives_list()]
+
+    features = np.array([ind.eval_parameters for ind in individuals])
+    features_str = [f.name for f in individuals[0].get_eval_parameter_list()]
+
+    def get_scalers(data:np.ndarray,data_keys:List[str]):
+        new_data = np.zeros(data.shape)
+        scalers = dict() # Scale each label
+        for i in range(len(data_keys)):
+            label_name = data_keys[i]
+            scalers[label_name] = MinMaxScaler(feature_range=(0,1))
+            scalers[label_name].fit(data[:,i])
+            new_data[:,i] = scalers[label_name].transform(data[:,i])
+        return scalers, new_data
+    label_scalers, labels = get_scalers(labels, labels_str)
+    feature_scalers, features = get_scalers(features, features_str)
+    
+    for i in range(len(labels.shape[0])):
+        for j in range(len(labels_str)):
+            individuals[i].set_objective(labels_str[j],labels[i,j])
+
+    for i in range(len(features.shape[0])):
+        for j in range(len(features_str)):
+            individuals[i].set_eval_parameter(features_str[j],features[i,j])
+    return individuals, label_scalers, feature_scalers
+
+def inverse_transform_data(label_scalers:Dict[str,MinMaxScaler], feature_scalers:Dict[str,MinMaxScaler],individuals:List[Individual]) -> List[Individual]:
+    """[summary]
+
+    Args:
+        label_scalers (Dict[str,MinMaxScaler]): [description]
+        feature_scalers (Dict[str,MinMaxScaler]): [description]
+        individuals (List[Individual]): [description]
+
+    Returns:
+        List[Individual]: [description]
+    """
+    individuals = [ind for ind in individuals if ind.IsFailed==False] # remove failed simulations
+
+    labels = np.array([ind.objectives for ind in individuals])
+    labels_str = [o.name for o in individuals[0].get_objectives_list()]
+
+    features = np.array([ind.eval_parameters for ind in individuals])
+    features_str = [f.name for f in individuals[0].get_eval_parameter_list()]
+    
+    for i in range(len(labels_str)):
+        label_str = labels_str[i]
+        labels[:,i] = label_scalers[label_str].inverse_transform(labels[:,i])
+    
+    for i in range(len(features_str)):
+        feature_str = features_str[i]
+        features[:,i] = feature_scalers[feature_str].inverse_transform(features[:,i])
+
+    for i in range(len(labels.shape[0])):
+        for j in range(len(labels_str)):
+            individuals[i].set_objective(labels_str[j],labels[i,j])
+
+    for i in range(len(features.shape[0])):
+        for j in range(len(features_str)):
+            individuals[i].set_eval_parameter(features_str[j],features[i,j])
+    return individuals, label_scalers, feature_scalers
 
 class Adjoint(Optimizer):
     def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval:bool=False, overwrite_input_file:bool=False, linear_network:List[int]=[64,128,128,64],epochs:int=100, train_test_split:float=0.7,pareto_resolution:int=4):
@@ -99,28 +180,32 @@ class Adjoint(Optimizer):
 
         """
         # * Handling the Data
-        # pareto_fronts = non_dominated_sorting(individuals,len(individuals))
+        transform_data(individuals)
 
-        # non_dominated_sorting
-        individuals = [ind for ind in individuals if ind.IsFailed==False] # remove failed simulations
-        labels = torch.as_tensor(np.array([ind.objectives for ind in individuals]),dtype=torch.float32)
+
         features = torch.as_tensor(np.array([ind.eval_parameters for ind in individuals]),dtype=torch.float32)
+        features_str = [f.name for f in self.eval_parameters]
 
         '''
             Normalization 
         '''
-        labels_scaler = list() # Scale each label
-        for label in labels:
-            labels_scaler = preprocessing.MinMaxScaler(feature_range=(0,1))
-        features_scaler = list()
-        for feature in features:
-            features_scaler = preprocessing.MinMaxScaler(feature_range=(0,1))
-        # Fit
-        labels_scaler.fit(labels)
-        features_scaler.fit(features)
+        individuals = transform_data(individuals)
+        labels_scaler = dict() # Scale each label
+        for label, label_name in zip(labels, labels_str):
+            labels_scaler[label_name] = preprocessing.MinMaxScaler(feature_range=(0,1))    
+            labels_scaler[label_name].fit(label)
+            labels = labels_scaler[label_name].transform(labels)
+
+        features_scaler = dict()
+        for feature,feature_name in zip(features,features_str):
+            features_scaler[feature_name] = preprocessing.MinMaxScaler(feature_range=(0,1))
+            features_scaler[feature_name].fit(features)
+            features = features_scaler[feature_name].transform(features)
+
+        
         # Transform
-        labels = labels_scaler.transform(labels)
-        features = features_scaler.transform(features)
+        
+        
 
 
         data = list(zip(features,labels))

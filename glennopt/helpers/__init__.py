@@ -8,3 +8,4 @@ from .nsga_functions import non_dominated_sorting, find_extreme_points, find_int
 from .post_processing import get_best, get_pop_best
 from .jacobian import gradient, jacobian
 from .MultiLayerLinear import MultiLayerLinear, SimpleLinearModel
+from .list_functions import check_if_duplicates
