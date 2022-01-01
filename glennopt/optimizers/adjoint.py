@@ -17,14 +17,31 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from ..helpers import MultiLayerLinear 
-from ..helpers import diversity, distance
+from ..helpers import diversity, distance, set_eval_parameters
 from ..helpers import non_dominated_sorting, find_extreme_points, find_intercepts, associate_to_niche, niching, uniform_reference_points 
 from ..base import Parameter, Individual, Optimizer
 from .nsga3 import find_intercepts, find_extreme_points
 individual_list = List[Individual]
 
+
+def adjoint_objective_func(x0:np.ndarray,model:nn.Module,reference_points:List[np.ndarray],intercepts:np.ndarray,dist_index:int):
+    """Objective function of adjoint using neural networks. The goal is to use this function to find values of x0 that minimize the distance to the reference point
+
+    Args:
+        x0 (np.ndarray): [description]
+        model (nn.Module): [description]
+        reference_points (List[np.ndarray]): [description]
+        intercepts (np.ndarray)
+    """
+    fitnesses = -1*model(x0)
+
+    best_point = np.min(fitnesses,axis=0)
+    _, dist = associate_to_niche(fitnesses, reference_points, best_point, intercepts)
+    
+    return dist[dist_index]
+
 class Adjoint(Optimizer):
-    def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval:bool=False, overwrite_input_file:bool=False, linear_network:List[int]=[64,128,128,64],epochs:int=20, train_test_split:float=0.7):
+    def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval:bool=False, overwrite_input_file:bool=False, linear_network:List[int]=[64,128,128,64],epochs:int=100, train_test_split:float=0.7,pareto_resolution:int=4):
         """The objective of adjoint is to find the minimum of the jacobian of the evaluation parameters.
 
         Args:
@@ -36,6 +53,7 @@ class Adjoint(Optimizer):
             overwrite_input_file (bool, optional): whether or not to overwrite the input file with new data when restarting a simulation. Defaults to False.
             linear_network (list, optional): Size of MultiLinear network. Defaults to [128,256,256].
             epochs (int, optional): Number of epochs to train neural network for 
+            pareto_resolution (int, optional)
         """
         super().__init__(name="adjoint",eval_command=eval_command,eval_folder=eval_folder, opt_folder=optimization_folder,single_folder_eval=single_folder_eval,overwrite_input_file=overwrite_input_file)
         
@@ -44,6 +62,9 @@ class Adjoint(Optimizer):
         self.linear_network = linear_network
         self.epochs = epochs
         self.train_test_split = train_test_split
+        self.pareto_resolution = pareto_resolution
+        self.model = None
+        self.optimizer = None
 
     def hessian(x:np.ndarray):
         """
@@ -66,7 +87,7 @@ class Adjoint(Optimizer):
                 hessian[k, l, :, :] = grad_kl
         return hessian
 
-    def train(self,individuals:List[Individual]):
+    def train(self,individuals:List[Individual],retrain:bool=False):
         """Trains the neural network to predict the output given an input 
     
         Optimizer (LBFGS): 
@@ -74,12 +95,11 @@ class Adjoint(Optimizer):
 
         Args:
             individuals (List[Individual]): [description]
+            retrain (bool, Optional): Retrains the existing model on new data 
 
-        Returns:
-            [type]: [description]
         """
         # * Handling the Data
-        pareto_fronts = non_dominated_sorting(individuals,len(individuals))
+        # pareto_fronts = non_dominated_sorting(individuals,len(individuals))
 
         # non_dominated_sorting
         labels = torch.as_tensor(np.array([ind.objectives for ind in individuals]),dtype=torch.float32)
@@ -99,39 +119,39 @@ class Adjoint(Optimizer):
         n_inputs = features.shape[1]
         n_outputs = labels.shape[1]
         
-        model = MultiLayerLinear(n_inputs,n_outputs,h_sizes=self.linear_network)
-        optimizer = LBFGS(model.parameters(), lr=0.2,history_size=10, max_iter=5)
+        if not retrain:
+            self.model = MultiLayerLinear(n_inputs,n_outputs,h_sizes=self.linear_network)
+            
+            self.optimizer = LBFGS(self.model.parameters(), lr=0.2,history_size=10, max_iter=5)
+
         criterion = nn.MSELoss()
         
         for epoch in range(self.epochs):
             train_running_loss = 0 
-            model.train()
+            self.model.train()
             for i, (x, y) in enumerate(train_dataset):
                 def closure():
                     if torch.is_grad_enabled():
-                        optimizer.zero_grad()
-                    y_pred = model(x)
+                        self.optimizer.zero_grad()
+                    y_pred = self.model(x)
                     loss = criterion(y_pred, y)
                     if loss.requires_grad:
                         loss.backward() # Zero gradients, backward pass, and update weights
                     return loss
-                optimizer.step(closure)
+                self.optimizer.step(closure)
                 # calculate the loss again for monitoring
                 loss = closure()
                 train_running_loss += loss.item()
 
-            model.eval()
+            self.model.eval()
             test_loss = 0
             for j, (x,y) in enumerate(test_dataset):
-                y_pred = model(x)
+                y_pred = self.model(x)
                 test_loss += criterion(y_pred, y).item()
             
             print(f"Epoch: {epoch + 1:02}/{self.epochs} Train Loss: {train_running_loss:.5e} Test Loss: {test_loss:.5e}")
-        return model
-    
-    
-    # def __objective_function__(self,model:nn.Module,reference_point:float,output_index:int):
-
+        
+        
     def optimize_from_population(self,pop_start:int,n_generations:int):
         """Reads the values of a population, this can be a DOE or a previous evaluation
             Starts the optimization 
@@ -152,65 +172,61 @@ class Adjoint(Optimizer):
             raise Exception("Number of individuals in the restart file is less than the population size."
                 + " lower the population size or increase the DOE count(if restarting from a DOE)")
 
-        # Crossover and Mutate the doe individuals to generate the next individuals used in the population
-        # Sort the population into [fill in here]
-        ref_points = self.uniform_reference_points(len(self.objectives), p=4, scaling=None)
-        individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(individuals=individuals,reference_points=ref_points)
+        for pop in range(pop_start+1,pop_start+n_generations):  # Population Loop 
+            ''' 
+                Train a Neural network on Individuals. Initially this is all the individuals
+            '''
+            if not self.model:
+                self.train(individuals, False)
+                newIndividuals = list()
+            else:
+                self.train(newIndividuals, True)
+                newIndividuals.clear()
 
-        model = self.train(individuals)
-        
-        # ! This will have to change Loop through all individuals 
-        # for pop in range(pop_start,pop_start+n_generations):
+            '''
+                Run parts of NSGA3 code to find intercepts 
+            '''
+            pareto_fronts = non_dominated_sorting(individuals,self.pop_size)
+            fitnesses = np.array([ind.objectives for f in pareto_fronts for ind in f])
+            fitnesses *= -1
 
+            ref_points = self.uniform_reference_points(len(self.objectives), p=self.pareto_resolution, scaling=None)
+            individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(individuals=individuals,reference_points=ref_points)
 
-        #     newIndividuals = self.__crossover_mutate__(individuals)
-
-        #     # Evaluate
-        #     self.evaluate_population(newIndividuals,pop_start)            
-        #     newIndividuals = self.read_population(pop_start)
-        #     # Sort and select
-        #     pop_diversity = diversity(newIndividuals)       # Calculate diversity 
-        #     pop_dist = distance(individuals,newIndividuals) # Calculate population distance between past and future
-        #     newIndividuals.extend(individuals) # add the previous population to the pool                       
-
-
-
-    def __adoint_objective_fun__(self,x0:np.ndarray,model:nn.Module,reference_points:List[np.ndarray],intercepts:np.ndarray,dist_index:int):
-        """Objective function of adjoint using neural networks
-
-        Args:
-            x0 (np.ndarray): [description]
-            model (nn.Module): [description]
-            reference_points (List[np.ndarray]): [description]
-            intercepts (np.ndarray)
-        """
-        fitnesses = -1*x0
-
-        best_point = np.min(fitnesses,axis=0)
-        worst_point = np.max(fitnesses,axis=0)
-        _, dist = associate_to_niche(fitnesses, reference_points, best_point, intercepts)
-
-        return dist[dist_index]
+            front_worst = np.max(fitnesses[:sum(len(f) for f in pareto_fronts),:],axis=0)
+            intercepts = find_intercepts(extreme_points,best_point,worst_point,front_worst)
 
 
-        
+            '''
+                Calculate new evaluation points using scipy minimization BFGS method
+                Broyden Fletcher Goldfarb Shanno algorithm
+                https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm
+            '''
+            for o in range(len(self.pareto_resolution)):
+                res = minimize(adjoint_objective_func,best_point,args=(self.model,ref_points,intercepts,o), method="BFGS", max_iter=100)
 
-        
+                newIndividuals.append(
+                    Individual(eval_parameters=set_eval_parameters(self.eval_parameters,res.x),
+                        objectives=self.objectives,performance_parameters=self.performance_parameters)
+                        )
+            # Evaluate
+            self.evaluate_population(newIndividuals,pop_start)
+            newIndividuals = self.read_population(pop_start)
+            # Sort and select
+            pop_diversity = diversity(newIndividuals)       # Calculate diversity 
+            pop_dist = distance(individuals,newIndividuals) # Calculate population distance between past and future
 
-        # individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(newIndividuals,reference_points)            
-        # self.append_restart_file(individuals)        # Keep the last designs
+            # TODO: Save the model and optimizer
+            self.append_restart_file(individuals)        # Keep the last designs
+            self.append_history_file(pop,individuals[0],pop_diversity,pop_dist)
 
-        
-        # self.append_history_file(pop,individuals[0],pop_diversity,pop_dist)
+            if self.single_folder_eval:
+                # Delete the population folder
+                population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(pop_start))
+                if os.path.isdir(population_folder):
+                    shutil.rmtree(population_folder)            
+            pop_start+=1 # increment the population
 
-        # if self.single_folder_eval:
-        #     # Delete the population folder
-        #     population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(pop_start))
-        #     if os.path.isdir(population_folder):
-        #         shutil.rmtree(population_folder)
-        # pop_start+=1 # increment the population
-        # * End Loop through all individuals
-    
     def add_eval_parameters(self,eval_params:List[Parameter]):
         """Add evaluation parameters. This is part of the initialization    
 
@@ -262,3 +278,5 @@ class Adjoint(Optimizer):
             population_folder = os.path.join(self.optimization_folder,self.__check_population_folder__(-1))
             if os.path.isdir(population_folder):
                 shutil.rmtree(population_folder)
+
+
