@@ -155,4 +155,5 @@ cython_debug/
 #.idea/
 
 # Glennopt generated folder
+/[Cc]alculation/
 Calculation/

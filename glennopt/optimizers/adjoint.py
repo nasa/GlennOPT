@@ -3,7 +3,7 @@
 """
 import os, shutil
 import copy
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from scipy.optimize import minimize
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
@@ -11,20 +11,21 @@ from tqdm import trange
 
 import torch
 import torch.nn as nn
-from torch.optim import LBFGS
+from torch.utils.data import DataLoader
+from torch.optim import LBFGS, AdamW
 from torch.utils.data import Dataset
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from ..helpers import MultiLayerLinear 
 from ..helpers import diversity, distance, set_eval_parameters
-from ..helpers import non_dominated_sorting, find_extreme_points, find_intercepts, associate_to_niche, niching, uniform_reference_points 
+from ..helpers import non_dominated_sorting, find_extreme_points, find_intercepts, associate_to_niche, niching, uniform_reference_points, sort_and_select_population
 from ..base import Parameter, Individual, Optimizer
 from .nsga3 import find_intercepts, find_extreme_points
 individual_list = List[Individual]
 
 
-def adjoint_objective_func(x0:np.ndarray,model:nn.Module,reference_points:List[np.ndarray],intercepts:np.ndarray,dist_index:int):
+def adjoint_objective_func(x0:np.ndarray,model:nn.Module,reference_points:List[np.ndarray],intercepts:np.ndarray,dist_index:int,best_point:np.ndarray):
     """Objective function of adjoint using neural networks. The goal is to use this function to find values of x0 that minimize the distance to the reference point
 
     Args:
@@ -33,14 +34,37 @@ def adjoint_objective_func(x0:np.ndarray,model:nn.Module,reference_points:List[n
         reference_points (List[np.ndarray]): [description]
         intercepts (np.ndarray)
     """
+    x0 = torch.as_tensor(x0,dtype=torch.float32)
     fitnesses = -1*model(x0)
-
-    best_point = np.min(fitnesses,axis=0)
-    _, dist = associate_to_niche(fitnesses, reference_points, best_point, intercepts)
+    fitnesses = fitnesses.detach().numpy()
+    dist = calculate_distance(fitnesses.reshape(1,-1), reference_points, best_point, intercepts)
     
     return dist[dist_index]
 
+def calculate_distance(fitnesses:List[Tuple[float]], reference_points:List[Tuple[float]], best_point:np.ndarray, intercepts:np.ndarray):
+    """Associates individuals to reference points and calculates niche number. Corresponds to Algorithm 3 of Deb & Jain (2014).
 
+    Args:
+        fitnesses (List[Tuple[float]]): These are a list of unnormalized objective values from all individuals.
+        reference_points (List[Tuple[float]]): List of tuples representing the ideal normalized pareto front/surface. Example for 2 objectives [ [0,1], [0.25, 0.75],[0.5, 0.5], [0.75, 0.25], [1, 0] ]
+        best_point (np.ndarray): Array representing the best individual's objective. Example for 2 objectives [7.28, -4.07]
+        intercepts (np.ndarray): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    # Normalize by ideal point and intercepts
+    fn = (fitnesses - best_point) / (intercepts - best_point)
+
+    # Create distance matrix
+    fn = np.repeat(np.expand_dims(fn, axis=1), len(reference_points), axis=1)
+    norm = np.linalg.norm(reference_points, axis=1)
+
+    distances = np.sum(fn * reference_points, axis=2) / norm.reshape(1, -1)
+    distances = distances[:, :, np.newaxis] * reference_points[np.newaxis, :, :] / norm[np.newaxis, :, np.newaxis]
+    distances = np.linalg.norm(distances - fn, axis=2)
+
+    return distances
 
 def transform_data(individuals:List[Individual]) -> List[Individual]:
     """Normalizes all the individuals and returns the label scaler for objectives and feature scalers for the evaluation parameters 
@@ -122,23 +146,22 @@ def inverse_transform_data(label_scalers:Dict[str,MinMaxScaler], feature_scalers
     return individuals, label_scalers, feature_scalers
 
 class Adjoint(Optimizer):
-    def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation",pop_size:int=128, optimization_folder:str=None,single_folder_eval:bool=False, overwrite_input_file:bool=False, linear_network:List[int]=[64,128,128,64],epochs:int=100, train_test_split:float=0.7,pareto_resolution:int=4):
+    def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation", optimization_folder:str=None,single_folder_eval:bool=False, overwrite_input_file:bool=False, linear_network:List[int]=[128,128,128,128],epochs:int=200, train_test_split:float=0.8,pareto_resolution:int=10):
         """The objective of adjoint is to find the minimum of the jacobian of the evaluation parameters.
 
         Args:
             eval_command (str, optional): [description]. Defaults to "python evaluation.py".
             eval_folder (str, optional): [description]. Defaults to "Evaluation".
-            pop_size (int, optional): [description]. Defaults to 128.
             optimization_folder (str, optional): Folder where the optimization and doe work should be stored in. Defaults to None.
             single_folder_eval (bool, optional): Evaluate within a single folder and not make a bunch of folders . Defaults to False.
             overwrite_input_file (bool, optional): whether or not to overwrite the input file with new data when restarting a simulation. Defaults to False.
             linear_network (list, optional): Size of MultiLinear network. Defaults to [128,256,256].
             epochs (int, optional): Number of epochs to train neural network for 
+            train_test_split (float, optional): Number of datapoints to be assigned to train and test
             pareto_resolution (int, optional)
         """
         super().__init__(name="adjoint",eval_command=eval_command,eval_folder=eval_folder, opt_folder=optimization_folder,single_folder_eval=single_folder_eval,overwrite_input_file=overwrite_input_file)
         
-        self.pop_size = pop_size
         self.individuals = None
         self.linear_network = linear_network
         self.epochs = epochs
@@ -185,53 +208,53 @@ class Adjoint(Optimizer):
         self.feature_scalers = feature_scalers
 
         labels = torch.as_tensor(np.array([ind.objectives for ind in individuals]),dtype=torch.float32)
-        labels_str = [o.name for o in self.objectives]
-
         features = torch.as_tensor(np.array([ind.eval_parameters for ind in individuals]),dtype=torch.float32)
-        features_str = [f.name for f in self.eval_parameters]
         
         # Transform
         data = list(zip(features,labels))
         test_size = int(len(data)*(1-self.train_test_split))
         train_size = int(len(data) - test_size)
         train_dataset, test_dataset = train_test_split(data,test_size=test_size,train_size=train_size,shuffle=True)
-
+        train_dl = DataLoader(train_dataset,batch_size=128,shuffle=True)
+        test_dl = DataLoader(test_dataset,batch_size=128,shuffle=False)
         # * Defining the Model        
         n_inputs = features.shape[1]
         n_outputs = labels.shape[1]
         
         if not retrain:
             self.model = MultiLayerLinear(n_inputs,n_outputs,h_sizes=self.linear_network)
-            
-            self.optimizer = LBFGS(self.model.parameters(), lr=0.2,history_size=10, max_iter=5)
+            # self.optimizer = LBFGS(self.model.parameters(), lr=0.0001,history_size=100, max_eval=int(20*1.25), max_iter=20)
+            self.optimizer = AdamW(self.model.parameters())
 
         criterion = nn.MSELoss()
         
         for epoch in range(self.epochs):
             train_running_loss = 0 
+            n_train = 0
             self.model.train()
-            for i, (x, y) in enumerate(train_dataset):
-                def closure():
-                    if torch.is_grad_enabled():
-                        self.optimizer.zero_grad()
-                    y_pred = self.model(x)
-                    loss = criterion(y_pred, y)
-                    if loss.requires_grad:
-                        loss.backward() # Zero gradients, backward pass, and update weights
-                    return loss
-                self.optimizer.step(closure)
+            for i, (x, y) in enumerate(train_dl):
+                batch_size = x.shape[0]
+                self.optimizer.zero_grad()
+                y_pred = self.model(x)
+                loss = criterion(y_pred, y)
+                loss.backward() # Zero gradients, backward pass, and update weights
+                self.optimizer.step()
                 # calculate the loss again for monitoring
-                loss = closure()
                 train_running_loss += loss.item()
-
+                n_train += batch_size
             self.model.eval()
             test_loss = 0
-            for j, (x,y) in enumerate(test_dataset):
+            n_test = 0
+            for j, (x,y) in enumerate(test_dl):
+                batch_size = x.shape[0]
                 y_pred = self.model(x)
                 test_loss += criterion(y_pred, y).item()
-            
+                n_test += batch_size
+            train_running_loss /= n_train
+            test_loss /= n_test
+
             print(f"Epoch: {epoch + 1:02}/{self.epochs} Train Loss: {train_running_loss:.5e} Test Loss: {test_loss:.5e}")
-        
+        return individuals
         
     def optimize_from_population(self,pop_start:int,n_generations:int):
         """Reads the values of a population, this can be a DOE or a previous evaluation
@@ -249,7 +272,7 @@ class Adjoint(Optimizer):
         if (len(individuals)==0):                               
             individuals = self.read_calculation_folder()
 
-        if (len(individuals)<self.pop_size):
+        if (len(individuals)<self.pareto_resolution):
             raise Exception("Number of individuals in the restart file is less than the population size."
                 + " lower the population size or increase the DOE count(if restarting from a DOE)")
 
@@ -258,7 +281,7 @@ class Adjoint(Optimizer):
                 Train a Neural network on Individuals. Initially this is all the individuals
             '''
             if not self.model:
-                self.train(individuals, False)
+                individuals_normalized = self.train(individuals, False)
                 newIndividuals = list()
             else:
                 self.train(newIndividuals, True)
@@ -267,12 +290,12 @@ class Adjoint(Optimizer):
             '''
                 Run parts of NSGA3 code to find intercepts 
             '''
-            pareto_fronts = non_dominated_sorting(individuals,self.pop_size)
+            pareto_fronts = non_dominated_sorting(individuals_normalized,32)
             fitnesses = np.array([ind.objectives for f in pareto_fronts for ind in f])
             fitnesses *= -1
 
-            ref_points = self.uniform_reference_points(len(self.objectives), p=self.pareto_resolution, scaling=None)
-            individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(individuals=individuals,reference_points=ref_points)
+            ref_points = uniform_reference_points(len(self.objectives), p=self.pareto_resolution, scaling=None)
+            individuals_normalized,best_point, worst_point, extreme_points = sort_and_select_population(individuals=individuals_normalized,reference_points=ref_points, pop_size=32)
 
             front_worst = np.max(fitnesses[:sum(len(f) for f in pareto_fronts),:],axis=0)
             intercepts = find_intercepts(extreme_points,best_point,worst_point,front_worst)
@@ -283,9 +306,13 @@ class Adjoint(Optimizer):
                 Broyden Fletcher Goldfarb Shanno algorithm
                 https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm
             '''
-            for o in range(len(self.pareto_resolution)):
-                res = minimize(adjoint_objective_func,best_point,args=(self.model,ref_points,intercepts,o), method="BFGS", max_iter=100)
+            features = np.array([ind.eval_parameters for ind in individuals])       # Normalized Features
 
+            x0 = features[0]
+            self.model.eval()
+            for o in range(self.pareto_resolution):
+                res = minimize(adjoint_objective_func,x0,args=(self.model,ref_points,intercepts,o, best_point), method="BFGS")
+                # TODO: need to unnormalize
                 newIndividuals.append(
                     Individual(eval_parameters=set_eval_parameters(self.eval_parameters,res.x),
                         objectives=self.objectives,performance_parameters=self.performance_parameters)

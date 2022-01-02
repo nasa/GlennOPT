@@ -1,3 +1,0 @@
-Single Objective Optimization
-===============================
-

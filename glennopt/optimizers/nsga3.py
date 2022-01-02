@@ -8,11 +8,9 @@ from typing import List
 from dataclasses import dataclass, field
 import numpy as np 
 import glob
-from itertools import chain
 from tqdm import trange
-
 from ..helpers import diversity, distance
-from ..helpers import non_dominated_sorting, find_extreme_points, find_intercepts, associate_to_niche, niching, uniform_reference_points 
+from ..helpers import non_dominated_sorting, find_extreme_points, find_intercepts, associate_to_niche, niching, uniform_reference_points, sort_and_select_population
 from ..base import Parameter, Individual, Optimizer
 from ..helpers import de_best_1_bin,de_rand_1_bin, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn,de_dmp, get_eval_param_matrix, get_objective_matrix, set_eval_parameters
 
@@ -142,7 +140,7 @@ class NSGA3(Optimizer):
         # Crossover and Mutate the doe individuals to generate the next individuals used in the population
         # Sort the population into [fill in here]
         ref_points = uniform_reference_points(len(self.objectives), p=self.pareto_resolution, scaling=None)
-        individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(individuals=individuals,reference_points=ref_points)
+        individuals,best_point, worst_point, extreme_points = sort_and_select_population(individuals=individuals,reference_points=ref_points, pop_size=self.pop_size)
         self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1, reference_points=ref_points)
 
 
@@ -169,7 +167,7 @@ class NSGA3(Optimizer):
             pop_diversity = diversity(newIndividuals)       # Calculate diversity 
             pop_dist = distance(individuals,newIndividuals) # Calculate population distance between past and future
             newIndividuals.extend(individuals) # add the previous population to the pool                                    
-            individuals,best_point, worst_point, extreme_points = self.sort_and_select_population(newIndividuals,reference_points)            
+            individuals,best_point, worst_point, extreme_points = sort_and_select_population(newIndividuals,reference_points, self.pop_size)            
             self.append_restart_file(individuals)        # Keep the last designs
 
             
@@ -183,61 +181,7 @@ class NSGA3(Optimizer):
             pop_start+=1 # increment the population
         # * End Loop through all individuals
     
-    def sort_and_select_population(self,individuals:List[Individual], reference_points:np.ndarray):
-        """Takes a list of individuals, finds the fronts and the best designs
-            
-            Code is a combination from deap and yarpiz
-            https://github.com/DEAP
-            https://yarpiz.com/456/ypea126-nsga3
-
-        Args:
-            individuals (List[Individual]): List of individuals from a DOE or POP or anything really
-            reference_points (np.ndarray): reference points along the pareto front.  
-
-        Raises:
-            Exception: something bad has happened
-
-        Returns:
-            (tuple): containing
-
-                **chosen** (List[List[int]]): individuals along front in order of best to worst front 
-                **best_point** (int): index of best individual 
-                **worst_point** (int): index of worst individual 
-                **extreme_points** (List[int]):  indexies of the extreme point 
-        """
-        
-        if (self.pop_size>len(individuals)):
-            raise Exception("population size needs to be <= the number of individuals")
-        
-
-        pareto_fronts = non_dominated_sorting(individuals,self.pop_size)
-        fitnesses = np.array([ind.objectives for f in pareto_fronts for ind in f])
-        fitnesses *= -1
-
-        best_point = np.min(fitnesses,axis=0)
-        worst_point = np.max(fitnesses,axis=0)
-
-        extreme_points = find_extreme_points(fitnesses,best_point)
-        front_worst = np.max(fitnesses[:sum(len(f) for f in pareto_fronts),:],axis=0)
-        intercepts = find_intercepts(extreme_points,best_point,worst_point,front_worst)
-        niches, dist = associate_to_niche(fitnesses, reference_points, best_point, intercepts)
-        
-        # Get counts per niche for individuals in all front but the last
-        niche_counts = np.zeros(len(reference_points), dtype=int)
-        index, counts = np.unique(niches[:-len(pareto_fronts[-1])], return_counts=True)
-        niche_counts[index] = counts
-
-        # Choose individuals from all fronts but the last
-        chosen = list(chain(*pareto_fronts[:-1]))
-
-        # Use niching to select the remaining individuals
-        sel_count = len(chosen)
-        n = self.pop_size - sel_count
-        selected = niching(pareto_fronts[-1], n, niches[sel_count:], dist[sel_count:], niche_counts)
-        chosen.extend(selected)
-
-        return chosen, best_point, worst_point, extreme_points
-
+    
     
     
 

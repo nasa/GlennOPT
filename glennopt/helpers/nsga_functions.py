@@ -1,9 +1,8 @@
-import copy
 import numpy as np
 from collections import defaultdict
-from numpy import linalg as LA
-from typing import Tuple, TypeVar,List
+from typing import Tuple,List
 from ..base import Individual
+from itertools import chain
 
 def non_dominated_sorting(individuals:List[Individual],k:int,first_front_only=False):
     """Loops through the list of individuals and sorts through them. 
@@ -250,3 +249,59 @@ def uniform_reference_points(nobj, p=4, scaling=None):
         ref_points += (1 - scaling) / nobj
 
     return ref_points
+
+def sort_and_select_population(individuals:List[Individual], reference_points:np.ndarray,pop_size:int):
+        """Takes a list of individuals, finds the fronts and the best designs
+            
+            Code is a combination from deap and yarpiz
+            https://github.com/DEAP
+            https://yarpiz.com/456/ypea126-nsga3
+
+        Args:
+            individuals (List[Individual]): List of individuals from a DOE or POP or anything really
+            reference_points (np.ndarray): reference points along the pareto front.  
+            pop_size (int): Population size to consider 
+
+        Raises:
+            Exception: something bad has happened
+
+        Returns:
+            (tuple): containing
+
+                **chosen** (List[List[int]]): individuals along front in order of best to worst front 
+                **best_point** (int): index of best individual 
+                **worst_point** (int): index of worst individual 
+                **extreme_points** (List[int]):  indexies of the extreme point 
+        """
+        
+        if (pop_size>len(individuals)):
+            raise Exception("population size needs to be <= the number of individuals")
+        
+
+        pareto_fronts = non_dominated_sorting(individuals,pop_size)
+        fitnesses = np.array([ind.objectives for f in pareto_fronts for ind in f])
+        fitnesses *= -1
+
+        best_point = np.min(fitnesses,axis=0)
+        worst_point = np.max(fitnesses,axis=0)
+
+        extreme_points = find_extreme_points(fitnesses,best_point)
+        front_worst = np.max(fitnesses[:sum(len(f) for f in pareto_fronts),:],axis=0)
+        intercepts = find_intercepts(extreme_points,best_point,worst_point,front_worst)
+        niches, dist = associate_to_niche(fitnesses, reference_points, best_point, intercepts)
+        
+        # Get counts per niche for individuals in all front but the last
+        niche_counts = np.zeros(len(reference_points), dtype=int)
+        index, counts = np.unique(niches[:-len(pareto_fronts[-1])], return_counts=True)
+        niche_counts[index] = counts
+
+        # Choose individuals from all fronts but the last
+        chosen = list(chain(*pareto_fronts[:-1]))
+
+        # Use niching to select the remaining individuals
+        sel_count = len(chosen)
+        n = pop_size - sel_count
+        selected = niching(pareto_fronts[-1], n, niches[sel_count:], dist[sel_count:], niche_counts)
+        chosen.extend(selected)
+
+        return chosen, best_point, worst_point, extreme_points
