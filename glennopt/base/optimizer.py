@@ -278,7 +278,7 @@ class Optimizer:
         
         individuals = list()
         for ind_dir in ind_directories:
-            ind = Individual(objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters)
+            ind = Individual(objectives=copy.deepcopy(self.objectives),eval_parameters=copy.deepcopy(self.eval_parameters),performance_parameters=copy.deepcopy(self.performance_parameters))
             ind.name = ind_dir
             ind.population = population_number
             current_directory = os.getcwd()

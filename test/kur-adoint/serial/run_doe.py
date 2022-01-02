@@ -11,16 +11,16 @@ from glennopt.DOE import Default,CCD,FullFactorial,LatinHyperCube
 # Generate the DOE
 pop_size=16
 current_dir = os.getcwd()
-adjoint = Adjoint(eval_command = "python evaluation.py", eval_folder="Evaluation",optimization_folder=current_dir)
+adjoint = Adjoint(eval_command = "python evaluation.py", eval_folder="Evaluation",optimization_folder=current_dir,pareto_resolution=64)
 
 # doe = Default(15) # Default
 # doe = CCD()
 # doe = FullFactorial(levels=8)
 doe = LatinHyperCube(128)
 
-doe.add_parameter(name="x1",min_value=-10,max_value=10)
-doe.add_parameter(name="x2",min_value=-10,max_value=10)
-doe.add_parameter(name="x3",min_value=-10,max_value=10)
+doe.add_parameter(name="x1",min_value=-5,max_value=5)
+doe.add_parameter(name="x2",min_value=-5,max_value=5)
+doe.add_parameter(name="x3",min_value=-5,max_value=5)
 adjoint.add_eval_parameters(eval_params=doe.eval_parameters)
 
 doe.add_objectives(name='objective1')
