@@ -33,8 +33,8 @@ def adjoint_objective_func(x0:np.ndarray,model:nn.Module,reference_points:List[n
         reference_points (List[np.ndarray]): [description]
         intercepts (np.ndarray)
     """
-    for l in range(len(labels_scaler)):
-        x0[l] = labels_scaler[l].transform(x0[l].reshape(-1,1))
+    for l in range(len(features_scaler)):
+        x0[l] = features_scaler[l].transform(x0[l].reshape(-1,1))
 
     x0 = torch.as_tensor(x0,dtype=torch.float32)
     fitnesses = model(x0)
@@ -75,10 +75,8 @@ def calculate_distance(fitnesses:np.ndarray, reference_points:List[Tuple[float]]
     # distances = distances[range(niches.shape[0]), niches]
 
     return distances
-
-def transform_features(bounds:List[Tuple[float,float]], feature_names:List[str]):
-    
-def transform_labels(individuals:List[Individual]) -> List[Individual]:
+   
+def transform_data(individuals:List[Individual]) -> List[Individual]:
     """Normalizes all the individuals and returns the label scaler for objectives and feature scalers for the evaluation parameters 
 
     Args:
@@ -98,19 +96,34 @@ def transform_labels(individuals:List[Individual]) -> List[Individual]:
     labels_str = [o.name for o in individuals[0].get_objectives_list()]
 
     features = np.array([ind.eval_parameters for ind in individuals])
+    eval_parameters = individuals[0].get_eval_parameter_list()
+    feature_bounds = [(ep.min_value, ep.max_value) for ep in eval_parameters]
     features_str = [f.name for f in individuals[0].get_eval_parameter_list()]
 
-    def get_scalers(data:np.ndarray,data_keys:List[str]):
+    def get_scalers(data:np.ndarray,data_keys:List[str], bounds:List[Tuple[float,float]]=None):
+        """This returns the scaled data
+
+        Args:
+            data (np.ndarray): data as a numpy array
+            data_keys (List[str]): [description]
+            bounds (List[Tuple[float,float]], optional): If you specify a list of min and max [(0.1, 0.5)], we use these ranges to scale your features. Defaults to None.
+
+        Returns:
+            [type]: [description]
+        """
         new_data = np.zeros(data.shape)
         scalers = dict() # Scale each label
         for i in range(len(data_keys)):
             label_name = data_keys[i]
             scalers[label_name] = MinMaxScaler(feature_range=(0,1))
-            scalers[label_name].fit(data[:,i].reshape(-1,1))
+            if bounds:
+                scalers[label_name].fit(np.array(bounds[i]).reshape(-1,1))
+            else:
+                scalers[label_name].fit(data[:,i].reshape(-1,1))
             new_data[:,i] = scalers[label_name].transform(data[:,i].reshape(-1,1)).flatten()
         return scalers, new_data
     label_scalers, labels = get_scalers(labels, labels_str)
-    feature_scalers, features = get_scalers(features, features_str)
+    feature_scalers, features = get_scalers(features, features_str,feature_bounds)
     
     for i in range(labels.shape[0]):
         for j in range(len(labels_str)):
@@ -273,29 +286,24 @@ class Adjoint(Optimizer):
             raise Exception("Number of individuals in the restart file is less than the population size."
                 + " lower the population size or increase the DOE count(if restarting from a DOE)")
 
+        # Do this before going into the train loop. This part of the code should happen after a new population is evaluated 
+        chosen_individuals,best_point, worst_point, extreme_points = sort_and_select_population(individuals=individuals,reference_points=ref_points, pop_size=self.pareto_resolution)
 
         for pop in range(pop_start+1,pop_start+n_generations):  # Population Loop 
             ''' 
                 Train a Neural network on Individuals. Initially this is all the individuals
             '''
-            if not self.model:
-                self.train(individuals, False) # returns the normalized set of individuals
-                newIndividuals = list()
-            else:
-                individuals.extend(newIndividuals)
-                individuals_normalized = self.train(individuals, False) # When we read in the new individuals, these values are not normalized
-                newIndividuals.clear()
+            self.train(individuals, False)   
+            newIndividuals = list()
 
             label_scalers = [self.label_scalers[l] for l in self.labels_str]
             feature_scalers = [self.feature_scalers[l] for l in self.features_str]
             '''
                 Run parts of NSGA3 code to find intercepts 
             '''
-            pareto_fronts = non_dominated_sorting(individuals,self.pareto_resolution)
+            pareto_fronts = non_dominated_sorting(individuals,self.pareto_resolution*2)
             fitnesses = np.array([ind.objectives for f in pareto_fronts for ind in f])
-            fitnesses *= -1
-
-            chosen_individuals,best_point, worst_point, extreme_points = sort_and_select_population(individuals=individuals,reference_points=ref_points, pop_size=self.pareto_resolution)
+            fitnesses *= -1            
 
             front_worst = np.max(fitnesses[:sum(len(f) for f in pareto_fronts),:],axis=0)
             intercepts = find_intercepts(extreme_points,best_point,worst_point,front_worst)
@@ -308,7 +316,7 @@ class Adjoint(Optimizer):
             features = np.array([ind.eval_parameters for ind in chosen_individuals])       # Normalized Features
             for o in range(self.pareto_resolution):
                 x0 = features[random.randrange(0,len(features))]
-                res = minimize(adjoint_objective_func,x0,bounds=bounds,args=(self.model,ref_points,intercepts,o, best_point,label_scalers,feature_scalers), method="Nelder-Mead")
+                res = minimize(adjoint_objective_func,x0,bounds=bounds,args=(self.model,ref_points,intercepts,o, best_point,label_scalers,feature_scalers), method="Powell")
                 newIndividuals.append(
                     Individual(eval_parameters=set_eval_parameters(self.eval_parameters,res.x),
                         objectives=self.objectives,performance_parameters=self.performance_parameters)
@@ -326,6 +334,10 @@ class Adjoint(Optimizer):
 
             self.append_restart_file(newIndividuals)        # Keep the last designs
             self.append_history_file(pop,newIndividuals[0],pop_diversity,pop_dist)
+            individuals.extend(newIndividuals)
+
+            # Sort and select 2x the amount of individuals for training 
+            individuals,best_point, worst_point, extreme_points = sort_and_select_population(individuals=individuals,reference_points=ref_points, pop_size=self.pareto_resolution*2)
 
             if self.single_folder_eval:
                 # Delete the population folder

@@ -34,5 +34,5 @@ doe.add_perf_parameter(name='p2')
 adjoint.add_performance_parameters(performance_params= doe.perf_parameters)
 
 # adjoint.start_doe(doe.generate_doe())
-adjoint.optimize_from_population(pop_start=-1,n_generations=20)
+adjoint.optimize_from_population(pop_start=-1,n_generations=40)
 

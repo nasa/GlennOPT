@@ -169,7 +169,6 @@ class NSGA3(Optimizer):
             newIndividuals.extend(individuals) # add the previous population to the pool                                    
             individuals,best_point, worst_point, extreme_points = sort_and_select_population(newIndividuals,reference_points, self.pop_size)            
             self.append_restart_file(individuals)        # Keep the last designs
-
             
             self.append_history_file(pop,individuals[0],pop_diversity,pop_dist)
 

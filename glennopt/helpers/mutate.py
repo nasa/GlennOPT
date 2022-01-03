@@ -135,7 +135,7 @@ def de_best_1_bin(best:Individual,individuals:List[Individual],objectives:List[P
     newIndividuals = list()
     for i in range(new_pop.shape[0]): # loop for each individual set (nIndividuals)
         z = new_pop[i,:]
-        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
+        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=copy.deepcopy(objectives),performance_parameters=copy.deepcopy(performance_parameters)))
 
     return newIndividuals
 
@@ -207,7 +207,7 @@ def de_dmp_bak(best:Individual,individuals:List[Individual],objectives:List[Para
         #------------- Create The Individuals ------------
         for i in range(u.shape[0]): # loop for each individual set (nIndividuals)
             z = u[i,:]
-            newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
+            newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=copy.deepcopy(objectives),performance_parameters=copy.deepcopy(performance_parameters)))
         
         
     random.shuffle(newIndividuals)
@@ -272,7 +272,7 @@ def de_dmp(individuals:List[Individual],objectives:List[Parameter],eval_paramete
     #------------- Create The Individuals ------------
     for i in range(U.shape[0]): # loop for each individual set (nIndividuals)
         z = U[i,:]
-        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
+        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=copy.deepcopy(objectives),performance_parameters=copy.deepcopy(performance_parameters)))
         
         
     random.shuffle(newIndividuals)
@@ -330,7 +330,7 @@ def de_rand_1_bin(individuals:List[Individual],objectives:List[Parameter],eval_p
     newIndividuals = list()
     for i in range(new_pop.shape[0]): # loop for each individual set (nIndividuals)
         z = new_pop[i,:]
-        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
+        newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=copy.deepcopy(objectives),performance_parameters=copy.deepcopy(performance_parameters)))
 
     return newIndividuals
 
@@ -361,8 +361,8 @@ def simple(individuals:List[Individual],nCrossover:int,nMutation:int,objectives:
         y2 = individuals[rand_indx2].eval_parameters
         [y1_new, y2_new] = crossover(y1, y2)
         
-        crossover_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y1_new),objectives=objectives,performance_parameters=performance_parameters))        
-        crossover_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y2_new),objectives=objectives,performance_parameters=performance_parameters))
+        crossover_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y1_new),objectives=copy.deepcopy(objectives),performance_parameters=copy.deepcopy(performance_parameters)))        
+        crossover_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y2_new),objectives=copy.deepcopy(objectives),performance_parameters=copy.deepcopy(performance_parameters)))
     
     # Perform Mutation    
     mutation_individuals = list()
@@ -374,7 +374,7 @@ def simple(individuals:List[Individual],nCrossover:int,nMutation:int,objectives:
 
         y1_new = mutate(y1,ymin,ymax,mu,sigma)
 
-        mutation_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y1_new),objectives=objectives,performance_parameters=performance_parameters))
+        mutation_individuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,y1_new),objectives=copy.deepcopy(objectives),performance_parameters=copy.deepcopy(performance_parameters)))
     crossover_individuals.extend(mutation_individuals)
 
     return crossover_individuals
@@ -501,7 +501,7 @@ def de_rand_1_bin_spawn(individuals:List[Individual],objectives:List[Parameter],
         #------------- Create The Individuals ------------    
         for i in range(new_pop.shape[0]): # loop for each individual set (nIndividuals)
             z = new_pop[i,:]
-            newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=objectives,performance_parameters=performance_parameters))
+            newIndividuals.append(Individual(eval_parameters=set_eval_parameters(eval_parameters,z),objectives=copy.deepcopy(objectives),performance_parameters=copy.deepcopy(performance_parameters)))
         
     random.shuffle(newIndividuals)
 
