@@ -14,166 +14,16 @@ from torch.utils.data import DataLoader
 from torch.optim import LBFGS, AdamW
 from torch.utils.data import Dataset
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.metrics import mean_squared_error
 from ..helpers import MultiLayerLinear 
-from ..helpers import diversity, distance, set_eval_parameters, mutation_parameters, de_mutation_type, simple,de_rand_1_bin_spawn,de_dmp, de_best_1_bin,de_rand_1_bin
-from ..helpers import non_dominated_sorting, find_intercepts, uniform_reference_points, sort_and_select_population
+from ..helpers import diversity, distance, mutation_parameters, de_mutation_type, simple,de_dmp, de_best_1_bin,de_rand_1_bin
+from ..helpers import uniform_reference_points, sort_and_select_population
+from ..helpers import evaluation_func, transform_data, compute_mse
 from ..base import Parameter, Individual, Optimizer
 from .nsga3 import find_intercepts, find_extreme_points
-individual_list = List[Individual]
-
-@torch.no_grad()
-def evaluation_func(individuals:List[Individual], model:nn.Module, label_scalers:Dict[str,MinMaxScaler], feature_scalers:Dict[str,MinMaxScaler]):
-    """Evaluates the individuals with the neural network function 
-
-    Args:
-        x0 (np.ndarray): [description]
-        model (nn.Module): [description]
-        reference_points (List[np.ndarray]): [description]
-        intercepts (np.ndarray)
-    """
-    individuals, _, _, labels_str, features_str = transform_data(individuals, label_scalers, feature_scalers)    
-
-    features = np.array([ind.eval_parameters for ind in individuals])
-    features = torch.as_tensor(features,dtype=torch.float32)
-    fitnesses = model(features)
-
-    for i in range(len(individuals)):
-        for j,l in enumerate(labels_str):
-            value = label_scalers[l].inverse_transform(fitnesses[i,j].detach().numpy().reshape(1,-1))
-            individuals[i].set_objective(l, value[0,0])
-
-        for k,l in enumerate(features_str):
-            value = feature_scalers[l].inverse_transform(features[i,k].detach().numpy().reshape(1,-1))
-            individuals[i].set_eval_parameter(l, value[0,0])
-
-    return individuals
-
-   
-def transform_data(individuals:List[Individual],label_scalers:Dict[str,MinMaxScaler]=None, feature_scalers:Dict[str,MinMaxScaler]=None) -> List[Individual]:
-    """Normalizes all the individuals and returns the label scaler for objectives and feature scalers for the evaluation parameters 
-
-    Args:
-        individuals (List[Individual]): Unnormalized list of individuals 
-        label_scalers (Dict[str,MinMaxScaler]): scalers that can be used to untransform the objectives. Optional, Default = None
-        feature_scalers (Dict[str,MinMaxScaler]): scalers that can be used to untransform the evaluation parameters. Optional, Default = None
-
-    Returns:
-        (tuple): Tuple containing
-
-            **Individuals** (List[Individual]): Normalized list of individuals
-            **label_scalers** (Dict[str,MinMaxScaler]): scalers that can be used to untransform the objectives
-            **feature_scalers** (Dict[str,MinMaxScaler]): scalers that can be used to untransform the evaluation parameters
-
-    """
-    individuals = [ind for ind in individuals if ind.IsFailed==False] # remove failed simulations
-
-    labels = np.array([ind.objectives for ind in individuals])
-    labels_str = [o.name for o in individuals[0].get_objectives_list()]
-
-    features = np.array([ind.eval_parameters for ind in individuals])
-    eval_parameters = individuals[0].get_eval_parameter_list()
-    feature_bounds = [(ep.min_value, ep.max_value) for ep in eval_parameters]
-    features_str = [f.name for f in individuals[0].get_eval_parameter_list()]
-
-    def get_scalers(data:np.ndarray,data_keys:List[str], bounds:List[Tuple[float,float]]=None):
-        """This returns the scaled data
-
-        Args:
-            data (np.ndarray): data as a numpy array
-            data_keys (List[str]): [description]
-            bounds (List[Tuple[float,float]], optional): If you specify a list of min and max [(0.1, 0.5)], we use these ranges to scale your features. Defaults to None.
-
-        Returns:
-            [type]: [description]
-        """
-        new_data = np.zeros(data.shape)
-        scalers = dict() # Scale each label
-        for i in range(len(data_keys)):
-            label_name = data_keys[i]
-            scalers[label_name] = MinMaxScaler(feature_range=(0,1))
-            # scalers[label_name] = StandardScaler()
-            if bounds:
-                scalers[label_name].fit(np.array(bounds[i]).reshape(-1,1))
-            else:
-                scalers[label_name].fit(data[:,i].reshape(-1,1))
-            new_data[:,i] = scalers[label_name].transform(data[:,i].reshape(-1,1)).flatten()
-        return scalers, new_data
-    
-    if label_scalers == None:
-        label_scalers, labels = get_scalers(labels, labels_str)
-    else:
-        _, labels = get_scalers(labels, labels_str)
-    
-    if feature_scalers == None:
-        # feature_scalers, features = get_scalers(features, features_str,feature_bounds)
-        feature_scalers, features = get_scalers(features, features_str)
-    else:
-        # _, features = get_scalers(features, features_str,feature_bounds)
-        _, features = get_scalers(features, features_str)
-
-    for i in range(labels.shape[0]):
-        for j in range(len(labels_str)):
-            individuals[i].set_objective(labels_str[j],labels[i,j])
-
-    for i in range(features.shape[0]):
-        for j in range(len(features_str)):
-            individuals[i].set_eval_parameter(features_str[j],features[i,j])
-
-    return individuals, label_scalers, feature_scalers, labels_str, features_str
-
-def inverse_transform_data(label_scalers:Dict[str,MinMaxScaler], feature_scalers:Dict[str,MinMaxScaler],individuals:List[Individual]) -> List[Individual]:
-    """[summary]
-
-    Args:
-        label_scalers (Dict[str,MinMaxScaler]): [description]
-        feature_scalers (Dict[str,MinMaxScaler]): [description]
-        individuals (List[Individual]): [description]
-
-    Returns:
-        List[Individual]: [description]
-    """
-    individuals = [ind for ind in individuals if ind.IsFailed==False] # remove failed simulations
-
-    labels = np.array([ind.objectives for ind in individuals])
-    labels_str = [o.name for o in individuals[0].get_objectives_list()]
-
-    features = np.array([ind.eval_parameters for ind in individuals])
-    features_str = [f.name for f in individuals[0].get_eval_parameter_list()]
-    
-    for i in range(len(labels_str)):
-        label_str = labels_str[i]
-        labels[:,i] = label_scalers[label_str].inverse_transform(labels[:,i].reshape(-1,1)).flatten()
-    
-    for i in range(len(features_str)):
-        feature_str = features_str[i]
-        features[:,i] = feature_scalers[feature_str].inverse_transform(features[:,i].reshape(-1,1)).flatten()
-
-    for i in range(labels.shape[0]):
-        for j in range(len(labels_str)):
-            individuals[i].set_objective(labels_str[j],labels[i,j])
-
-    for i in range(features.shape[0]):
-        for j in range(len(features_str)):
-            individuals[i].set_eval_parameter(features_str[j],features[i,j])
-    return individuals
-
-def compute__mse(ml_individuals:List[Individual],eval_individuals:List[Individual]):
-    passed_simulations = [i for i in range(len(eval_individuals)) if eval_individuals[i].IsFailed==False] # remove failed simulations
-
-    ml_individuals = [ml_individuals[i] for i in passed_simulations]
-    eval_individuals = [eval_individuals[i] for i in passed_simulations]
-
-    objectives1 = np.array([ind.objectives for ind in ml_individuals])
-    objectives2 = np.array([ind.objectives for ind in eval_individuals])
-    return mean_squared_error(objectives1,objectives2)
-    # mse = ((objectives1 - objectives2)**2).mean(axis=0)
-    # return mse
 
 
 class NSGA3_ML(Optimizer):
-    def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation", optimization_folder:str=None,single_folder_eval:bool=False, overwrite_input_file:bool=False, linear_network:List[int]=[64,64,64,64],epochs:int=200, train_test_split:float=0.8,pop_size:int=32,ml_evals:int=20):
+    def __init__(self,eval_command:str = "python evaluation.py", eval_folder:str = "Evaluation", optimization_folder:str=None,single_folder_eval:bool=False, overwrite_input_file:bool=False, linear_network:List[int]=[64,64,64,64],epochs:int=100, train_test_split:float=0.8,pop_size:int=32,ml_evals:int=5):
         """The objective of adjoint is to find the minimum of the jacobian of the evaluation parameters.
 
         Args:
@@ -292,7 +142,7 @@ class NSGA3_ML(Optimizer):
                 n_test += batch_size
             train_running_loss /= n_train
             test_loss /= n_test
-
+        return train_running_loss, test_loss
             # print(f"Epoch: {epoch + 1:02}/{self.epochs} Train Loss: {train_running_loss:.5e} Test Loss: {test_loss:.5e}")
         
     def optimize_from_population(self,pop_start:int,n_generations:int):
@@ -316,17 +166,18 @@ class NSGA3_ML(Optimizer):
                 + " lower the population size or increase the DOE count(if restarting from a DOE)")
 
         # Do this before going into the train loop. This part of the code should happen after a new population is evaluated 
-        ref_points = uniform_reference_points(len(self.objectives), p=16, scaling=None)
+        ref_points = uniform_reference_points(len(self.objectives), p=4, scaling=None)
         individuals,best_point, worst_point, extreme_points = sort_and_select_population(individuals=newIndividuals,reference_points=ref_points, pop_size=self.pop_size)
         all_individuals = list() 
         all_individuals.extend(copy.deepcopy(individuals))
         for pop in range(pop_start+1,pop_start+n_generations):  # Population Loop 
-            # newIndividuals = self.__crossover_mutate__(individuals)
+            if self.ml_evals == 0:
+                newIndividuals = self.__crossover_mutate__(individuals) # This becomes normal nsga3
             
             ''' 
                 Train a Neural network on Individuals. Initially this is all the individuals
             '''
-            self.train(copy.deepcopy(all_individuals), False)
+            train_loss, test_loss = self.train(copy.deepcopy(all_individuals), False)
             
             '''
                 Calculate new evaluation points using neural networks
@@ -347,7 +198,8 @@ class NSGA3_ML(Optimizer):
             self.evaluate_population(individuals,pop)
             # self.evaluate_population(newIndividuals,pop)
             newIndividuals = self.read_population(pop)
-            print(f"mse {compute__mse(individuals,newIndividuals):03e}")
+            mse = compute_mse(individuals,newIndividuals)
+            print(f"mse {mse:03e}")
             # Sort and select
             pop_diversity = diversity(newIndividuals)       # Calculate diversity 
             pop_dist = distance(individuals,newIndividuals) # Calculate population distance between past and future
@@ -355,7 +207,7 @@ class NSGA3_ML(Optimizer):
             newIndividuals.extend(individuals) # add the previous population to the pool                                                
             individuals,best_point, worst_point, extreme_points = sort_and_select_population(newIndividuals,ref_points, self.pop_size)    # reduces the size of newIndividuals to the population size         
             self.append_restart_file(individuals)        # Keep the last designs
-            self.append_history_file(pop,individuals[0],pop_diversity,pop_dist)
+            self.append_history_file(pop,individuals[0],pop_diversity,pop_dist,train_loss,test_loss,mse)
 
             if self.single_folder_eval:
                 # Delete the population folder

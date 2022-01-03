@@ -16,7 +16,7 @@ ns = NSGA3_ML(eval_command = "python evaluation.py", eval_folder="Evaluation",op
 # doe = Default(15) # Default
 # doe = CCD()
 # doe = FullFactorial(levels=8)
-doe = FullFactorial(levels=8)
+doe = LatinHyperCube(128)
 
 doe.add_parameter(name="x1",min_value=-5,max_value=5)
 doe.add_parameter(name="x2",min_value=-5,max_value=5)
@@ -42,6 +42,6 @@ ns.mutation_params.mutation_type = de_mutation_type.de_rand_1_bin   # Choice of 
 ns.mutation_params.F = 0.8
 ns.mutation_params.C = 0.7
 
-# ns.start_doe(doe.generate_doe())
+ns.start_doe(doe.generate_doe())
 ns.optimize_from_population(pop_start=-1,n_generations=40)
 

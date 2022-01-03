@@ -157,3 +157,6 @@ cython_debug/
 # Glennopt generated folder
 /[Cc]alculation/
 Calculation/
+history.csv
+log.dat
+restart_file.csv

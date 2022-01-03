@@ -484,7 +484,7 @@ class Optimizer:
                 self.history = None
                 os.remove(self.__history_filename)
 
-    def append_history_file(self, pop:int, best_ind:Individual,diversity:float,distance:float):
+    def append_history_file(self, pop:int, best_ind:Individual,diversity:float,distance:float, train_loss:float=0, test_loss:float=0,mse:float=0):
         """Writes a history.csv file containing the best design(s) this function is called by the inheriting class
 
         Args:
@@ -515,8 +515,8 @@ class Optimizer:
         write_arrays(objective_names,objectives)
         write_arrays(perf_param_names,perf_param)
         
-        header.extend(['pop_diversity','pop_avg_distance'])
-        data.extend([diversity,distance])
+        header.extend(['pop_diversity','pop_avg_distance','train_loss','test_loss','actual_mse_loss'])
+        data.extend([diversity,distance,train_loss,test_loss,mse])
         if (not os.path.exists(self.__history_filename)):                        
             self.history = pd.DataFrame(dict(zip(header, data)),index=[0])
             self.history.to_csv(self.__history_filename)
