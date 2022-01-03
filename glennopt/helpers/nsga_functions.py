@@ -144,12 +144,12 @@ def find_intercepts(extreme_points:List[np.ndarray], best_point:np.ndarray, curr
     return intercepts
 
 
-def associate_to_niche(fitnesses:List[Tuple[float]], reference_points:List[Tuple[float]], best_point:np.ndarray, intercepts:np.ndarray):
+def associate_to_niche(fitnesses:np.ndarray, reference_points:np.ndarray, best_point:np.ndarray, intercepts:np.ndarray):
     """Associates individuals to reference points and calculates niche number. Corresponds to Algorithm 3 of Deb & Jain (2014).
 
     Args:
-        fitnesses (List[Tuple[float]]): These are a list of unnormalized objective values from all individuals.
-        reference_points (List[Tuple[float]]): List of tuples representing the ideal normalized pareto front/surface. Example for 2 objectives [ [0,1], [0.25, 0.75],[0.5, 0.5], [0.75, 0.25], [1, 0] ]
+        fitnesses (np.ndarray): multi-dimensional array of unnormalized objective values from all individuals.
+        reference_points (np.ndarray): multi-dimensional array representing the ideal normalized pareto front/surface. Example for 2 objectives [ [0,1], [0.25, 0.75],[0.5, 0.5], [0.75, 0.25], [1, 0] ]
         best_point (np.ndarray): Array representing the best individual's objective. Example for 2 objectives [7.28, -4.07]
         intercepts (np.ndarray): [description]
 

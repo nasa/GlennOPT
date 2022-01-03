@@ -75,7 +75,7 @@ class NSGA3_ML(Optimizer):
         """
         self.__mutation_params = v
 
-    def train(self,individuals:List[Individual],retrain:bool=False):
+    def train(self,individuals:List[Individual],retrain:bool=False) -> Tuple[float, float]:
         """Trains the neural network to predict the output given an input 
     
         Optimizer (LBFGS): 
@@ -85,7 +85,10 @@ class NSGA3_ML(Optimizer):
             individuals (List[Individual]): [description]
             retrain (bool, Optional): (True) retrains the existing model on new data. (False) create a new model
 
+        Returns:
+            Tuple[float float]: Train Loss and test loss 
         """
+        
         # * Normalizing the Data
         if retrain: # If we simply train it with more data then there's no reason create new normalization scalers
             normalized_individuals, label_scalers, feature_scalers, labels_str, features_str = transform_data(individuals,self.label_scalers,self.feature_scalers)
@@ -118,7 +121,7 @@ class NSGA3_ML(Optimizer):
         criterion = nn.MSELoss()
         
         for epoch in range(self.epochs):
-            train_running_loss = 0 
+            train_loss = 0 
             n_train = 0
             self.model.train()
             for i, (x, y) in enumerate(train_dl):
@@ -129,7 +132,7 @@ class NSGA3_ML(Optimizer):
                 loss.backward() # Zero gradients, backward pass, and update weights
                 self.optimizer.step()
                 # calculate the loss again for monitoring
-                train_running_loss += loss.item()
+                train_loss += loss.item()
                 n_train += batch_size
             
             test_loss = 0
@@ -140,10 +143,10 @@ class NSGA3_ML(Optimizer):
                 y_pred = self.model(x)
                 test_loss += criterion(y_pred, y).item()
                 n_test += batch_size
-            train_running_loss /= n_train
+            train_loss /= n_train
             test_loss /= n_test
-        return train_running_loss, test_loss
-            # print(f"Epoch: {epoch + 1:02}/{self.epochs} Train Loss: {train_running_loss:.5e} Test Loss: {test_loss:.5e}")
+        return train_loss, test_loss
+            # print(f"Epoch: {epoch + 1:02}/{self.epochs} Train Loss: {train_loss:.5e} Test Loss: {test_loss:.5e}")
         
     def optimize_from_population(self,pop_start:int,n_generations:int):
         """Reads the values of a population, this can be a DOE or a previous evaluation
@@ -170,10 +173,10 @@ class NSGA3_ML(Optimizer):
         individuals,best_point, worst_point, extreme_points = sort_and_select_population(individuals=newIndividuals,reference_points=ref_points, pop_size=self.pop_size)
         all_individuals = list() 
         all_individuals.extend(copy.deepcopy(individuals))
+
         for pop in range(pop_start+1,pop_start+n_generations):  # Population Loop 
             if self.ml_evals == 0:
-                newIndividuals = self.__crossover_mutate__(individuals) # This becomes normal nsga3
-            
+                newIndividuals = self.__crossover_mutate__(individuals) # This becomes normal nsga3            
             ''' 
                 Train a Neural network on Individuals. Initially this is all the individuals
             '''

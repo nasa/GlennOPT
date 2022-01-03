@@ -33,6 +33,12 @@ doe.add_perf_parameter(name='p2')
 doe.add_perf_parameter(name='p2')
 adjoint.add_performance_parameters(performance_params= doe.perf_parameters)
 
+# Parallel Settings (You don't need to run this block if you only want serial execution)
+adjoint.parallel_settings.concurrent_executions = 16    # Change to 1 for serial
+adjoint.parallel_settings.cores_per_execution = 0   
+adjoint.parallel_settings.execution_timeout = 0.2      # minutes
+
+
 # adjoint.start_doe(doe.generate_doe())
 adjoint.optimize_from_population(pop_start=-1,n_generations=40)
 
