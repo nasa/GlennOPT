@@ -11,7 +11,7 @@ from glennopt.DOE import Default,CCD,FullFactorial,LatinHyperCube
 # Generate the DOE
 pop_size=16
 current_dir = os.getcwd()
-adjoint = Adjoint(eval_command = "python evaluation.py", eval_folder="Evaluation",optimization_folder=current_dir,epochs=100)
+adjoint = Adjoint(eval_command = "python evaluation.py", eval_folder="Evaluation",optimization_folder=current_dir,epochs=150,pareto_resolution=48)
 
 # doe = Default(15) # Default
 # doe = CCD()
@@ -39,6 +39,6 @@ adjoint.parallel_settings.cores_per_execution = 0
 adjoint.parallel_settings.execution_timeout = 0.2      # minutes
 
 
-# adjoint.start_doe(doe.generate_doe())
+adjoint.start_doe(doe.generate_doe())
 adjoint.optimize_from_population(pop_start=-1,n_generations=40)
 

@@ -236,7 +236,7 @@ class Adjoint(Optimizer):
             for o in range(self.pareto_resolution):
                 x0 = features[random.randrange(0,len(features))]
                 # least_squares(adjoint_objective_func,x0,jac=)
-                res = minimize(adjoint_objective_func,x0,bounds=bounds,method="Nelder-Mead",args=(self.model,ref_points,intercepts,o, best_point,label_scalers,feature_scalers))
+                res = minimize(adjoint_objective_func,x0,bounds=bounds,method="Powell",args=(self.model,ref_points,intercepts,o, best_point,label_scalers,feature_scalers))
                 adjoint_objective_func(res.x,self.model,ref_points,intercepts,o, best_point,label_scalers,feature_scalers)                
                 newIndividuals.append(
                     Individual(eval_parameters=set_eval_parameters(self.eval_parameters,copy.deepcopy(res.x)),
