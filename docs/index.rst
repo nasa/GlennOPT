@@ -3,49 +3,22 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-
-
 GlennOPT Documentation
 ==================================
+GlennOPT is a general purpose multi-objective optimizer for computer simulations locally or on the super computer. One of the biggest problems when simulating many designs on a super computer are the unexpected problems that occur such as unexpected server crashes, out of storage, updates that stop the job from executing. 
 
-.. toctree::
-   :glob:
-   :maxdepth: 1
-   :caption: Notes
+GlennOPT is designed with this in mind. When an optimization crashes, you can restart GlennOPT and it will scan the execution folder either the DOE or POP folders and any simulation that did not yield an `output.txt` file will be restarted from it's local evaluation script. 
 
-   notes/installation
-   notes/single-objective
-   notes/multi-objective
-   notes/serial-parallel
+The number of files that GlennOPT produces is quite significant. It saves a copy of every single execution of the objective function. This is useful for generating data for machine learning. While many of these evaluations may not yield an optimized result, some may even fail. These extra data is useful for debugging/understanding the trends of your design space.
 
-.. toctree::
-   :glob:
-   :maxdepth: 1
-   :caption: Package Reference
+.. note::
+   GlennOPT does not solve CFD. It cannot provide direct gradients that relate your objective to the design parameters. The best method for doing this would be to use one of the surrogate models `NSOPT` and specify a minimization method from scipy that an estimate gradients 
+   https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html 
 
-   modules/base
-   modules/nsga3
-   modules/sode
-   modules/helpers
+What is an Individual?
+------------------------
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-Background 
-=================
-
-GlennOPT is a library used for single and multi-objective optimization for Computational Applications. There are many libraries out there that can do optimization but many of these are geared towards solving a particular function, calling it and retaining the `objectives` in memory while the optimizer goes about minimizing the objectives. This is great for a modeling where you always have a solution and maybe that's all you need. 
-
-Where GlennOPT really differs from other tools is it's ability to save and retain all the performance parameters, parameters, and the objectives the optimization along with the solutions. While many of these evaluations may not yield an optimized result, some may even fail. These extra data is useful for debugging/understanding the trends of your design space.
-
-The Individual
------------------
-
-In this documentation and the code you will hear a lot about `individual`. This represents your design parameters for a single evaluation. So lets take a simple function :math:`f(x) = x_1 + x_2 + (x_3)^2` the :math:`x` in :math:`f(x)` is a vector containing :math:`x_1`, :math:`x_2`, :math:`x_3`. This vector of :math:`x` is the evaluation parameters of an individual. An individual in GlennOPT is a class containing the evaluation parameters, performance parameters, objective values, and constraints.
+In this documentation and the code you will hear a lot about `Individual`. This represents your design parameters for a single evaluation. So lets take a simple function :math:`f(x) = x_1 + x_2 + (x_3)^2` the :math:`x` in :math:`f(x)` is a vector containing :math:`x_1`, :math:`x_2`, :math:`x_3`. This vector of :math:`x` is the evaluation parameters of an individual. An individual in GlennOPT is a class containing the evaluation parameters, performance parameters, objective values, and constraints.
 
 Say your objectives include these two functions :math:`f_1(x) and :math:f_2(x)` where x is a vector shared between these functions. The individual will contain f_1 and f_2. If you have other performance parameter such as Pressure(x) and Speed(x) these can also be tracked within an individual. 
 
@@ -71,5 +44,39 @@ It is reccomended to keep the following folder structure when performing the opt
    Data
       -Evaluation.py (Called by the optimizer, this can be your optimization function)
    optimization_setup.py (starts the optimization)
+
+
+Note about NAS (NASA Advance Super Computer) or any Torque/SLURM queuing system 
+################################################################################
+When executing on NAS it was found to be best to launch simulations directly from GlennOPT and have GlennOPT wait for the output.txt results. Think of doing a `qsub` to launch glennopt and then having glennopt do `qsub` to launch other executions. This is better for debugging failed simulations. 
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 1
+   :caption: Notes
+
+   notes/installation
+   notes/optimizers
+   
+
+.. toctree::
+   :glob:
+   :maxdepth: 1
+   :caption: Package Reference
+
+   modules/base
+   modules/nsga3
+   modules/sode
+   modules/helpers
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
+
 
 
