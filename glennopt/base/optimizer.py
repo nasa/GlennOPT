@@ -23,7 +23,7 @@ import matplotlib.cm as cm
 import numpy as np
 from .individual import Individual
 from .parameter import Parameter
-from ..helpers import copy_helper, parallel_settings, convert_to_ndarray
+from ..helpers import copy_helper, parallel_settings, convert_to_ndarray, check_if_duplicates
 import psutil
 
 class Optimizer: 
@@ -93,6 +93,15 @@ class Optimizer:
         # Cache storage
         self.pandas_cache = {} # Appends individuals to pandas dataframe each dictionar contains the population number
         self.single_folder_eval = single_folder_eval
+
+        
+        objective_names = [o.name for o in self.objectives]
+        eval_parameter_names = [o.name for o in self.eval_parameters]
+        performance_parameter_names = [o.name for o in self.performance_parameters]
+        assert check_if_duplicates(objective_names) == False, "Objective names have to be unique"
+        assert check_if_duplicates(eval_parameter_names) == False, "Evaluation Parameter names have to be unique"
+        assert check_if_duplicates(performance_parameter_names) == False, "Performance Parameter names have to be unique"
+
         
     @property
     def use_calculation_folder(self) -> bool:
@@ -269,7 +278,7 @@ class Optimizer:
         
         individuals = list()
         for ind_dir in ind_directories:
-            ind = Individual(objectives=self.objectives,eval_parameters=self.eval_parameters,performance_parameters=self.performance_parameters)
+            ind = Individual(objectives=copy.deepcopy(self.objectives),eval_parameters=copy.deepcopy(self.eval_parameters),performance_parameters=copy.deepcopy(self.performance_parameters))
             ind.name = ind_dir
             ind.population = population_number
             current_directory = os.getcwd()
@@ -475,7 +484,7 @@ class Optimizer:
                 self.history = None
                 os.remove(self.__history_filename)
 
-    def append_history_file(self, pop:int, best_ind:Individual,diversity:float,distance:float):
+    def append_history_file(self, pop:int, best_ind:Individual,diversity:float,distance:float, train_loss:float=0, test_loss:float=0,mse:float=0):
         """Writes a history.csv file containing the best design(s) this function is called by the inheriting class
 
         Args:
@@ -506,8 +515,8 @@ class Optimizer:
         write_arrays(objective_names,objectives)
         write_arrays(perf_param_names,perf_param)
         
-        header.extend(['pop_diversity','pop_avg_distance'])
-        data.extend([diversity,distance])
+        header.extend(['pop_diversity','pop_avg_distance','train_loss','test_loss','actual_mse_loss'])
+        data.extend([diversity,distance,train_loss,test_loss,mse])
         if (not os.path.exists(self.__history_filename)):                        
             self.history = pd.DataFrame(dict(zip(header, data)),index=[0])
             self.history.to_csv(self.__history_filename)

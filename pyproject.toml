@@ -15,6 +15,8 @@ diversipy = "*"
 doepy = "*" 
 dataclasses_json = "*"
 tqdm = "*"
+torch = "*"
+sklearn = "*"
 
 [tool.poetry.dev-dependencies]
 

@@ -6,7 +6,7 @@ from typing import List
 
 from ..base import Individual
 from .convert_to_ndarray import convert_to_ndarray
-from .non_dominated_sorting import non_dominated_sorting
+from .nsga_functions import non_dominated_sorting
 
 def get_best(individuals:List[Individual],pop_size:int):
     """Gets the best individual vs Pop. Some populations won't generate a better design but the best design will always be carried to the next population for crossover + mutation     
