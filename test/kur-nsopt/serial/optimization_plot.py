@@ -4,36 +4,35 @@ sys.path.insert(0,'../../../')
 from glennopt.base import Parameter
 from glennopt.helpers import mutation_parameters, de_mutation_type
 from glennopt.helpers import get_best,get_pop_best
-from glennopt.optimizers import Adjoint
-
+from glennopt.optimizers import NSOPT
 
 # Generate the DOE
 current_dir = os.getcwd()
-adjoint = Adjoint(eval_command = "python evaluation.py", eval_folder="Evaluation",optimization_folder=current_dir)
+ns = NSOPT(eval_command = "python evaluation.py", eval_folder="Evaluation",optimization_folder=current_dir)
 
 eval_parameters = []
 eval_parameters.append(Parameter(name="x1",min_value=-5,max_value=5))
 eval_parameters.append(Parameter(name="x2",min_value=-5,max_value=5))
 eval_parameters.append(Parameter(name="x3",min_value=-5,max_value=5))
-adjoint.add_eval_parameters(eval_params = eval_parameters)
+ns.add_eval_parameters(eval_params = eval_parameters)
 
 objectives = []
 objectives.append(Parameter(name='objective1'))
 objectives.append(Parameter(name='objective2'))
-adjoint.add_objectives(objectives=objectives)
+ns.add_objectives(objectives=objectives)
 
 # No performance Parameters
 performance_parameters = []
 performance_parameters.append(Parameter(name='p1'))
 performance_parameters.append(Parameter(name='p2'))
 performance_parameters.append(Parameter(name='p3'))
-adjoint.add_performance_parameters(performance_params=performance_parameters)
-# adjoint.start_doe(doe_size=40)
-# adjoint.optimize_from_population(pop_start=-1,n_generatioadjoint=10)
-individuals = adjoint.read_calculation_folder()
-adjoint.to_tecplot()
-adjoint.plot_2D('objective1','objective2',[-20,0],[-15,20])
-# adjoint.plot_2D('objective1','objective2')
+ns.add_performance_parameters(performance_params=performance_parameters)
+# ns.start_doe(doe_size=40)
+# ns.optimize_from_population(pop_start=-1,n_generations=10)
+individuals = ns.read_calculation_folder()
+ns.to_tecplot()
+ns.plot_2D('objective1','objective2',[-20,0],[-15,20])
+# ns.plot_2D('objective1','objective2')
 #%% Plot Best objective vs population
 # import matplotlib.pyplot as plt
 # import matplotlib.cm as cm
@@ -55,7 +54,7 @@ adjoint.plot_2D('objective1','objective2',[-20,0],[-15,20])
 #     objective_data.append(best_individual[objective_index].objectives[objective_index])
 
 # _,ax = plt.subplots()
-# colors = cm.rainbow(np.liadjointpace(0, 1, len(best_individuals.keys())))
+# colors = cm.rainbow(np.linspace(0, 1, len(best_individuals.keys())))
 # ax.scatter(list(best_individuals.keys()), objective_data, color='blue',s=10)
 # ax.set_xlabel('Population')
 # ax.set_ylabel('Objective {0} Value'.format(objective_index))
@@ -69,7 +68,7 @@ adjoint.plot_2D('objective1','objective2',[-20,0],[-15,20])
 
 # fig,ax = plt.subplots(figsize=(10,8))
 
-# colors = cm.rainbow(np.liadjointpace(0, 1, len(best_fronts)))        
+# colors = cm.rainbow(np.linspace(0, 1, len(best_fronts)))        
 # indx = 0
 # legend_labels = []
 # # Scan the pandas file, grab objectives for each population
@@ -87,7 +86,7 @@ adjoint.plot_2D('objective1','objective2',[-20,0],[-15,20])
 
 # ax.set_xlabel('Objective 1')
 # ax.set_ylabel('Objective 2')
-# ax.set_title('Non-dimeadjointional sorting: Best Front for each population')
+# ax.set_title('Non-dimensional sorting: Best Front for each population')
 # ax.legend(legend_labels)
 # fig.canvas.draw()
 # fig.canvas.flush_events()
