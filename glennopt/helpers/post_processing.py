@@ -71,11 +71,12 @@ def get_pop_best(individuals:List[Individual]):
             (tuple): tuple containing:
 
             **best_individuals** (List[Dict[str,List[Individual]]]): this is an array of individuals that are best at each objective
-                [ 
-                    POP001: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
-                    POP002: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
-                    POP003: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
-                ]
+
+                |    [ 
+                |        POP001: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
+                |        POP002: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
+                |        POP003: [best_individual_objective1, best_individual,objective2, best_individual,objective3], best_individual_compromise
+                |    ]
 
             **comp_individuals** (List[Individual]): this is an array of individuals that is the best compromise between all the objectives
 

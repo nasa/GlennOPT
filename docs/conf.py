@@ -22,8 +22,8 @@ copyright = '2021, Paht Juangphanich'
 author = 'Paht Juangphanich <paht.juangphanich@nasa.gov>'
 
 # The full version, including alpha/beta/rc tags
-version = '1.3.2' # glennopt.__version__
-release = '1.3.2' # glennopt.__version__
+version = '1.4.*' # glennopt.__version__
+release = '1.4.*' # glennopt.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -82,7 +82,10 @@ html_theme_options = {
     'navigation_depth': 2,
 }
 
-html_static_path = ['static']
+html_static_path = ['_static']
+html_css_files = [
+    'css/style.css',
+]
 rst_context = {'glennopt': glennopt}
 
 

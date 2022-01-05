@@ -392,6 +392,7 @@ def mutate(x1:np.ndarray,xmin:np.ndarray,xmax:np.ndarray,mu:float=0.02,sigma:flo
 
     Returns:
         np.ndarray: array of mutated values
+
     """
     nMu = math.ceil(mu*len(x1))
     j = np.random.randint(0,len(x1)-1,size=nMu)
@@ -446,11 +447,14 @@ def get_pairs(nIndividuals:int,nParents:int,parent_indx_seed=[]) -> List[int]:
     return parent_indicies
 
 def set_eval_parameters(eval_parameters:List[Parameter], x:np.ndarray):
-    """
-        Set the evaluation parameters 
-        Inputs:
-            eval_parameters - list of parameters as a class. x is mapped to eval_parameter.value
-            x - represents an the mutated value/array to be evaluated 
+    """Set the evaluation parameters 
+
+    Args:
+        eval_parameters (List[Parameter]): list of parameters as a class. x is mapped to eval_parameter.value
+        x (np.ndarray): represents an the mutated value/array to be evaluated 
+
+    Returns:
+        Parameter: returns the new parameter
     """
     parameters = copy.deepcopy(eval_parameters)
     for indx in range(len(parameters)):
@@ -470,7 +474,7 @@ def de_rand_1_bin_spawn(individuals:List[Individual],objectives:List[Parameter],
         C (float, optional): Crossover Factor. Defaults to 0.7.
 
     Returns:
-        [type]: [description]
+        List[Individual]: List of individuals
     """
     nIndividuals = len(individuals)
     pop,xmin,xmax = get_eval_param_matrix(individuals)
