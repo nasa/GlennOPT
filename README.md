@@ -23,7 +23,7 @@ Future Features
 
 
 # Tutorials
-[Multi-Objective Kursawe Function](https://colab.research.google.com/github/nasa/GlennOPT/blob/main/test/KUR/multi_objective_example.ipynb)
+[Multi-Objective Kursawe Function](https://colab.research.google.com/github/nasa/GlennOPT/blob/main/test/kur/multi_objective_example.ipynb)
 
 [Single Objective Rosenbrock](https://colab.research.google.com/github/nasa/GlennOPT/blob/main/test/Rosenbrock/RosenbrockExample.ipynb)
 
