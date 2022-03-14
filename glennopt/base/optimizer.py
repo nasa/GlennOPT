@@ -635,12 +635,14 @@ class Optimizer:
         # zones
         
         zones = []
-        i = 0
+        
         for key, df in self.pandas_cache.items():
-            zone_str = 'ZONE T = \"{0}\"\n'.format(key+"_"+df.iloc[0]['individual'])
-            data_str = ' '
+            i = 0
             for index, row in self.pandas_cache[key].iterrows():
+                zone_str = 'ZONE T = \"{0}\"\n'.format(key+"_"+df.iloc[i]['individual'])
+                data_str = ' '
                 data = []
+                i+=1
                 for col in self.pandas_cache[key].columns:
                     if col=='population':
                         if row[col] == "DOE":
@@ -652,6 +654,8 @@ class Optimizer:
                     else:
                         if type(row[col])== float:
                             data.append("{:.6E}".format(row[col]))
+                        elif type(row[col])== int:
+                            data.append("{0}".format(row[col]))
                         else:
                             data.append(row[col])
                 zones.append(zone_str)
