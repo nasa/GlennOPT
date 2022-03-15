@@ -1,10 +1,12 @@
 # GlennOPT
+> `pip install glennopt`
+
 ## Objective
 The objective of this project is to develop a standalone optimization tool that can be easily integrated into openmdao at a later stage. 
 This tool will be entirely written in python making it compatible with windows and linux. 
 
 ## Why this tool?
-"This tool overcomes some of the limitations of gradient based optimization where F(x) = y which isn't always true for all simulations. GlennOPT uses a variation of Genetic Optimizers called Differential Evolution (DE). DE is capable of handling failed simulations. In the event of a failure the objective is set to a high value making the individual" undesireable for mutation and crossover. The other reason why someone would use this tool is if they had other parameters besides the objective that they wanted to keep track of or constrain. A good example of this is optimizing turbomachinery. There are many other parameters other than efficiency and power that matter. You might want to keep track of the mach number entering and exiting the geometry, flow angles, just to name a few. If you need gradient optimization, I reccomend OpenMDAO.
+This tool overcomes some of the limitations of gradient based optimization where F(x) = y which isn't always true for all simulations. GlennOPT uses a variation of Genetic Optimizers called Differential Evolution (DE). DE is capable of handling failed simulations. In the event of a failure the objective is set to a high value making the individual" undesireable for mutation and crossover. The other reason why someone would use this tool is if they had other parameters besides the objective that they wanted to keep track of or constrain. A good example of this is optimizing turbomachinery. There are many other parameters other than efficiency and power that matter. You might want to keep track of the mach number entering and exiting the geometry, flow angles, just to name a few. If you need gradient optimization, I recommend OpenMDAO or scipy minimize. 
 
 ## Summary
 Many optimization packages seem like a compile of past tools written in other langauges, they lack unverisal features described above that can make big data really happen at Glenn
