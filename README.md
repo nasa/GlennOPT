@@ -42,3 +42,5 @@ Future Features
 # Funding
 The development of this library was supported by NASA AATT (Advance Air Transport Technology). The development is supported by NASA Glenn LTE Branch however anyone is welcome to contribute by submitting a pull request. 
 
+# License
+[NASA Open Source Agreement](https://opensource.org/licenses/NASA-1.3)
