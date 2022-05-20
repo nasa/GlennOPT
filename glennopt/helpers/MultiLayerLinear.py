@@ -25,9 +25,9 @@ class SimpleLinearModel(Module):
     
     def forward(self,x):
               
-        out1 = F.relu6(self.lin1(x))
-        out2 = F.relu6(self.lin2(out1))
-        out3 = F.relu6(self.lin3(out2))
+        out1 = F.tanh(self.lin1(x))
+        out2 = F.tanh(self.lin2(out1))
+        out3 = F.tanh(self.lin3(out2))
         out4 = self.lin4(out3)
         return out4
 

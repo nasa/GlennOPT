@@ -304,4 +304,4 @@ def sort_and_select_population(individuals:List[Individual], reference_points:np
         selected = niching(pareto_fronts[-1], n, niches[sel_count:], dist[sel_count:], niche_counts)
         chosen.extend(selected)
 
-        return chosen, best_point, worst_point, extreme_points
+        return chosen, best_point, worst_point, extreme_points, pareto_fronts[:-1]

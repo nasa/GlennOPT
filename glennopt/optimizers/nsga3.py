@@ -140,7 +140,7 @@ class NSGA3(Optimizer):
         # Crossover and Mutate the doe individuals to generate the next individuals used in the population
         # Sort the population into [fill in here]
         ref_points = uniform_reference_points(len(self.objectives), p=self.pareto_resolution, scaling=None)
-        individuals,best_point, worst_point, extreme_points = sort_and_select_population(individuals=individuals,reference_points=ref_points, pop_size=self.pop_size)
+        individuals,_, _, _,_ = sort_and_select_population(individuals=individuals,reference_points=ref_points, pop_size=self.pop_size)
         self.__optimize__(individuals=individuals,n_generations=n_generations,pop_start=pop_start+1, reference_points=ref_points)
 
 
@@ -167,7 +167,7 @@ class NSGA3(Optimizer):
             pop_diversity = diversity(newIndividuals)       # Calculate diversity 
             pop_dist = distance(individuals,newIndividuals) # Calculate population distance between past and future
             newIndividuals.extend(individuals) # add the previous population to the pool                                    
-            individuals,best_point, worst_point, extreme_points = sort_and_select_population(newIndividuals,reference_points, self.pop_size)            
+            individuals,_, _, _, _ = sort_and_select_population(newIndividuals,reference_points, self.pop_size)            
             self.append_restart_file(individuals)        # Keep the last designs
             
             self.append_history_file(pop,individuals[0],pop_diversity,pop_dist)

@@ -18,7 +18,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from ..helpers import MultiLayerLinear 
 from ..helpers import diversity, distance, set_eval_parameters
 from ..helpers import non_dominated_sorting, find_intercepts, uniform_reference_points, sort_and_select_population
-from ..helpers import compute_mse, transform_data
+from ..helpers import compute_loss, transform_data
 from ..base import Parameter, Individual, Optimizer
 from .nsga3 import find_intercepts
 individual_list = List[Individual]

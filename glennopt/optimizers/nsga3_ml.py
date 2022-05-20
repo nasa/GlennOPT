@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 from ..helpers import MultiLayerLinear 
 from ..helpers import diversity, distance, mutation_parameters, de_mutation_type, simple,de_dmp, de_best_1_bin,de_rand_1_bin
 from ..helpers import uniform_reference_points, sort_and_select_population
-from ..helpers import evaluation_func, transform_data, compute_mse
+from ..helpers import evaluation_func, transform_data, compute_weights, objective_weighted_loss
 from ..base import Parameter, Individual, Optimizer
 from .nsga3 import find_intercepts, find_extreme_points
 
@@ -48,8 +48,8 @@ class NSGA3_ML(Optimizer):
         self.pop_size = pop_size
         self.__mutation_params = mutation_parameters()
         
-        self.model = None
-        self.optimizer = None
+        self.models = list()
+        self.optimizers = list()
         self.label_scalers = None
         self.feature_scalers = None
         self.labels_str = None
@@ -75,20 +75,21 @@ class NSGA3_ML(Optimizer):
         """
         self.__mutation_params = v
 
-    def train(self,individuals:List[Individual],retrain:bool=False) -> Tuple[float, float]:
+    def train(self,individuals:List[Individual],weights:List[float],retrain:bool=False) -> Tuple[float, float]:
         """Trains the neural network to predict the output given an input 
     
         Optimizer (LBFGS): 
             https://johaupt.github.io/python/pytorch/neural%20network/optimization/pytorch_lbfgs.html 
 
         Args:
-            individuals (List[Individual]): [description]
+            individuals (List[Individual]): All the individuals from best to worst
+            weights (List[float]): List of weights for each individual
             retrain (bool, Optional): (True) retrains the existing model on new data. (False) create a new model
 
         Returns:
             Tuple[float float]: Train Loss and test loss 
         """
-        
+        weights = torch.tensor(weights,dtype=torch.float32)
         # * Normalizing the Data
         if retrain: # If we simply train it with more data then there's no reason create new normalization scalers
             normalized_individuals, label_scalers, feature_scalers, labels_str, features_str = transform_data(individuals,self.label_scalers,self.feature_scalers)
@@ -106,45 +107,52 @@ class NSGA3_ML(Optimizer):
         data = list(zip(features,labels))
         test_size = int(len(data)*(1-self.train_test_split))
         train_size = int(len(data) - test_size)
-        train_dataset, test_dataset = train_test_split(data,test_size=test_size,train_size=train_size,shuffle=True)
-        train_dl = DataLoader(train_dataset,batch_size=128,shuffle=True)
+
+        train_indices, test_indices = train_test_split(list(range(len(data))),test_size=test_size,train_size=train_size,shuffle=True)
+        train_dataset = [data[i],weights[i] for i in train_indices] # Tuple containing the weight
+        test_dataset = [data[i],weights[i] for i in test_indices]
+        
+        train_dl = DataLoader(train_dataset,batch_size=128,shuffle=False)
         test_dl = DataLoader(test_dataset,batch_size=128,shuffle=False)
         # * Defining the Model        
         n_inputs = features.shape[1]
         n_outputs = labels.shape[1]
-
-        if self.model is None or retrain == False:
-            self.model = MultiLayerLinear(n_inputs,n_outputs,h_sizes=self.linear_network)
-            # self.optimizer = LBFGS(self.model.parameters(), lr=0.0001,history_size=100, max_eval=int(20*1.25), max_iter=20)
-            self.optimizer = AdamW(self.model.parameters())
-
-        criterion = nn.MSELoss()
+        criterions = list()
         
-        for epoch in range(self.epochs):
-            train_loss = 0 
-            n_train = 0
-            self.model.train()
-            for i, (x, y) in enumerate(train_dl):
-                batch_size = x.shape[0]
-                self.optimizer.zero_grad()
-                y_pred = self.model(x)
-                loss = criterion(y_pred, y)
-                loss.backward() # Zero gradients, backward pass, and update weights
-                self.optimizer.step()
-                # calculate the loss again for monitoring
-                train_loss += loss.item()
-                n_train += batch_size
-            
-            test_loss = 0
-            n_test = 0
-            self.model.eval()
-            for j, (x,y) in enumerate(test_dl):
-                batch_size = x.shape[0]
-                y_pred = self.model(x)
-                test_loss += criterion(y_pred, y).item()
-                n_test += batch_size
-            train_loss /= n_train
-            test_loss /= n_test
+        if len(self.models) == 0 or retrain == False:
+            self.models.clear(); self.optimizers.clear()
+            for l in self.label_scalers: # For each label we make a new model 
+                self.models.append(MultiLayerLinear(n_inputs,1,h_sizes=self.linear_network))
+                # self.optimizer = LBFGS(self.model.parameters(), lr=0.0001,history_size=100, max_eval=int(20*1.25), max_iter=20)
+                self.optimizers.append(AdamW(self.models[-1].parameters()))
+                criterions.append(objective_weighted_loss())
+
+        for i in range(len(self.models)): # Train a model for each objective
+            for _ in range(self.epochs):
+                train_loss = 0 
+                n_train = 0
+                self.models[i].train()
+                for i, (x,w,y) in enumerate(train_dl):
+                    batch_size = x.shape[0]
+                    self.optimizers[i].zero_grad()
+                    y_pred = self.models[i](x)
+                    loss = criterions[i](y_pred, y[:,i], w)
+                    loss.backward() # Zero gradients, backward pass, and update weights
+                    self.optimizers[i].step()
+                    # calculate the loss again for monitoring
+                    train_loss += loss.item()
+                    n_train += batch_size
+                
+                test_loss = 0
+                n_test = 0
+                self.models[i].eval()
+                for j, (x,y) in enumerate(test_dl):
+                    batch_size = x.shape[0]
+                    y_pred = self.models[i](x)
+                    test_loss += criterions[i](y_pred, y, None).item()
+                    n_test += batch_size
+                train_loss /= n_train
+                test_loss /= n_test
         return train_loss, test_loss
             # print(f"Epoch: {epoch + 1:02}/{self.epochs} Train Loss: {train_loss:.5e} Test Loss: {test_loss:.5e}")
         
@@ -170,7 +178,8 @@ class NSGA3_ML(Optimizer):
 
         # Do this before going into the train loop. This part of the code should happen after a new population is evaluated 
         ref_points = uniform_reference_points(len(self.objectives), p=4, scaling=None)
-        individuals,best_point, worst_point, extreme_points = sort_and_select_population(individuals=newIndividuals,reference_points=ref_points, pop_size=self.pop_size)
+        individuals,_, _, _, pareto_groups = sort_and_select_population(individuals=newIndividuals,reference_points=ref_points, pop_size=self.pop_size)
+        weights = compute_weights(pareto_groups)
         all_individuals = list() 
         all_individuals.extend(copy.deepcopy(individuals))
 
@@ -180,7 +189,7 @@ class NSGA3_ML(Optimizer):
             ''' 
                 Train a Neural network on Individuals. Initially this is all the individuals
             '''
-            train_loss, test_loss = self.train(copy.deepcopy(all_individuals), False)
+            train_loss, test_loss = self.train(copy.deepcopy(all_individuals),weights, False)
             
             '''
                 Calculate new evaluation points using neural networks
@@ -201,8 +210,9 @@ class NSGA3_ML(Optimizer):
             self.evaluate_population(individuals,pop)
             # self.evaluate_population(newIndividuals,pop)
             newIndividuals = self.read_population(pop)
-            mse = compute_mse(individuals,newIndividuals)
-            print(f"mse {mse:03e}")
+
+            loss = objective_weighted_loss(individuals,newIndividuals, weights)
+            print(f"Pareto Weighted Loss {loss:03e}")
             # Sort and select
             pop_diversity = diversity(newIndividuals)       # Calculate diversity 
             pop_dist = distance(individuals,newIndividuals) # Calculate population distance between past and future
@@ -210,7 +220,7 @@ class NSGA3_ML(Optimizer):
             newIndividuals.extend(individuals) # add the previous population to the pool                                                
             individuals,best_point, worst_point, extreme_points = sort_and_select_population(newIndividuals,ref_points, self.pop_size)    # reduces the size of newIndividuals to the population size         
             self.append_restart_file(individuals)        # Keep the last designs
-            self.append_history_file(pop,individuals[0],pop_diversity,pop_dist,train_loss,test_loss,mse)
+            self.append_history_file(pop,individuals[0],pop_diversity,pop_dist,train_loss,test_loss,loss)
 
             if self.single_folder_eval:
                 # Delete the population folder

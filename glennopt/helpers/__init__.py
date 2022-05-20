@@ -9,4 +9,4 @@ from .post_processing import get_best, get_pop_best
 from .jacobian import gradient, jacobian
 from .MultiLayerLinear import MultiLayerLinear, SimpleLinearModel
 from .list_functions import check_if_duplicates
-from .nn_helpers import transform_data, inverse_transform_data, compute_mse, evaluation_func
+from .nn_helpers import *

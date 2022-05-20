@@ -1,3 +1,4 @@
+from cProfile import label
 from typing import Dict, List, Tuple
 import torch 
 import torch.nn as nn
@@ -110,7 +111,7 @@ def transform_data(individuals:List[Individual],label_scalers:Dict[str,MinMaxSca
     return individuals, label_scalers, feature_scalers, labels_str, features_str
 
 def inverse_transform_data(label_scalers:Dict[str,MinMaxScaler], feature_scalers:Dict[str,MinMaxScaler],individuals:List[Individual]) -> List[Individual]:
-    """[summary]
+    """Inverse scales the data. Data is scaled for machine learning, this scales it back to original values 
 
     Args:
         label_scalers (Dict[str,MinMaxScaler]): [description]
@@ -145,7 +146,62 @@ def inverse_transform_data(label_scalers:Dict[str,MinMaxScaler], feature_scalers
             individuals[i].set_eval_parameter(features_str[j],features[i,j])
     return individuals
 
-def compute_mse(ml_individuals:List[Individual],eval_individuals:List[Individual]):
+class objective_weighted_loss():
+    def __call__(self, labels:torch.Tensor,labels_actual:torch.Tensor,weights:List[float]=None):
+        """Weighted Loss based on minimum objective value 
+
+        Weighted error formula https://datascience.stackexchange.com/questions/66326/need-of-weighted-mean-squared-error 
+
+        Args:
+            labels (torch.Tensor): predicted value
+            labels_actual (torch.Tensor): Actual value
+            weights (List[float]): weights for each individual, if this is none then standard mse is computed
+        """
+        if weights == None:
+            weights = torch.ones(labels.shape[0])
+        return 1/len(weights) * torch.sum(weights*(labels - labels_actual)**2) / torch.sum(weights)
+        
+
+def compute_weights(pareto_group:List[List[Individual]],decay_rate:float=0.2) -> List[float]:
+    """Weights are based on how close the individual is to the pareto front. 
+
+    Example:
+    >>> chosen,best_point, worst_point, extreme_points = sort_and_select_population(individuals=newIndividuals,reference_points=ref_points, pop_size=self.pop_size)
+    >>> weights = compute_weights()
+
+    Args:
+        pareto_group (List[List[Individual]]): Pareto groups 
+        decay_rate (float, optional): _description_. Defaults to 0.2.
+
+    Returns:
+        List[float]: list of weights assigned to each individual
+    """
+    start_weight = 10 # starting weight
+    n_pareto = len(pareto_group) # This is number of pareto fronts 
+    group_weights = [start_weight * decay_rate**i  for i in range(n_pareto)] # Weight for each pareto group
+    all_weights = list()
+    for i in range(len(pareto_group)):
+        weights = list()
+        for _ in pareto_group[i]:
+            weights.append(group_weights[i])
+        all_weights.append(weights)
+    return flatten_list_of_list(all_weights)
+
+def flatten_list_of_list(regular_list:List[List[object]]) -> List[object]:
+    """Flattens a list of list 
+    https://stackabuse.com/python-how-to-flatten-list-of-lists/
+
+    Args:
+        regular_list (List[List[object]]): _description_
+
+    Returns:
+        List[object] : Returns a flattened list
+    """
+    return [item for sublist in regular_list for item in sublist]
+
+
+def compute_loss(ml_individuals:List[Individual],eval_individuals:List[Individual]):
+
     passed_simulations = [i for i in range(len(eval_individuals)) if eval_individuals[i].IsFailed==False] # remove failed simulations
 
     ml_individuals = [ml_individuals[i] for i in passed_simulations]
