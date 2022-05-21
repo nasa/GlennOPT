@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 from ..helpers import MultiLayerLinear 
 from ..helpers import diversity, distance, mutation_parameters, de_mutation_type, simple,de_dmp, de_best_1_bin,de_rand_1_bin
 from ..helpers import uniform_reference_points, sort_and_select_population
-from ..helpers import evaluation_func, transform_data, compute_weights, objective_weighted_loss
+from ..helpers import evaluation_func, transform_data, compute_weights, objective_weighted_loss, compute_loss
 from ..base import Parameter, Individual, Optimizer
 from .nsga3 import find_intercepts, find_extreme_points
 
@@ -109,8 +109,8 @@ class NSGA3_ML(Optimizer):
         train_size = int(len(data) - test_size)
 
         train_indices, test_indices = train_test_split(list(range(len(data))),test_size=test_size,train_size=train_size,shuffle=True)
-        train_dataset = [data[i],weights[i] for i in train_indices] # Tuple containing the weight
-        test_dataset = [data[i],weights[i] for i in test_indices]
+        train_dataset = [(data[i], weights[i]) for i in train_indices] # Tuple containing the weight
+        test_dataset = [(data[i],weights[i]) for i in test_indices]
         
         train_dl = DataLoader(train_dataset,batch_size=128,shuffle=False)
         test_dl = DataLoader(test_dataset,batch_size=128,shuffle=False)
@@ -126,13 +126,16 @@ class NSGA3_ML(Optimizer):
                 # self.optimizer = LBFGS(self.model.parameters(), lr=0.0001,history_size=100, max_eval=int(20*1.25), max_iter=20)
                 self.optimizers.append(AdamW(self.models[-1].parameters()))
                 criterions.append(objective_weighted_loss())
-
-        for i in range(len(self.models)): # Train a model for each objective
+        n = len(self.models)
+        for i in range(n): # Train a model for each objective
+            print(f"training model {i+1} out of {n}")
             for _ in range(self.epochs):
                 train_loss = 0 
                 n_train = 0
                 self.models[i].train()
-                for i, (x,w,y) in enumerate(train_dl):
+                for i, d in enumerate(train_dl):
+                    x,y = d[0]
+                    w = d[1]
                     batch_size = x.shape[0]
                     self.optimizers[i].zero_grad()
                     y_pred = self.models[i](x)
@@ -146,10 +149,12 @@ class NSGA3_ML(Optimizer):
                 test_loss = 0
                 n_test = 0
                 self.models[i].eval()
-                for j, (x,y) in enumerate(test_dl):
+                for j, d in enumerate(test_dl):
+                    x,y = d[0]
+                    w = d[1]
                     batch_size = x.shape[0]
                     y_pred = self.models[i](x)
-                    test_loss += criterions[i](y_pred, y, None).item()
+                    test_loss += criterions[i](y_pred, y[:,i], w).item()
                     n_test += batch_size
                 train_loss /= n_train
                 test_loss /= n_test
@@ -182,7 +187,7 @@ class NSGA3_ML(Optimizer):
         weights = compute_weights(pareto_groups)
         all_individuals = list() 
         all_individuals.extend(copy.deepcopy(individuals))
-
+        loss_fn = objective_weighted_loss()
         for pop in range(pop_start+1,pop_start+n_generations):  # Population Loop 
             if self.ml_evals == 0:
                 newIndividuals = self.__crossover_mutate__(individuals) # This becomes normal nsga3            
@@ -196,31 +201,33 @@ class NSGA3_ML(Optimizer):
             '''
             pop_dist_ml = list()
             pop_diversity_ml = list() 
-            for _ in range(self.ml_evals): # perform nsga evaluations on the ML Model 
+            for _ in range(self.ml_evals): # Perform nsga evaluations on the ML Model 
                 newIndividuals = self.__crossover_mutate__(individuals)
-                newIndividuals = evaluation_func(newIndividuals,self.model,self.label_scalers,self.feature_scalers)                
+                newIndividuals = evaluation_func(newIndividuals,self.models,self.label_scalers,self.feature_scalers)                
                 pop_diversity_ml.append(diversity(newIndividuals))       # Calculate diversity 
                 pop_dist_ml.append(distance(individuals,newIndividuals)) # Calculate population distance between past and future
 
                 newIndividuals.extend(individuals) # add the previous population to the pool                                    
 
-                individuals,best_point, worst_point, extreme_points = sort_and_select_population(newIndividuals,ref_points, self.pop_size) 
+                individuals,_, _, _,_ = sort_and_select_population(newIndividuals,ref_points, self.pop_size)
 
             # Evaluate
             self.evaluate_population(individuals,pop)
-            # self.evaluate_population(newIndividuals,pop)
             newIndividuals = self.read_population(pop)
+            _,_, _, _, pareto_groups = sort_and_select_population(newIndividuals,ref_points, self.pop_size)    # reduces the size of newIndividuals to the population size    
+            weights = compute_weights(pareto_groups)
+            loss = compute_loss(individuals,newIndividuals, weights)    # Compare how ML is predicting the latest pareto front 
+            print(f"Pareto Weighted Loss {loss:03e}")                   # This should improve as pareto front gets more well defined
 
-            loss = objective_weighted_loss(individuals,newIndividuals, weights)
-            print(f"Pareto Weighted Loss {loss:03e}")
-            # Sort and select
+            # Sort and select after extending the list of individuals with the old list
             pop_diversity = diversity(newIndividuals)       # Calculate diversity 
             pop_dist = distance(individuals,newIndividuals) # Calculate population distance between past and future
             all_individuals.extend(copy.deepcopy(newIndividuals))
-            newIndividuals.extend(individuals) # add the previous population to the pool                                                
-            individuals,best_point, worst_point, extreme_points = sort_and_select_population(newIndividuals,ref_points, self.pop_size)    # reduces the size of newIndividuals to the population size         
-            self.append_restart_file(individuals)        # Keep the last designs
-            self.append_history_file(pop,individuals[0],pop_diversity,pop_dist,train_loss,test_loss,loss)
+            individuals,_, _, _, pareto_groups = sort_and_select_population(all_individuals,ref_points, len(all_individuals))    # reduces the size of newIndividuals to the population size                
+            weights = compute_weights(pareto_groups)
+
+            self.append_restart_file(individuals)        # Keep the last best designs
+            self.append_history_file(pop,individuals[0],pop_diversity,pop_dist,train_loss,test_loss,loss) # Save the best one, for multi-objective this could be meaningless
 
             if self.single_folder_eval:
                 # Delete the population folder

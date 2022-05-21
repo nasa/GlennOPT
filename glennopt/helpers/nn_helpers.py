@@ -8,12 +8,12 @@ import numpy as np
 from sklearn.metrics import mean_squared_error
 
 @torch.no_grad()
-def evaluation_func(individuals:List[Individual], model:nn.Module, label_scalers:Dict[str,MinMaxScaler], feature_scalers:Dict[str,MinMaxScaler]):
+def evaluation_func(individuals:List[Individual], models:List[nn.Module], label_scalers:Dict[str,MinMaxScaler], feature_scalers:Dict[str,MinMaxScaler]):
     """Evaluates the individuals with the neural network function 
 
     Args:
         x0 (np.ndarray): [description]
-        model (nn.Module): [description]
+        models (List[nn.Module]): [description]
         reference_points (List[np.ndarray]): [description]
         intercepts (np.ndarray)
     """
@@ -21,7 +21,10 @@ def evaluation_func(individuals:List[Individual], model:nn.Module, label_scalers
 
     features = np.array([ind.eval_parameters for ind in individuals])
     features = torch.as_tensor(features,dtype=torch.float32)
-    fitnesses = model(features)
+    fitnesses = list()
+    for i in range(len(models)):
+        fitnesses.append(models[i](features))
+    fitnesses = torch.concat(fitnesses,dim=1)
 
     for i in range(len(individuals)):
         for j,l in enumerate(labels_str):
@@ -147,7 +150,7 @@ def inverse_transform_data(label_scalers:Dict[str,MinMaxScaler], feature_scalers
     return individuals
 
 class objective_weighted_loss():
-    def __call__(self, labels:torch.Tensor,labels_actual:torch.Tensor,weights:List[float]=None):
+    def __call__(self, labels:torch.Tensor,labels_actual:torch.Tensor,weights:torch.Tensor=None):
         """Weighted Loss based on minimum objective value 
 
         Weighted error formula https://datascience.stackexchange.com/questions/66326/need-of-weighted-mean-squared-error 
@@ -162,7 +165,7 @@ class objective_weighted_loss():
         return 1/len(weights) * torch.sum(weights*(labels - labels_actual)**2) / torch.sum(weights)
         
 
-def compute_weights(pareto_group:List[List[Individual]],decay_rate:float=0.2) -> List[float]:
+def compute_weights(pareto_group:List[List[Individual]],decay_rate:float=0.5) -> List[float]:
     """Weights are based on how close the individual is to the pareto front. 
 
     Example:
@@ -176,7 +179,7 @@ def compute_weights(pareto_group:List[List[Individual]],decay_rate:float=0.2) ->
     Returns:
         List[float]: list of weights assigned to each individual
     """
-    start_weight = 10 # starting weight
+    start_weight = 1 # starting weight
     n_pareto = len(pareto_group) # This is number of pareto fronts 
     group_weights = [start_weight * decay_rate**i  for i in range(n_pareto)] # Weight for each pareto group
     all_weights = list()
@@ -200,15 +203,30 @@ def flatten_list_of_list(regular_list:List[List[object]]) -> List[object]:
     return [item for sublist in regular_list for item in sublist]
 
 
-def compute_loss(ml_individuals:List[Individual],eval_individuals:List[Individual]):
+def compute_loss(ml_individuals:List[Individual],eval_individuals:List[Individual], weights:torch.Tensor):
+    """_summary_
 
+    Args:
+        ml_individuals (List[Individual]): _description_
+        eval_individuals (List[Individual]): _description_
+        weights (torch.Tensor): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    loss_fn = objective_weighted_loss()
     passed_simulations = [i for i in range(len(eval_individuals)) if eval_individuals[i].IsFailed==False] # remove failed simulations
 
     ml_individuals = [ml_individuals[i] for i in passed_simulations]
     eval_individuals = [eval_individuals[i] for i in passed_simulations]
 
-    objectives1 = np.array([ind.objectives for ind in ml_individuals])
-    objectives2 = np.array([ind.objectives for ind in eval_individuals])
-    return mean_squared_error(objectives1,objectives2)
+    objectives1 = torch.tensor([ind.objectives for ind in ml_individuals])
+    objectives2 = torch.tensor([ind.objectives for ind in eval_individuals])
+    losses = 0  
+    for i in range(objectives1.shape[1]):
+        losses += loss_fn(objectives1[:,i], objectives2[:,i],torch.tensor(weights))
+    losses /= objectives1.shape[1] 
+    return losses
     # mse = ((objectives1 - objectives2)**2).mean(axis=0)
     # return mse

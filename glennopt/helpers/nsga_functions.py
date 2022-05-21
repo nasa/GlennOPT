@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Tuple,List
 from ..base import Individual
 from itertools import chain
+from .nn_helpers import flatten_list_of_list
 
 def non_dominated_sorting(individuals:List[Individual],k:int,first_front_only=False):
     """Loops through the list of individuals and sorts through them. 
@@ -303,5 +304,6 @@ def sort_and_select_population(individuals:List[Individual], reference_points:np
         n = pop_size - sel_count
         selected = niching(pareto_fronts[-1], n, niches[sel_count:], dist[sel_count:], niche_counts)
         chosen.extend(selected)
-
-        return chosen, best_point, worst_point, extreme_points, pareto_fronts[:-1]
+        pareto_fronts = pareto_fronts[:-1]
+        pareto_fronts.append(selected)
+        return chosen, best_point, worst_point, extreme_points, pareto_fronts
