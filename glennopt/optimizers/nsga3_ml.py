@@ -133,7 +133,7 @@ class NSGA3_ML(Optimizer):
                 train_loss = 0 
                 n_train = 0
                 self.models[i].train()
-                for i, d in enumerate(train_dl):
+                for _, d in enumerate(train_dl):
                     x,y = d[0]
                     w = d[1]
                     batch_size = x.shape[0]
@@ -187,7 +187,7 @@ class NSGA3_ML(Optimizer):
         weights = compute_weights(pareto_groups)
         all_individuals = list() 
         all_individuals.extend(copy.deepcopy(individuals))
-        loss_fn = objective_weighted_loss()
+
         for pop in range(pop_start+1,pop_start+n_generations):  # Population Loop 
             if self.ml_evals == 0:
                 newIndividuals = self.__crossover_mutate__(individuals) # This becomes normal nsga3            
