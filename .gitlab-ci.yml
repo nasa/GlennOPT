@@ -12,10 +12,7 @@ job:
         - sudo yum install -y python3-pip
         - pip uninstall pandas numpy scipy -y -y -y
         - pip install pandas numpy scipy
-        - pip install setuptools cython
-        - cd python
-        - python3 setup.py install
-        - cd ../
+        - pip install setuptools cython glennopt
     artifacts:
         untracked: true
 
@@ -23,10 +20,10 @@ pages:
   stage: deploy
   script:
     - mkdir .public
-    - cd python/docs
+    - cd docs
     - make html
-    - cd ../../
-    - cp -r python/docs/_build/html/* .public
+    - cd ../
+    - cp -r docs/build/html/* .public
     - mv .public public
   artifacts:
     paths:
