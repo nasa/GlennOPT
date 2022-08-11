@@ -787,7 +787,8 @@ class Optimizer:
         """Computes the hypervolume which represents the convergence of the simulations. 
            The idea is, as the number of populations increase the idea is this converges to a pareto front/surface/something. 
            When you compute the hypervolume of your objectives, you should see that it's approaching some value. 
-        
+
+        Note: This function should be used with multi-objective problems 
 
         Args:
             individuals (List[Individual], optional): List of individuals, this can be from a restart file or if nothing is specified, it reads the calculation folder. Defaults to None.
