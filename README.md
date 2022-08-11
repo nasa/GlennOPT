@@ -1,4 +1,6 @@
 # GlennOPT
+
+## Installation Instructions
 > `pip install glennopt`
 
 ## Objective

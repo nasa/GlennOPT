@@ -14,6 +14,7 @@ import time
 import math
 import pprint
 import logging
+from warnings import catch_warnings
 import pandas as pd
 """
     External Modules
@@ -55,8 +56,12 @@ class Optimizer:
         self.name = name        
         assert opt_folder is not None
 
-        logging.basicConfig(filename=os.path.join(opt_folder,'log.dat'),  level=logging.DEBUG)
-        self.logger = logging.getLogger()
+        try:
+            logging.basicConfig(filename=os.path.join(opt_folder,'log.dat'),  level=logging.DEBUG)
+            self.logger = logging.getLogger()
+        except:
+            self.logger = None
+        
 
         if (not os.path.isabs(eval_folder)):
             eval_folder = os.path.join(os.getcwd(),eval_folder)
@@ -459,7 +464,8 @@ class Optimizer:
         """
         if p is not None:     
             for line in p.stdout:
-                self.logger.debug('POP {0} Indivudual: {1} Message: {2}'.format(pop,ind_name,line.decode("utf-8").replace('\n', ' ').replace('\r', '')).strip())
+                if (self.logger):
+                    self.logger.debug('POP {0} Indivudual: {1} Message: {2}'.format(pop,ind_name,line.decode("utf-8").replace('\n', ' ').replace('\r', '')).strip())
         
     def load_history_file(self):
         """Reads the history file if exists 
