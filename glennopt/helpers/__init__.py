@@ -10,3 +10,4 @@ from .jacobian import gradient, jacobian
 from .MultiLayerLinear import MultiLayerLinear, SimpleLinearModel
 from .list_functions import check_if_duplicates
 from .nn_helpers import *
+from .hypervolume import hypervolume

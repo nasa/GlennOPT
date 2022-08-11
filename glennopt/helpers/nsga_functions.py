@@ -4,6 +4,18 @@ from typing import Tuple,List
 from ..base import Individual
 from itertools import chain
 from .nn_helpers import flatten_list_of_list
+def dominates(x:np.ndarray,y:np.ndarray) -> bool:
+    """Returns true if all or any the objectives of x are less than y
+
+    Args:
+        x (np.ndarray): a set of individual x's objective values 
+        y (np.ndarray): a set of individual y's objective values 
+
+    Returns:
+        bool: True if individual x dominates individual y 
+    """        
+    b = np.all(x <= y) & np.any(x<y)
+    return b
 
 def non_dominated_sorting(individuals:List[Individual],k:int,first_front_only=False):
     """Loops through the list of individuals and sorts through them. 
@@ -19,18 +31,6 @@ def non_dominated_sorting(individuals:List[Individual],k:int,first_front_only=Fa
     Returns:
         List[Individual]: List containing fronts so List of lists of individuals. 
     """
-    def dominates(x:np.ndarray,y:np.ndarray) -> bool:
-        """Returns true if all or any the objectives of x are less than y
-
-        Args:
-            x (np.ndarray): a set of individual x's objective values 
-            y (np.ndarray): a set of individual y's objective values 
-
-        Returns:
-            bool: True if individual x dominates individual y 
-        """        
-        b = np.all(x <= y) & np.any(x<y)
-        return b
 
     map_fit_ind = defaultdict(list)
     for ind in individuals:

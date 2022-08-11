@@ -25,6 +25,7 @@ from .individual import Individual
 from .parameter import Parameter
 from ..helpers import copy_helper, parallel_settings, convert_to_ndarray, check_if_duplicates
 import psutil
+from ..helpers import hypervolume
 
 class Optimizer: 
     """
@@ -781,3 +782,23 @@ class Optimizer:
         self.objectives = [Parameter().from_dict(p) for p in settings['objectives']]
         self.performance_parameters = [Parameter().from_dict(p) for p in settings['perf_parameters']]
         self.read_calculation_folder()
+    
+    def hypervolume(self, individuals:List[Individual]=None) -> float:
+        """Computes the hypervolume which represents the convergence of the simulations. 
+           The idea is, as the number of populations increase the idea is this converges to a pareto front/surface/something. 
+           When you compute the hypervolume of your objectives, you should see that it's approaching some value. 
+        
+
+        Args:
+            individuals (List[Individual], optional): List of individuals, this can be from a restart file or if nothing is specified, it reads the calculation folder. Defaults to None.
+
+        Returns:
+            float: volume
+        """
+        if individuals is None: 
+            individuals = self.read_calculation_folder()
+        
+        individuals = [ind for ind in individuals if ind.IsFailed==False] # remove failed simulations
+
+        objectives = np.array([ind.objectives for ind in individuals]) # Rows = individuals, columns = objectives 
+        return hypervolume(objectives.transpose())
