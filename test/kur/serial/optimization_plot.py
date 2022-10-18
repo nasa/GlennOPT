@@ -93,7 +93,3 @@ ax.legend(legend_labels)
 fig.canvas.draw()
 fig.canvas.flush_events()
 plt.show()
-
-
-
-# %%
