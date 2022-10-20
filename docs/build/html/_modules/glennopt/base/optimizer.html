@@ -746,13 +746,15 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pandas_cache</span><span class="p">[</span><span class="s1">&#39;POP</span><span class="si">{0:03d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pop_number</span><span class="p">)]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Optimizer.to_tecplot"><a class="viewcode-back" href="../../../modules/base.html#glennopt.base.optimizer.Optimizer.to_tecplot">[docs]</a>    <span class="k">def</span> <span class="nf">to_tecplot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Converts the dataframe to a tecplot file (.tec)</span>
+<div class="viewcode-block" id="Optimizer.df_to_tecplot"><a class="viewcode-back" href="../../../modules/base.html#glennopt.base.optimizer.Optimizer.df_to_tecplot">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">df_to_tecplot</span><span class="p">(</span><span class="n">df_dict</span><span class="p">:</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span><span class="n">filename</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Staticmethod to convert a normal pandas dataframe to tecplot file</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            df (Dict[str,pd.DataFrame]): For example {&#39;DOE&#39;: pd.DataFrame}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pandas_cache</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span>
-        <span class="n">firstKey</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pandas_cache</span><span class="p">))</span>
-        <span class="n">firstPandas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pandas_cache</span><span class="p">[</span><span class="n">firstKey</span><span class="p">]</span>
+        <span class="n">firstKey</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">df_dict</span><span class="p">))</span>
+        <span class="n">firstPandas</span> <span class="o">=</span> <span class="n">df_dict</span><span class="p">[</span><span class="n">firstKey</span><span class="p">]</span>
 
         <span class="c1"># header</span>
         <span class="n">variables</span> <span class="o">=</span> <span class="p">[]</span>
@@ -761,17 +763,15 @@
         <span class="n">head</span> <span class="o">=</span> <span class="s1">&#39;VARIABLES = &#39;</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
 
         <span class="c1"># zones</span>
-        
         <span class="n">zones</span> <span class="o">=</span> <span class="p">[]</span>
-        
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pandas_cache</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">df_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pandas_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
                 <span class="n">zone_str</span> <span class="o">=</span> <span class="s1">&#39;ZONE T = </span><span class="se">\&quot;</span><span class="si">{0}</span><span class="se">\&quot;\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;individual&#39;</span><span class="p">])</span>
                 <span class="n">data_str</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
                 <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
-                <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pandas_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">col</span><span class="o">==</span><span class="s1">&#39;population&#39;</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;DOE&quot;</span><span class="p">:</span>
                             <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
@@ -790,16 +790,24 @@
                 <span class="n">zones</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         
         <span class="c1"># write to .tec file</span>
-        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_folder</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">))):</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_folder</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">))</span>
-
-        <span class="n">db_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_folder</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="s1">&#39;database.tec&#39;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">db_filename</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="c1"># write headers</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
             <span class="c1"># write zones</span>
             <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">zones</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">zone</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Optimizer.to_tecplot"><a class="viewcode-back" href="../../../modules/base.html#glennopt.base.optimizer.Optimizer.to_tecplot">[docs]</a>    <span class="k">def</span> <span class="nf">to_tecplot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts the dataframe to a tecplot file (.tec)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pandas_cache</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_folder</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">))):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_folder</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">))</span>
+
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_folder</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="s1">&#39;database.tec&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df_to_tecplot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pandas_cache</span><span class="p">,</span><span class="n">filename</span><span class="p">)</span></div>
+
     
 <div class="viewcode-block" id="Optimizer.create_restart"><a class="viewcode-back" href="../../../modules/base.html#glennopt.base.optimizer.Optimizer.create_restart">[docs]</a>    <span class="k">def</span> <span class="nf">create_restart</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a restart file containing all individuals of all populations</span>

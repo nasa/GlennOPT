@@ -653,6 +653,17 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="glennopt.base.optimizer.Optimizer.df_to_tecplot">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">df_to_tecplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/base/optimizer.html#Optimizer.df_to_tecplot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.base.optimizer.Optimizer.df_to_tecplot" title="Permalink to this definition"></a></dt>
+<dd><p>Staticmethod to convert a normal pandas dataframe to tecplot file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>Dict</em><em>[</em><em>str</em><em>,</em><em>pd.DataFrame</em><em>]</em>) – For example {‘DOE’: pd.DataFrame}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="glennopt.base.optimizer.Optimizer.evaluate_population">
 <span class="sig-name descname"><span class="pre">evaluate_population</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individuals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#glennopt.base.individual.Individual" title="glennopt.base.individual.Individual"><span class="pre">Individual</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">population_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/base/optimizer.html#Optimizer.evaluate_population"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.base.optimizer.Optimizer.evaluate_population" title="Permalink to this definition"></a></dt>
 <dd><p>Evaluates a population of individuals, checks to see if the population exists in the directory. If it already exists, do nothing, read the results, evaluate if there is no output file</p>
