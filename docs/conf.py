@@ -22,8 +22,8 @@ copyright = '2021, Paht Juangphanich'
 author = 'Paht Juangphanich <paht.juangphanich@nasa.gov>'
 
 # The full version, including alpha/beta/rc tags
-version = '1.4.*' # glennopt.__version__
-release = '1.4.*' # glennopt.__version__
+version = '1.4.5' # glennopt.__version__
+release = '1.4.5' # glennopt.__version__
 
 
 # -- General configuration ---------------------------------------------------

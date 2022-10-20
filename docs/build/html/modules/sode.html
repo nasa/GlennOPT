@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Single Objective Differential Evolution (SODE) &mdash; GlennOPT 1.4.* documentation</title>
+  <title>Single Objective Differential Evolution (SODE) &mdash; GlennOPT 1.4.5 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/style.css" type="text/css" />
@@ -15,7 +15,9 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -31,7 +33,7 @@
             <a href="../index.html" class="icon icon-home"> GlennOPT
           </a>
               <div class="version">
-                1.4.*
+                1.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -64,10 +66,26 @@
 <li class="toctree-l2"><a class="reference internal" href="base.html#module-glennopt.base.parameter">Parameter Class</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Single Objective Differential Evolution (SODE)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nsga3.html">Non-dominated sorting genetic algorithm (NSGA-III)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nsga3_ml.html">Non-dominated sorting genetic algorithm (NSGA-III) with Machine Learning Surrogate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nsopt.html">Non-dominated sorting optmization with Scipy</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Single Objective Differential Evolution (SODE)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#glennopt.optimizers.sode.SODE"><code class="docutils literal notranslate"><span class="pre">SODE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glennopt.optimizers.sode.random"><code class="docutils literal notranslate"><span class="pre">random()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glennopt.optimizers.sode.selection_type"><code class="docutils literal notranslate"><span class="pre">selection_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nsga3.html">Non-dominated sorting genetic algorithm (NSGA-III)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nsga3.html#glennopt.optimizers.nsga3.NSGA3"><code class="docutils literal notranslate"><span class="pre">NSGA3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="nsga3.html#glennopt.optimizers.nsga3.random"><code class="docutils literal notranslate"><span class="pre">random()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nsga3_ml.html">Non-dominated sorting genetic algorithm (NSGA-III) with Machine Learning Surrogate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nsga3_ml.html#glennopt.optimizers.nsga3_ml.NSGA3_ML"><code class="docutils literal notranslate"><span class="pre">NSGA3_ML</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nsopt.html">Non-dominated sorting optmization with Scipy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nsopt.html#glennopt.optimizers.nsopt.NSOPT"><code class="docutils literal notranslate"><span class="pre">NSOPT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="nsopt.html#glennopt.optimizers.nsopt.surrogate_objective_func"><code class="docutils literal notranslate"><span class="pre">surrogate_objective_func()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="helpers.html">GlennOPT Helpers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="helpers.html#module-glennopt.helpers.convert_to_ndarray">Converting to Numpy Array</a></li>
 <li class="toctree-l2"><a class="reference internal" href="helpers.html#module-glennopt.helpers.copy">Copy</a></li>
@@ -105,26 +123,26 @@
            <div itemprop="articleBody">
              
   <section id="module-glennopt.optimizers.sode">
-<span id="single-objective-differential-evolution-sode"></span><h1>Single Objective Differential Evolution (SODE)<a class="headerlink" href="#module-glennopt.optimizers.sode" title="Permalink to this headline"></a></h1>
+<span id="single-objective-differential-evolution-sode"></span><h1>Single Objective Differential Evolution (SODE)<a class="headerlink" href="#module-glennopt.optimizers.sode" title="Permalink to this heading"></a></h1>
 <p>Single objective differential evolution</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="glennopt.optimizers.sode.SODE">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">glennopt.optimizers.sode.</span></span><span class="sig-name descname"><span class="pre">SODE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_command</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'python</span> <span class="pre">evaluation.py'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Evaluation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pop_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/optimizers/sode.html#SODE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.optimizers.sode.SODE" title="Permalink to this definition"></a></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="glennopt.optimizers.sode.SODE.__crossover_mutate__">
-<span class="sig-name descname"><span class="pre">__crossover_mutate__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individuals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#glennopt.base.individual.Individual" title="glennopt.base.individual.Individual"><span class="pre">glennopt.base.individual.Individual</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/optimizers/sode.html#SODE.__crossover_mutate__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.optimizers.sode.SODE.__crossover_mutate__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__crossover_mutate__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individuals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#glennopt.base.individual.Individual" title="glennopt.base.individual.Individual"><span class="pre">Individual</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/optimizers/sode.html#SODE.__crossover_mutate__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.optimizers.sode.SODE.__crossover_mutate__" title="Permalink to this definition"></a></dt>
 <dd><p>Applies Crossover and Mutate</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="glennopt.optimizers.sode.SODE.__set_eval_parameters__">
-<span class="sig-name descname"><span class="pre">__set_eval_parameters__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/optimizers/sode.html#SODE.__set_eval_parameters__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.optimizers.sode.SODE.__set_eval_parameters__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__set_eval_parameters__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/optimizers/sode.html#SODE.__set_eval_parameters__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.optimizers.sode.SODE.__set_eval_parameters__" title="Permalink to this definition"></a></dt>
 <dd><p>only call this function within the class, do not expose to outside. once we have the parameters set, we might need to set the values based on an array.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="glennopt.optimizers.sode.SODE.optimize_from_population">
-<span class="sig-name descname"><span class="pre">optimize_from_population</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_generations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#glennopt.optimizers.sode.selection_type" title="glennopt.optimizers.sode.selection_type"><span class="pre">glennopt.optimizers.sode.selection_type</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">selection_type.best_design</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/optimizers/sode.html#SODE.optimize_from_population"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.optimizers.sode.SODE.optimize_from_population" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">optimize_from_population</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_generations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#glennopt.optimizers.sode.selection_type" title="glennopt.optimizers.sode.selection_type"><span class="pre">selection_type</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">selection_type.best_design</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/optimizers/sode.html#SODE.optimize_from_population"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.optimizers.sode.SODE.optimize_from_population" title="Permalink to this definition"></a></dt>
 <dd><p>Reads the values of a population, this can be a DOE or a previous evaluation
 Starts the optimization</p>
 <dl class="simple">
@@ -136,7 +154,7 @@ n_generations - number of generations to run for</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="glennopt.optimizers.sode.SODE.select_individuals">
-<span class="sig-name descname"><span class="pre">select_individuals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prevIndividuals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#glennopt.base.individual.Individual" title="glennopt.base.individual.Individual"><span class="pre">glennopt.base.individual.Individual</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newIndividuals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#glennopt.base.individual.Individual" title="glennopt.base.individual.Individual"><span class="pre">glennopt.base.individual.Individual</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/optimizers/sode.html#SODE.select_individuals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.optimizers.sode.SODE.select_individuals" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">select_individuals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prevIndividuals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#glennopt.base.individual.Individual" title="glennopt.base.individual.Individual"><span class="pre">Individual</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newIndividuals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#glennopt.base.individual.Individual" title="glennopt.base.individual.Individual"><span class="pre">Individual</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/optimizers/sode.html#SODE.select_individuals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.optimizers.sode.SODE.select_individuals" title="Permalink to this definition"></a></dt>
 <dd><p>Select individuals using diversity and distance. Use this only for single objective type problems. This is not suitable for multi-objective.</p>
 <dl>
 <dt>Inputs:</dt><dd><p>previndividuals - previous population
@@ -150,7 +168,7 @@ newIndividuals - new population</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="glennopt.optimizers.sode.SODE.start_doe">
-<span class="sig-name descname"><span class="pre">start_doe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doe_individuals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#glennopt.base.individual.Individual" title="glennopt.base.individual.Individual"><span class="pre">glennopt.base.individual.Individual</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doe_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/optimizers/sode.html#SODE.start_doe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.optimizers.sode.SODE.start_doe" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">start_doe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doe_individuals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#glennopt.base.individual.Individual" title="glennopt.base.individual.Individual"><span class="pre">Individual</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doe_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/glennopt/optimizers/sode.html#SODE.start_doe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glennopt.optimizers.sode.SODE.start_doe" title="Permalink to this definition"></a></dt>
 <dd><p>Starts a design of experiments. If the DOE has already started and there is an output file for an individual then the individual won’t be evaluated</p>
 </dd></dl>
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>glennopt.base.optimizer &mdash; GlennOPT 1.4.* documentation</title>
+  <title>glennopt.base.optimizer &mdash; GlennOPT 1.4.5 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/style.css" type="text/css" />
@@ -14,7 +14,9 @@
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -28,7 +30,7 @@
             <a href="../../../index.html" class="icon icon-home"> GlennOPT
           </a>
               <div class="version">
-                1.4.*
+                1.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -61,10 +63,26 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../modules/base.html#module-glennopt.base.parameter">Parameter Class</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules/sode.html">Single Objective Differential Evolution (SODE)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules/nsga3.html">Non-dominated sorting genetic algorithm (NSGA-III)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules/nsga3_ml.html">Non-dominated sorting genetic algorithm (NSGA-III) with Machine Learning Surrogate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules/nsopt.html">Non-dominated sorting optmization with Scipy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/sode.html">Single Objective Differential Evolution (SODE)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/sode.html#glennopt.optimizers.sode.SODE"><code class="docutils literal notranslate"><span class="pre">SODE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/sode.html#glennopt.optimizers.sode.random"><code class="docutils literal notranslate"><span class="pre">random()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/sode.html#glennopt.optimizers.sode.selection_type"><code class="docutils literal notranslate"><span class="pre">selection_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/nsga3.html">Non-dominated sorting genetic algorithm (NSGA-III)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3"><code class="docutils literal notranslate"><span class="pre">NSGA3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/nsga3.html#glennopt.optimizers.nsga3.random"><code class="docutils literal notranslate"><span class="pre">random()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/nsga3_ml.html">Non-dominated sorting genetic algorithm (NSGA-III) with Machine Learning Surrogate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/nsga3_ml.html#glennopt.optimizers.nsga3_ml.NSGA3_ML"><code class="docutils literal notranslate"><span class="pre">NSGA3_ML</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/nsopt.html">Non-dominated sorting optmization with Scipy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/nsopt.html#glennopt.optimizers.nsopt.NSOPT"><code class="docutils literal notranslate"><span class="pre">NSOPT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/nsopt.html#glennopt.optimizers.nsopt.surrogate_objective_func"><code class="docutils literal notranslate"><span class="pre">surrogate_objective_func()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules/helpers.html">GlennOPT Helpers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../modules/helpers.html#module-glennopt.helpers.convert_to_ndarray">Converting to Numpy Array</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../modules/helpers.html#module-glennopt.helpers.copy">Copy</a></li>
@@ -118,6 +136,7 @@
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">pprint</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">catch_warnings</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    External Modules</span>
@@ -158,8 +177,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>        
         <span class="k">assert</span> <span class="n">opt_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
-        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">opt_folder</span><span class="p">,</span><span class="s1">&#39;log.dat&#39;</span><span class="p">),</span>  <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">opt_folder</span><span class="p">,</span><span class="s1">&#39;log.dat&#39;</span><span class="p">),</span>  <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="kc">None</span>
+        
 
         <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">eval_folder</span><span class="p">)):</span>
             <span class="n">eval_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span><span class="n">eval_folder</span><span class="p">)</span>
@@ -562,7 +585,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>     
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">stdout</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;POP </span><span class="si">{0}</span><span class="s1"> Indivudual: </span><span class="si">{1}</span><span class="s1"> Message: </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span><span class="n">ind_name</span><span class="p">,</span><span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span></div>
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;POP </span><span class="si">{0}</span><span class="s1"> Indivudual: </span><span class="si">{1}</span><span class="s1"> Message: </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span><span class="n">ind_name</span><span class="p">,</span><span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span></div>
         
 <div class="viewcode-block" id="Optimizer.load_history_file"><a class="viewcode-back" href="../../../modules/base.html#glennopt.base.optimizer.Optimizer.load_history_file">[docs]</a>    <span class="k">def</span> <span class="nf">load_history_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Reads the history file if exists </span>
@@ -739,12 +763,14 @@
         <span class="c1"># zones</span>
         
         <span class="n">zones</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pandas_cache</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">zone_str</span> <span class="o">=</span> <span class="s1">&#39;ZONE T = </span><span class="se">\&quot;</span><span class="si">{0}</span><span class="se">\&quot;\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;individual&#39;</span><span class="p">])</span>
-            <span class="n">data_str</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pandas_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="n">zone_str</span> <span class="o">=</span> <span class="s1">&#39;ZONE T = </span><span class="se">\&quot;</span><span class="si">{0}</span><span class="se">\&quot;\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;individual&#39;</span><span class="p">])</span>
+                <span class="n">data_str</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
                 <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
                 <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pandas_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">col</span><span class="o">==</span><span class="s1">&#39;population&#39;</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;DOE&quot;</span><span class="p">:</span>
@@ -756,6 +782,8 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">col</span><span class="p">])</span><span class="o">==</span> <span class="nb">float</span><span class="p">:</span>
                             <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:.6E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">col</span><span class="p">]))</span>
+                        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">col</span><span class="p">])</span><span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+                            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">col</span><span class="p">]))</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
                 <span class="n">zones</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zone_str</span><span class="p">)</span>

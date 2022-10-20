@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; GlennOPT 1.4.* documentation</title>
+  <title>Index &mdash; GlennOPT 1.4.5 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
@@ -14,7 +14,9 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -28,7 +30,7 @@
             <a href="index.html" class="icon icon-home"> GlennOPT
           </a>
               <div class="version">
-                1.4.*
+                1.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -61,10 +63,26 @@
 <li class="toctree-l2"><a class="reference internal" href="modules/base.html#module-glennopt.base.parameter">Parameter Class</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="modules/sode.html">Single Objective Differential Evolution (SODE)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules/nsga3.html">Non-dominated sorting genetic algorithm (NSGA-III)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules/nsga3_ml.html">Non-dominated sorting genetic algorithm (NSGA-III) with Machine Learning Surrogate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules/nsopt.html">Non-dominated sorting optmization with Scipy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/sode.html">Single Objective Differential Evolution (SODE)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/sode.html#glennopt.optimizers.sode.SODE"><code class="docutils literal notranslate"><span class="pre">SODE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/sode.html#glennopt.optimizers.sode.random"><code class="docutils literal notranslate"><span class="pre">random()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/sode.html#glennopt.optimizers.sode.selection_type"><code class="docutils literal notranslate"><span class="pre">selection_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules/nsga3.html">Non-dominated sorting genetic algorithm (NSGA-III)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/nsga3.html#glennopt.optimizers.nsga3.NSGA3"><code class="docutils literal notranslate"><span class="pre">NSGA3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/nsga3.html#glennopt.optimizers.nsga3.random"><code class="docutils literal notranslate"><span class="pre">random()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules/nsga3_ml.html">Non-dominated sorting genetic algorithm (NSGA-III) with Machine Learning Surrogate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/nsga3_ml.html#glennopt.optimizers.nsga3_ml.NSGA3_ML"><code class="docutils literal notranslate"><span class="pre">NSGA3_ML</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules/nsopt.html">Non-dominated sorting optmization with Scipy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/nsopt.html#glennopt.optimizers.nsopt.NSOPT"><code class="docutils literal notranslate"><span class="pre">NSOPT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/nsopt.html#glennopt.optimizers.nsopt.surrogate_objective_func"><code class="docutils literal notranslate"><span class="pre">surrogate_objective_func()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="modules/helpers.html">GlennOPT Helpers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="modules/helpers.html#module-glennopt.helpers.convert_to_ndarray">Converting to Numpy Array</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/helpers.html#module-glennopt.helpers.copy">Copy</a></li>
