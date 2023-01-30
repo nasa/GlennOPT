@@ -257,9 +257,47 @@ class CCD(DOE):
         self.alpha = settings['alpha']
         self.face =settings['face']
 
+class BoxBehnken(DOE):
+    def __init__(self,center_points:int=1):
+        """Box Behnken design of experiments. Their primary advantage is in addressing the issue of where the experimental boundaries should be, and in particular to avoid treatment combinations that are extreme. Extreme = corner and star points. 
+
+        Args:
+            center (int, optional): Number of levels within the min and max values. Defaults to 4.
+        """
+        super(BoxBehnken, self).__init__()
+        self.center_points=center_points
+        
+    def create_design(self):        
+        param_dict = dict() 
+        for p in self.eval_parameters:
+            r = np.linspace(p.min_value ,p.max_value)
+            param_dict[p.name] = r.tolist()
+            
+        df = build.box_behnken(param_dict,center=self.center_points)
+        return df
+
+    def to_dict(self):
+        """Export the settings used to create the optimizer to dict. Also exports the optimization results if performed
+
+        Returns:
+            Dict: dictionary object 
+        """
+        settings = DOE.to_dict(self) # call super class 
+        settings['doe_name'] = 'fullfactorial'
+        settings['levels'] = self.levels
+        return settings
+
+    def from_dict(self, settings: dict):
+        """creates the object from a dictionary 
+
+        Args:
+            settings (dict): dictionary object created by calling to_dict()
+        """
+        super().from_dict(settings)
+        self.levels = settings['levels']
     
 class FullFactorial(DOE):
-    def __init__(self,levels=4):
+    def __init__(self,levels:int=4):
         """Factorial based design of experiments. number of evaluations scale with 2^(level-1)
 
         Args:
