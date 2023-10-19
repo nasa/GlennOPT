@@ -16,7 +16,7 @@ doepy = "*"
 dataclasses_json = "*"
 tqdm = "*"
 torch = "*"
-sklearn = "*"
+scikit-learn = "*"
 
 [tool.poetry.dev-dependencies]
 
