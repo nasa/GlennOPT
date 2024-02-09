@@ -625,13 +625,15 @@ class Optimizer:
         else:
             self.pandas_cache['POP{0:03d}'.format(pop_number)] = pd.DataFrame(data)
 
-    def to_tecplot(self):
-        """Converts the dataframe to a tecplot file (.tec)
+    @staticmethod
+    def df_to_tecplot(df_dict:Dict[str,pd.DataFrame],filename:str):
+        """Staticmethod to convert a normal pandas dataframe to tecplot file
+
+        Args:
+            df (Dict[str,pd.DataFrame]): For example {'DOE': pd.DataFrame}
         """
-        if len(self.pandas_cache)==0:
-            return
-        firstKey = next(iter(self.pandas_cache))
-        firstPandas = self.pandas_cache[firstKey]
+        firstKey = next(iter(df_dict))
+        firstPandas = df_dict[firstKey]
 
         # header
         variables = []
@@ -640,17 +642,15 @@ class Optimizer:
         head = 'VARIABLES = ' + ','.join(variables) + '\n'
 
         # zones
-        
         zones = []
-        
-        for key, df in self.pandas_cache.items():
+        for key, df in df_dict.items():
             i = 0
-            for index, row in self.pandas_cache[key].iterrows():
+            for index, row in df_dict[key].iterrows():
                 zone_str = 'ZONE T = \"{0}\"\n'.format(key+"_"+df.iloc[i]['individual'])
                 data_str = ' '
                 data = []
                 i+=1
-                for col in self.pandas_cache[key].columns:
+                for col in df_dict[key].columns:
                     if col=='population':
                         if row[col] == "DOE":
                             data.append(str(-1))
@@ -669,16 +669,24 @@ class Optimizer:
                 zones.append(' '.join(data) + '\n')
         
         # write to .tec file
-        if (not os.path.exists(os.path.join(self.optimization_folder,''))):
-            os.makedirs(os.path.join(self.optimization_folder,''))
-
-        db_filename = os.path.join(self.optimization_folder,'','database.tec')
-        with open(db_filename,'w') as f:
+        with open(filename,'w') as f:
             # write headers
             f.write(head)
             # write zones
             for zone in zones:
                 f.write(zone)
+
+    def to_tecplot(self):
+        """Converts the dataframe to a tecplot file (.tec)
+        """
+        if len(self.pandas_cache)==0:
+            return
+        if (not os.path.exists(os.path.join(self.optimization_folder,''))):
+            os.makedirs(os.path.join(self.optimization_folder,''))
+
+        filename = os.path.join(self.optimization_folder,'','database.tec')
+        self.df_to_tecplot(self.pandas_cache,filename)
+
     
     def create_restart(self):
         """Create a restart file containing all individuals of all populations

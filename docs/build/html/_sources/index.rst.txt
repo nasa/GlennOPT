@@ -31,7 +31,7 @@ Now that you have a rough background, please check out the tutorials and documen
 Optimization Folder Structure
 -----------------------------------------
 
-It is reccomended to keep the following folder structure when performing the optimization. The calculation folder will be created automatically by glennopt. However you need to put
+It is recommended to keep the following folder structure when performing the optimization. The calculation folder will be created automatically by glennopt. However you need to put
 
 ::
 
