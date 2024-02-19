@@ -17,7 +17,7 @@ ns = NSGA3(eval_command = "python evaluation.py", eval_folder="Evaluation",pop_s
 # doe = CCD()
 doe = FullFactorial(levels=8)
 # doe = LatinHyperCube(128)
-doe = BoxBehnken(center_points=1)
+# doe = BoxBehnken(center_points=1)
 
 doe.add_parameter(name="x1",min_value=-5,max_value=5)
 doe.add_parameter(name="x2",min_value=-5,max_value=5)

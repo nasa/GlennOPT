@@ -186,13 +186,13 @@ def niching(individuals, k, niches, distances, niche_counts):
         [type]: [description]
     """
     selected = []
-    available = np.ones(len(individuals), dtype=np.bool)
+    available = np.ones(len(individuals), dtype=np.bool_)
     while len(selected) < k:
         # Maximum number of individuals (niches) to select in that round
         n = k - len(selected)
 
         # Find the available niches and the minimum niche count in them
-        available_niches = np.zeros(len(niche_counts), dtype=np.bool)
+        available_niches = np.zeros(len(niche_counts), dtype=np.bool_)
         available_niches[np.unique(niches[available])] = True
         min_count = np.min(niche_counts[available_niches])
 
