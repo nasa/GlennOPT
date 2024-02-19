@@ -1,6 +1,6 @@
 
 import sys,os
-# sys.path.insert(0,'../../../')
+sys.path.insert(0,'../../../')
 from glennopt.base import Parameter
 from glennopt.helpers import parallel_settings, mutation_parameters,de_mutation_type
 from glennopt.optimizers import NSGA3 

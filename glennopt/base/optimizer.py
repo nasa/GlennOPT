@@ -527,7 +527,7 @@ class Optimizer:
             self.history = pd.DataFrame(dict(zip(header, data)),index=[0])
             self.history.to_csv(self.__history_filename)
         else:            
-            self.history = self.history.append(dict(zip(header, data)),ignore_index=True)
+            self.history = pd.concat([self.history,pd.DataFrame(dict(zip(header, data)),index=[1])])
             self.history.to_csv(self.__history_filename)
 
     def append_restart_file(self, individuals:List[Individual]):
