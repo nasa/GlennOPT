@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field, fields
+from enum import Enum
 from typing import List
 from dataclasses_json import dataclass_json
+
 
 @dataclass_json
 @dataclass
@@ -23,3 +25,6 @@ class Parameter:
     constraint_greater_than:float = None
     constraint_less_than:float = None
     value:float = 10000
+
+class ParameterList:
+    parameters:List[Parameter]
