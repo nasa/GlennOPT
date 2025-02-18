@@ -8,7 +8,6 @@ from tqdm import trange
 from doepy import build
 from dataclasses_json import dataclass_json
 
-
 class DOE:
     def __init__(self):
         """Initializes a design of experiments object
@@ -33,6 +32,12 @@ class DOE:
             constr_greater_than (float, optional): No need to input anything for this. Min and Max values are used to constrain. Defaults to None.
         """
         self.eval_parameters.append(Parameter(name, min_value,max_value,value_if_failed, constr_less_than, constr_greater_than))
+        self.num_parameters = len(self.eval_parameters)
+    
+    def add_parameter_list(self,name:str=None,length:int=2,min_value:float=None ,max_value:float=None,value_if_failed:float=100000, constr_less_than:float = None, constr_greater_than:float = None)->None:
+        for i in range(length):
+            parameter_name = f"{name}_{i:d}"
+            self.eval_parameters.append(Parameter(parameter_name, min_value,max_value,value_if_failed, constr_less_than, constr_greater_than))
         self.num_parameters = len(self.eval_parameters)
 
     def add_objectives(self,name:str = None, min_value:float = None ,max_value:float = None,value_if_failed:float = 100000, constr_less_than:float = None, constr_greater_than:float = None)->None:
