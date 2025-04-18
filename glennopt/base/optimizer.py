@@ -675,7 +675,7 @@ class Optimizer:
             for zone in zones:
                 f.write(zone)
 
-    def to_tecplot(self):
+    def to_tecplot(self,use_min_max:bool=False):
         """Converts the dataframe to a tecplot file (.tec)
         """
         if len(self.pandas_cache)==0:
@@ -684,6 +684,19 @@ class Optimizer:
             os.makedirs(os.path.join(self.optimization_folder,''))
 
         filename = os.path.join(self.optimization_folder,'','database.tec')
+        for i in range(len(self.objectives)):
+            if use_min_max == True:
+                if self.objectives[i].max_value is not None:
+                    column = self.objectives[i].name
+                    max_value = self.objectives[i].max_value
+                    for k in self.pandas_cache.keys():
+                        self.pandas_cache[k] = self.pandas_cache[k][(self.pandas_cache[k][column] <= max_value)]
+                        
+                if self.objectives[i].min_value is not None:
+                    column = self.objectives[i].name
+                    min_value = self.objectives[i].min_value
+                    for k in self.pandas_cache.keys():
+                        self.pandas_cache[k] = self.pandas_cache[k][(self.pandas_cache[k][column] >= min_value)]
         self.df_to_tecplot(self.pandas_cache,filename)
 
     

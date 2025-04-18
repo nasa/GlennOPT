@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "GlennOPT"
-version = "1.4.12"
+version = "1.5.0"
 description = "Multi and single objective optimization tool for cfd/computer simulations."
 authors = ["Paht Juangphanich <paht.juangphanich@nasa.gov>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
-matplotlib = "^3.3.1"
+python = ">3.11"
+matplotlib = ">3.3.2"
 numpy = "*"
 pandas = "*"
 psutil = "*"
