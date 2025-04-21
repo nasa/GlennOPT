@@ -8,7 +8,7 @@ def read_input_to_dict(input_file:str="input.dat"):
         for line in f:
             split_val = line.split('=')
             if len(split_val)==2: # x1 = 2 # Grab the 2
-                matches = re.findall("(\w+)_(\d+$)",split_val[0])
+                matches = re.findall("(\w+)_(\d+$)",split_val[0].strip())
                 if len(matches)>0:
                     parameter_name = matches[0][0].strip()
                     if parameter_name not in x.keys():
@@ -19,5 +19,3 @@ def read_input_to_dict(input_file:str="input.dat"):
                     x[parameter_name] = float(split_val[1])
 
     return x
-
-    
