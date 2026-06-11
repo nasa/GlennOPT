@@ -5,7 +5,7 @@ import copy
 from ..base import Individual, Parameter
 import numpy as np
 from tqdm import trange
-from doepy import build
+from pyDOE3 import lhs, ccdesign, bbdesign, fullfact
 from dataclasses_json import dataclass_json
 
 class DOE:
@@ -172,11 +172,10 @@ class LatinHyperCube(DOE):
             levels (int, optional): number of divisions of the evaluation parameters (this breaks it into cubes). Defaults to 4.
 
         Citations:
-            https://pythonhosted.org/pyDOE/randomized.html
-            https://doepy.readthedocs.io/en/latest/
+            https://pydoe3.readthedocs.io/en/latest/randomized.html
         """
         super(LatinHyperCube, self).__init__()
-        self.samples = samples 
+        self.samples = samples
         self.levels = levels
 
     def create_design(self) -> pd.DataFrame:
@@ -185,12 +184,15 @@ class LatinHyperCube(DOE):
         Returns:
             pd.DataFrame: dataframe object
         """
-        param_dict = dict()
-        for p in self.eval_parameters:
-            r = np.linspace(p.min_value ,p.max_value ,self.levels)
-            param_dict[p.name] = r.tolist()
-        df = build.space_filling_lhs(param_dict, self.samples)
-        return df
+        names = [p.name for p in self.eval_parameters]
+        n = len(self.eval_parameters)
+        unit = lhs(n, samples=self.samples, criterion='maximin')
+        data = dict()
+        for j, p in enumerate(self.eval_parameters):
+            grid = np.linspace(p.min_value, p.max_value, self.levels)
+            idx = np.clip(np.floor(unit[:, j] * self.levels).astype(int), 0, self.levels - 1)
+            data[p.name] = grid[idx]
+        return pd.DataFrame(data, columns=names)
     
     def to_dict(self):
         """Export the settings used to create the optimizer to dict. Also exports the optimization results if performed
@@ -234,9 +236,14 @@ class CCD(DOE):
         Returns:
             pd.DataFrame: dataframe object
         """
-        param_dict = dict((p.name, [p.min_value, p.max_value]) for p in self.eval_parameters)    
-        df = build.central_composite(param_dict,face=self.face)
-        return df
+        n = len(self.eval_parameters)
+        coded = ccdesign(n, center=self.center, alpha=self.alpha, face=self.face)
+        data = dict()
+        for j, p in enumerate(self.eval_parameters):
+            mid = 0.5 * (p.max_value + p.min_value)
+            half = 0.5 * (p.max_value - p.min_value)
+            data[p.name] = mid + coded[:, j] * half
+        return pd.DataFrame(data, columns=[p.name for p in self.eval_parameters])
 
     def to_dict(self):
         """Export the settings used to create the optimizer to dict. Also exports the optimization results if performed
@@ -272,14 +279,15 @@ class BoxBehnken(DOE):
         super(BoxBehnken, self).__init__()
         self.center_points=center_points
         
-    def create_design(self):        
-        param_dict = dict() 
-        for p in self.eval_parameters:
-            r = np.linspace(p.min_value ,p.max_value)
-            param_dict[p.name] = r.tolist()
-            
-        df = build.box_behnken(param_dict,center=self.center_points)
-        return df
+    def create_design(self):
+        n = len(self.eval_parameters)
+        coded = bbdesign(n, center=self.center_points)
+        data = dict()
+        for j, p in enumerate(self.eval_parameters):
+            mid = 0.5 * (p.max_value + p.min_value)
+            half = 0.5 * (p.max_value - p.min_value)
+            data[p.name] = mid + coded[:, j] * half
+        return pd.DataFrame(data, columns=[p.name for p in self.eval_parameters])
 
     def to_dict(self):
         """Export the settings used to create the optimizer to dict. Also exports the optimization results if performed
@@ -311,14 +319,14 @@ class FullFactorial(DOE):
         super(FullFactorial, self).__init__()
         self.levels=levels
         
-    def create_design(self):        
-        param_dict = dict() 
-        for p in self.eval_parameters:
-            r = np.linspace(p.min_value ,p.max_value ,self.levels)
-            param_dict[p.name] = r.tolist()
-            
-        df = build.full_fact(param_dict)
-        return df
+    def create_design(self):
+        n = len(self.eval_parameters)
+        idx = fullfact([self.levels] * n).astype(int)
+        data = dict()
+        for j, p in enumerate(self.eval_parameters):
+            grid = np.linspace(p.min_value, p.max_value, self.levels)
+            data[p.name] = grid[idx[:, j]]
+        return pd.DataFrame(data, columns=[p.name for p in self.eval_parameters])
 
     def to_dict(self):
         """Export the settings used to create the optimizer to dict. Also exports the optimization results if performed

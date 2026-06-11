@@ -107,7 +107,33 @@ class Optimizer:
         assert check_if_duplicates(eval_parameter_names) == False, "Evaluation Parameter names have to be unique"
         assert check_if_duplicates(performance_parameter_names) == False, "Performance Parameter names have to be unique"
 
-        
+
+    def add_yaml(self, path) -> "Optimizer":
+        """Augment this optimizer with parameters/settings from a YAML config file.
+
+        Adds eval_parameters, objectives, and performance_parameters; sets
+        ``parallel_settings`` and ``mutation_params``; and caches the DOE on
+        ``self.doe`` so you can do ``self.start_doe(self.doe.generate_doe())``.
+
+        Optimizer-level kwargs that are settable post-construction (pop_size,
+        pareto_resolution, eval_command) are applied if present in the YAML;
+        ``eval_folder`` / ``single_folder_eval`` / ``overwrite_input_file`` are
+        validated at __init__ and silently ignored here. ``optimizer.type`` is
+        also ignored — the class is whatever you constructed.
+
+        Args:
+            path: path to a YAML file. See
+                :func:`glennopt.helpers.load_optimization_yaml` for the schema.
+
+        Returns:
+            self, so you can chain: ``opt.add_yaml(path).start_doe(...)``.
+        """
+        # Local import to avoid circular import at module load time.
+        from ..helpers.read_yaml_config import load_optimization_yaml
+        cfg = load_optimization_yaml(path)
+        return cfg.apply_to(self)
+
+
     @property
     def use_calculation_folder(self) -> bool:
         """Allows the optimizer to define calculation folders for each call.
