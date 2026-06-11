@@ -15,6 +15,7 @@ diversipy = "*"
 dataclasses_json = "*"
 tqdm = "*"
 scikit-learn = "*"
+pyyaml = "*"
 
 [tool.poetry.dev-dependencies]
 
