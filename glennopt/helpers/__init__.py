@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from importlib import import_module     
+from importlib.util import find_spec
 
 from .copy_helper import copy
 from .convert_to_ndarray import convert_to_ndarray
@@ -9,12 +9,12 @@ from .population_distance import distance, diversity
 from .nsga_functions import non_dominated_sorting, find_extreme_points, find_intercepts, associate_to_niche, niching, uniform_reference_points, sort_and_select_population
 from .post_processing import get_best, get_pop_best
 
-if import_module('torch') is not None:
+if find_spec('torch') is not None:
     from .jacobian import gradient, jacobian
+    from .MultiLayerLinear import MultiLayerLinear, SimpleLinearModel
+    from .nn_helpers import transform_data, inverse_transform_data, compute_mse, evaluation_func
 
-from .MultiLayerLinear import MultiLayerLinear, SimpleLinearModel
 from .list_functions import check_if_duplicates
-from .nn_helpers import transform_data, inverse_transform_data, compute_mse, evaluation_func
 from .read_input_file import read_input_to_dict
 from .read_yaml_config import (
     OptimizationConfig,

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "GlennOPT"
-version = "1.5.3"
+version = "1.5.5"
 description = "Multi and single objective optimization tool for cfd/computer simulations."
 authors = ["Paht Juangphanich <paht.juangphanich@nasa.gov>"]
 
@@ -11,11 +11,15 @@ numpy = "*"
 pandas = "*"
 psutil = "*"
 pyDOE3 = "*"
-diversipy = "*"
 dataclasses_json = "*"
+torch = { version = "*", optional = true }
+scipy = "*"
 tqdm = "*"
 scikit-learn = "*"
 pyyaml = "*"
+
+[tool.poetry.extras]
+ml = ["torch"]
 
 [tool.poetry.dev-dependencies]
 
