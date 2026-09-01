@@ -22,13 +22,13 @@ Installation via Pip
 Installation via Source
 -------------------------
 
-Clone the repository and you will need the poetry package manager to build and install the project. `Poetry Installation <https://python-poetry.org/docs/#installation>`
+Clone the repository and you will need the uv package manager to build and install the project. `uv Installation <https://docs.astral.sh/uv/getting-started/installation/>`
 
 Commands for building and installing the library
 
     .. code-block:: none
 
-        poetry build
-        poetry install 
+        pip install uv
+        uv sync
 
         
