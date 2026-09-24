@@ -239,6 +239,9 @@ class Optimizer:
         if (os.path.exists(self.output_file)):
             with open(self.output_file,'r') as f:
                 for line in f:
+                    # Section headers, comments and blank lines carry no values.
+                    if not line.strip() or line.lstrip().startswith('#') or '=' not in line:
+                        continue
                     split_val = line.split('=')
                     key = split_val[0].strip()
                     val = float(split_val[1].strip())
