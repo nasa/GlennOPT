@@ -92,7 +92,11 @@ class DOE:
             parameter = copy.deepcopy(self.eval_parameters)
             for indx in range(len(parameter)):
                 parameter[indx].value=eval_values[i][indx]
-            individuals.append(Individual(eval_parameters=parameter,objectives=self.objectives,performance_parameters=self.perf_parameters))
+            # Each evaluation owns its results, just as it owns its inputs.
+            individuals.append(Individual(
+                eval_parameters=parameter,
+                objectives=copy.deepcopy(self.objectives),
+                performance_parameters=copy.deepcopy(self.perf_parameters)))
         return individuals
     
     def to_dict(self) -> Dict:
